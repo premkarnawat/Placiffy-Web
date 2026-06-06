@@ -114,15 +114,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-zinc-900 flex items-center justify-center shadow-lg transition-transform hover:scale-105 duration-300">
-              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            {/* Elegant Serif Logo Slot */}
-            <span className="font-serif italic font-bold text-2xl tracking-wide text-zinc-900">placify</span>
+            <img 
+              src="/logo.jpg" 
+              alt="Placify Logo" 
+              className="h-11 w-auto mix-blend-multiply" 
+            />
           </div>
 
           {/* Nav Links dropdown-styled */}
@@ -564,15 +560,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
           
           <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center shadow-md">
-                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span className="font-serif italic font-bold text-xl tracking-wide text-zinc-900">placify</span>
+            <div className="flex items-center gap-3">
+              <img 
+                src="/logo.jpg" 
+                alt="Placify Logo" 
+                className="h-12 w-auto mix-blend-multiply" 
+              />
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed font-sans">
               Verified Talent. Faster Hiring. Reduced Risk. The verification network replacing unverified resume database listings.
@@ -719,8 +712,14 @@ export default function Home() {
                 <X className="w-5 h-5" />
               </button>
 
-              <h3 className="text-2xl font-serif text-zinc-900 mb-2">Sign in to placify</h3>
-              <p className="text-xs text-zinc-400 mb-6 font-sans">Select your portal access and enter your credentials.</p>
+              <div className="flex flex-col items-center justify-center mb-6">
+                <img 
+                  src="/logo.jpg" 
+                  alt="Placify Logo" 
+                  className="h-16 w-auto mix-blend-multiply mb-3" 
+                />
+                <p className="text-xs text-zinc-450 font-sans text-center">Select your portal access and enter your credentials.</p>
+              </div>
 
               {/* Tabs */}
               <div className="flex bg-zinc-50 border border-zinc-200 rounded-xl p-1 gap-1 mb-6">
