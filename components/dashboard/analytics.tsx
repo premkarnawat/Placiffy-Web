@@ -9,7 +9,7 @@ export default function Analytics() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/analytics')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/analytics`)
       .then(res => res.json())
       .then(data => setData(data))
       .catch(() => {
