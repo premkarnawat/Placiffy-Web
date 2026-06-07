@@ -23,6 +23,7 @@ export default function RegisterPage() {
     fullName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     headline: '',
     summary: '',
@@ -106,27 +107,59 @@ export default function RegisterPage() {
 
     try {
       // 1. Register Auth
-      const regRes = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        if (formData.password !== formData.confirmPassword) {
+          toast('error', 'Error', 'Passwords do not match');
+          return;
+        }
+
+        // 1. Register with Supabase Native Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          full_name: formData.fullName,
-          role: 'candidate'
-        })
-      });
+          options: {
+            data: {
+              full_name: formData.fullName,
+              role: 'candidate'
+            }
+          }
+        });
+  
+        if (authError) {
+          throw new Error(authError.message);
+        }
+  
+        if (!authData.session) {
+          toast('info', 'Verification', 'Please check your email to verify your account');
+          return;
+        }
+        
+        try {
+          await supabase.from('users').upsert({
+            id: authData.user!.id,
+            email: formData.email,
+            name: formData.fullName,
+            role: 'candidate'
+          });
+          
+          await supabase.from('candidates').upsert({
+            user_id: authData.user!.id,
+            headline: formData.headline,
+            skills: formData.skills,
+            location: formData.location
+          });
+        } catch (e) {
+          console.error('Failed to sync user data', e);
+        }
 
-      if (!regRes.ok) {
-        const err = await regRes.json();
-        throw new Error(err.detail || 'Registration failed');
-      }
+        login(authData.session.access_token, {
+          id: authData.user!.id,
+          email: formData.email,
+          role: 'candidate',
+          name: formData.fullName
+        });
 
-      const { access_token, user } = await regRes.json();
-      login(access_token, user);
-
-      // 2. Update Profile
-      const token = access_token;
+        // 2. Update Profile
+        const token = authData.session.access_token;
       await fetch(`${API_URL}/api/candidates/profile`, {
         method: 'PUT',
         headers: { 
