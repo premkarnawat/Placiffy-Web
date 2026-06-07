@@ -27,8 +27,8 @@ export default function CandidateDashboard() {
 
   if (!data) return <div className="p-8 text-center text-gray-500">Loading Dashboard Engine...</div>;
 
-  const pct = data.cand.profile_completion_pct || 0;
-  const isVerified = data.cand.verification_status === 'verified';
+  const pct = data.cand?.profile_completion_pct || 0;
+  const isVerified = data.cand?.verification_status === 'verified';
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
