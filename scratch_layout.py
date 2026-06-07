@@ -1,3 +1,6 @@
+import os
+
+layout_content = """\
 import type { Metadata } from "next";
 import { Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -28,3 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+"""
+
+with open(r"app\layout.tsx", "w", encoding="utf-8") as f:
+    f.write(layout_content)

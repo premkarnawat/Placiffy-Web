@@ -1,3 +1,6 @@
+import os
+
+register_content = """\
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +17,7 @@ export default function RegisterPage() {
   const [isUploading, setIsUploading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -75,7 +78,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.consent) {
-      toast('error' , 'Error', 'You must agree to verification consent');
+      addToast({ title: 'Error', message: 'You must agree to verification consent', type: 'error' });
       return;
     }
 
@@ -119,11 +122,11 @@ export default function RegisterPage() {
         })
       });
 
-      toast('success' , 'Success', 'Profile created successfully');
+      addToast({ title: 'Success', message: 'Profile created successfully', type: 'success' });
       router.push('/candidate/dashboard');
 
     } catch (error: any) {
-      toast('error' , 'Registration Failed', error.message);
+      addToast({ title: 'Registration Failed', message: error.message, type: 'error' });
     }
   };
 
@@ -292,3 +295,7 @@ export default function RegisterPage() {
     </div>
   );
 }
+"""
+
+with open(r"app\register\page.tsx", "w", encoding="utf-8") as f:
+    f.write(register_content)

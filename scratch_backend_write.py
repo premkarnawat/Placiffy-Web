@@ -1,3 +1,6 @@
+import os
+
+main_py_content = """\
 import uuid
 import httpx
 from typing import Optional, List, Dict, Any
@@ -294,3 +297,7 @@ async def get_jobs():
 @app.get("/health", tags=["System"])
 def health_check():
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+"""
+
+with open(r"backend\app\main.py", "w", encoding="utf-8") as f:
+    f.write(main_py_content)

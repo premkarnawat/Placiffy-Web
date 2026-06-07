@@ -1,3 +1,7 @@
+﻿# -*- coding: utf-8 -*-
+import os
+
+login_content = """\
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -14,7 +18,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,14 +39,14 @@ export default function LoginPage() {
       const { access_token, user } = await res.json();
       login(access_token, user);
       
-      toast('success' , 'Welcome back!', 'Login successful');
+      addToast({ title: 'Welcome back!', message: 'Login successful', type: 'success' });
       
       if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'company') router.push('/company/dashboard');
       else router.push('/candidate/dashboard');
       
     } catch (error: any) {
-      toast('error' , 'Login Failed', error.message);
+      addToast({ title: 'Login Failed', message: error.message, type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -129,3 +133,7 @@ export default function LoginPage() {
     </div>
   );
 }
+"""
+
+with open(r"app\login\page.tsx", "w", encoding="utf-8") as f:
+    f.write(login_content)

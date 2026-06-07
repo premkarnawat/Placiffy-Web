@@ -1,0 +1,146 @@
+﻿# -*- coding: utf-8 -*-
+import os
+
+layout_content = """\
+"use client";
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter, usePathname } from 'next/navigation';
+import { 
+  LayoutDashboard, Briefcase, FileText, Shield, Award, CreditCard, 
+  Search, Bell, Settings, LogOut, HelpCircle, UserPlus, Menu, X
+} from 'lucide-react';
+import Link from 'next/link';
+
+export default function CandidateLayout({ children }: { children: React.ReactNode }) {
+  const { user, isLoading, logout } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  }
+
+  const navItems = [
+    { name: 'Dashboard', href: '/candidate/dashboard', icon: LayoutDashboard },
+    { name: 'Jobs', href: '/candidate/jobs', icon: Briefcase },
+    { name: 'Applications', href: '/candidate/applications', icon: FileText },
+    { name: 'Verification', href: '/candidate/verification', icon: Shield },
+    { name: 'Trust Score', href: '/candidate/trust-score', icon: Award },
+    { name: 'Passport', href: '/candidate/passport', icon: CreditCard },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans">
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden fixed top-4 left-4 z-50">
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-white rounded-lg shadow-sm border border-gray-200">
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="h-full flex flex-col">
+          <div className="p-6 border-b border-gray-100">
+            <h1 className="text-xl font-bold text-blue-700 tracking-tight">Candidate Hub</h1>
+            <p className="text-xs text-gray-500 mt-1">Hiring OS</p>
+          </div>
+
+          <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
+                    ${isActive 
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' 
+                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'}
+                  `}
+                >
+                  <item.icon size={18} className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="p-4 border-t border-gray-100 space-y-2">
+            <button className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 py-2.5 rounded-xl text-sm font-medium transition-colors">
+              <UserPlus size={16} /> Refer a Friend
+            </button>
+            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-colors">
+              <HelpCircle size={18} className="text-gray-400" /> Help Center
+            </button>
+            <button 
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+            >
+              <LogOut size={18} className="text-red-500" /> Sign Out
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 lg:pl-64">
+        {/* Top Header */}
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30">
+          <div className="flex-1 flex items-center ml-12 lg:ml-0">
+            <div className="max-w-md w-full relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search jobs, skills, or companies..."
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg outline-none transition-all text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-5">
+            <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900">
+              <HelpCircle size={18} /> Support
+            </button>
+            <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
+            <button className="relative text-gray-500 hover:text-gray-900 transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <button className="text-gray-500 hover:text-gray-900 transition-colors">
+              <Settings size={20} />
+            </button>
+            <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 overflow-hidden flex-shrink-0 cursor-pointer">
+              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt="Avatar" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+"""
+
+os.makedirs(r"app\candidate", exist_ok=True)
+with open(r"app\candidate\layout.tsx", "w", encoding="utf-8") as f:
+    f.write(layout_content)
