@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, User, Sparkles, Loader2, Minimize2 } from 'lucide-react';
+import { Bot, X, Send, User, Sparkles, Loader2, Minimize2, Languages } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
+
 
 export default function AIAssistant() {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ export default function AIAssistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [context, setContext] = useState<any>(null);
+  const [language, setLanguage] = useState<'English' | 'Hindi'>('English');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function AIAssistant() {
       // Initial greeting
       setMessages([{
         role: 'assistant', 
-        content: `Hi there! I'm Placify AI. I see your Trust Score is currently ${cand?.trust_score || 0}. I can help you improve your profile, optimize your resume for ATS, or answer any verification questions. How can I help today?`
+        content: `Hi there! I'm Placify AI, your platform expert. I see your Trust Score is ${cand?.trust_score || 0}. I can help you understand ATS matching, verification steps, or navigate the dashboard. How can I assist you today?`
       }]);
     } catch (e) {
       console.error(e);
@@ -49,12 +51,17 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
+      const pageContext = window.location.pathname;
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, { role: 'user', content: userMessage }],
-          candidateContext: context || {}, userId: user?.id
+          candidateContext: context || {}, 
+          userId: user?.id,
+          language,
+          pageContext,
+          role: 'Candidate'
         })
       });
 
@@ -67,7 +74,7 @@ export default function AIAssistant() {
         throw new Error('No reply from Groq');
       }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm sorry, I'm having trouble connecting to my servers right now. Please try again in a moment." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to my servers right now. Please [Create a Support Ticket](/candidate/support) if this persists." }]);
     } finally {
       setLoading(false);
     }
@@ -96,10 +103,16 @@ export default function AIAssistant() {
               <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm"><Bot size={24}/></div>
               <div>
                 <h3 className="font-bold">Placify AI Assistant</h3>
-                <p className="text-xs text-blue-100 flex items-center gap-1"><Sparkles size={12}/> Powered by Groq</p>
+                <p className="text-xs text-blue-100 flex items-center gap-1"><Sparkles size={12}/> Business Expert</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setLanguage(language === 'English' ? 'Hindi' : 'English')} 
+                className="text-xs font-bold bg-white/20 hover:bg-white/30 px-2 py-1 rounded-md transition-colors"
+              >
+                {language === 'English' ? 'EN' : 'हिंदी'}
+              </button>
               <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><Minimize2 size={18}/></button>
             </div>
           </div>
@@ -116,8 +129,18 @@ export default function AIAssistant() {
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
                 {m.role === 'assistant' && <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Bot size={16}/></div>}
-                <div className={`max-w-[75%] p-3 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-gray-900 text-white rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'}`}>
-                  {m.content}
+                <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-gray-900 text-white rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'}`}>
+                  {m.role === 'assistant' ? (
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+                  ) : (
+                    m.content
+                  )}
+                  {/* Support Injection */}
+                  {m.role === 'assistant' && (m.content.includes('Support Ticket') || m.content.includes('Contact the Placify Team')) && (
+                    <a href="/candidate/support" className="mt-3 inline-flex items-center gap-2 bg-blue-50 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors text-xs no-underline">
+                      <Sparkles size={14} /> Create Support Ticket
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
@@ -142,7 +165,7 @@ export default function AIAssistant() {
                 type="text" 
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Ask me anything..." 
+                placeholder={language === 'English' ? "Ask me anything about Placify..." : "Placify के बारे में कुछ भी पूछें..."} 
                 className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition-colors"
               />
               <button 
