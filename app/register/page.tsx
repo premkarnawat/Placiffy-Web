@@ -60,7 +60,7 @@ export default function RegisterPage() {
         body: formDataObj
       });
       
-      if (!res.ok) throw new Error('Failed to parse resume');
+      if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Failed to parse resume'); }
       
       const data = await res.json();
       if (data.status === 'success' && data.extracted_data) {

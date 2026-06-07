@@ -7,6 +7,9 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timezone
 import io
 import PyPDF2
+import pdfplumber
+import docx
+
 from groq import Groq
 import json
 
@@ -178,22 +181,30 @@ async def get_me(user: dict = Depends(get_current_user)):
 async def parse_resume_public(file: UploadFile = File(...)):
     try:
         content = await file.read()
+        filename = file.filename.lower()
         
-        # Parse PDF
         text = ""
         try:
-            pdf = PyPDF2.PdfReader(io.BytesIO(content))
-            for page in pdf.pages:
-                text += page.extract_text() + "\n"
+            if filename.endswith(".docx") or filename.endswith(".doc"):
+                doc = docx.Document(io.BytesIO(content))
+                text = "
+".join([para.text for para in doc.paragraphs])
+            else:
+                # Default to PDF
+                with pdfplumber.open(io.BytesIO(content)) as pdf:
+                    for page in pdf.pages:
+                        page_text = page.extract_text()
+                        if page_text:
+                            text += page_text + "
+"
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Could not read PDF file")
+            raise HTTPException(status_code=400, detail=f"Could not read file {filename}: {str(e)}")
             
         if not text.strip():
-            raise HTTPException(status_code=400, detail="PDF contains no readable text")
+            raise HTTPException(status_code=400, detail="Document contains no readable text. Please ensure it is a text-based document, not a scanned image.")
             
         # Use Groq to extract details
         if not settings.groq_api_key:
-            # Fallback mock if API key isn't provided to backend
             return {
                 "status": "success",
                 "extracted_data": {
@@ -235,8 +246,10 @@ async def parse_resume_public(file: UploadFile = File(...)):
             "extracted_data": extracted_data
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @app.get("/api/candidates/profile", tags=["Candidate"])
 async def get_candidate_profile(user: dict = Depends(require_candidate)):
