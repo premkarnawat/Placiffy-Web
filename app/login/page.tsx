@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
+import { supabase } from '@/lib/supabase';
 import { Linkedin, Github, Mail, Lock } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';

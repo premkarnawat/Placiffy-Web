@@ -1,3 +1,5 @@
+﻿# -*- coding: utf-8 -*-
+auth_content = """\
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -105,3 +107,7 @@ export function useAuth() {
   }
   return context;
 }
+"""
+
+with open(r"lib\auth-context.tsx", "w", encoding="utf-8") as f:
+    f.write(auth_content)

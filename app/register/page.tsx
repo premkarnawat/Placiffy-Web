@@ -5,6 +5,7 @@ import { Upload, Linkedin, Github, FileText, ArrowRight, CheckCircle, Shield, Fi
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
+import { supabase } from '@/lib/supabase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
 
@@ -206,7 +207,7 @@ export default function RegisterPage() {
                   onDrop={handleFileDrop}
                   className="border-2 border-dashed border-blue-200 bg-blue-50/50 hover:bg-blue-50 transition-colors rounded-xl p-10 text-center cursor-pointer relative"
                 >
-                  <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${file ? 'z-0 hidden' : 'z-10'}`} />
                   <div className="mx-auto w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
                     <Upload size={24} />
                   </div>
@@ -215,7 +216,7 @@ export default function RegisterPage() {
                   <p className="text-xs text-gray-400">Maximum size: 10MB</p>
                   
                   {file && (
-                    <div className="mt-4 p-3 bg-white border border-blue-100 rounded-lg flex items-center justify-between text-left">
+                    <div className="mt-4 p-3 bg-white border border-blue-100 rounded-lg flex items-center justify-between text-left relative z-20">
                       <div className="flex items-center gap-3">
                         <FileText className="text-blue-500" size={20} />
                         <div>
