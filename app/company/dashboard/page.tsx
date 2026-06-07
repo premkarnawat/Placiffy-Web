@@ -1,258 +1,257 @@
 "use client";
-import React, { useState, useRef } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
-  LayoutDashboard, Briefcase, Users, BarChart2, Settings,
-  LogOut, Bell, Plus, TrendingUp, Clock, CheckCircle, XCircle,
-  ArrowRight, Menu, X, ChevronRight, Star, Search,
-  Building2, FileText, Award, Zap, Target, RefreshCw
+  LayoutDashboard, Briefcase, Users, MessageSquare, BarChart2,
+  Bell, HelpCircle, Settings, Search, Plus, Calendar, ChevronRight,
+  TrendingUp, Sparkles, LogOut, Building2
 } from "lucide-react";
 
-function FadeIn({ children, delay=0, className="" }: { children: React.ReactNode; delay?: number; className?: string }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  return (
-    <motion.div ref={ref} initial={{opacity:0,y:20}} animate={inView?{opacity:1,y:0}:{}}
-      transition={{duration:0.6,delay,ease:[0.23,1,0.32,1]}} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-
-const KPIS = [
-  { label:"Active Jobs", value:"14", change:"+3 this week", icon:<Briefcase className="w-5 h-5"/>, color:"text-blue-500", bg:"bg-blue-50" },
-  { label:"Total Applicants", value:"247", change:"+28 today", icon:<Users className="w-5 h-5"/>, color:"text-emerald-500", bg:"bg-emerald-50" },
-  { label:"Verified Candidates", value:"89", change:"36% of pool", icon:<Award className="w-5 h-5"/>, color:"text-violet-500", bg:"bg-violet-50" },
-  { label:"Avg Time-to-Hire", value:"11d", change:"-4d vs last month", icon:<Clock className="w-5 h-5"/>, color:"text-amber-500", bg:"bg-amber-50" },
-  { label:"Interviews Scheduled", value:"32", change:"This week", icon:<Target className="w-5 h-5"/>, color:"text-pink-500", bg:"bg-pink-50" },
-  { label:"Offer Acceptance", value:"91%", change:"+7% vs last Q", icon:<TrendingUp className="w-5 h-5"/>, color:"text-teal-500", bg:"bg-teal-50" },
+const NAV = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "jobs", label: "Job Workspaces", icon: Briefcase, href: "/company/jobs" },
+  { id: "candidates", label: "Candidate Pool", icon: Users, href: "/company/candidates" },
+  { id: "messaging", label: "Messaging", icon: MessageSquare, href: "/messages" },
+  { id: "analytics", label: "Analytics", icon: BarChart2 },
 ];
 
-const RECENT_JOBS = [
-  { title:"Senior React Developer", dept:"Engineering", applicants:42, ats_avg:88, stage:"Interview", urgent:true },
-  { title:"Product Designer", dept:"Design", applicants:31, ats_avg:82, stage:"Shortlisting", urgent:false },
-  { title:"Data Scientist", dept:"AI/ML", applicants:28, ats_avg:91, stage:"Verification", urgent:true },
-  { title:"DevOps Engineer", dept:"Infrastructure", applicants:19, ats_avg:79, stage:"Assessment", urgent:false },
+const STATS = [
+  { label: "Active Jobs", value: "24", change: "+4%", icon: Briefcase, color: "text-[#0052CC]", bg: "bg-blue-50" },
+  { label: "Applicants", value: "1,482", change: "+12%", icon: Users, color: "text-[#0052CC]", bg: "bg-blue-50" },
+  { label: "Verified", value: "428", change: "+18%", icon: "shield", color: "text-emerald-600", bg: "bg-emerald-50" },
+  { label: "Interviews", value: "56", change: "-2%", icon: Calendar, color: "text-violet-600", bg: "bg-violet-50", negative: true },
+  { label: "Offers", value: "12", change: "+8%", icon: "file", color: "text-amber-600", bg: "bg-amber-50" },
+];
+
+const FUNNEL = [
+  { label: "Awareness / Views", value: "12,400", pct: 100 },
+  { label: "Applied", value: "1,482 (12%)", pct: 45 },
+  { label: "Screened / AI Verified", value: "428 (28.8%)", pct: 32 },
+  { label: "Interviewed", value: "56 (13%)", pct: 18 },
+  { label: "Hired", value: "12 (21%)", pct: 5 },
 ];
 
 const PIPELINE = [
-  { label:"Applied", count:247, pct:100, color:"bg-zinc-200" },
-  { label:"ATS Matched", count:148, pct:60, color:"bg-blue-400" },
-  { label:"Interested", count:91, pct:37, color:"bg-indigo-400" },
-  { label:"Verified", count:64, pct:26, color:"bg-violet-400" },
-  { label:"Interview", count:32, pct:13, color:"bg-amber-400" },
-  { label:"Offer", count:18, pct:7, color:"bg-emerald-400" },
-  { label:"Joined", count:11, pct:4.5, color:"bg-green-500" },
+  { stage: "Sourcing", count: 12, candidates: [{ name: "Sarah Jenkins", role: "Senior Product Designer", skills: ["Figma", "SwiftUI"], badge: "AI Match", badgeColor: "bg-amber-100 text-amber-700", time: "", salary: "" }] },
+  { stage: "Interviews", count: 8, candidates: [{ name: "Marcus Kovic", role: "Fullstack Engineer", skills: [], badge: "Technical", badgeColor: "bg-blue-100 text-blue-700", time: "Today, 2:30 PM", salary: "" }] },
+  { stage: "Evaluation", count: 4, candidates: [{ name: "David Lattimore", role: "Operations Manager", skills: [], badge: "Verifying", badgeColor: "bg-emerald-100 text-emerald-700", time: "", salary: "" }] },
+  { stage: "Offers", count: 3, candidates: [{ name: "Elena Rodriguez", role: "VP of Engineering", skills: [] as string[], badge: "", badgeColor: "", time: "", salary: "Base: $240k + Equity: 0.2%" }] },
 ];
 
-const NAV = [
-  { id:"dashboard", label:"Dashboard", icon:LayoutDashboard },
-  { id:"jobs", label:"Jobs", icon:Briefcase, href:"/company/jobs" },
-  { id:"candidates", label:"Candidates", icon:Users, href:"/company/candidates" },
-  { id:"analytics", label:"Analytics", icon:BarChart2 },
+const SOURCES = [
+  { name: "LinkedIn Recruiter", pct: 45, color: "bg-[#0052CC]" },
+  { name: "Direct Referrals", pct: 30, color: "bg-violet-500" },
+  { name: "Careers Page", pct: 15, color: "bg-emerald-500" },
+  { name: "Other Portals", pct: 10, color: "bg-zinc-400" },
 ];
 
 export default function CompanyDashboard() {
-  const [active, setActive] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("dashboard");
+  const [pipelineView, setPipelineView] = useState("Board");
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex">
-      {/* Sidebar overlay mobile */}
-      {sidebarOpen && <div className="fixed inset-0 bg-black/20 z-30 lg:hidden" onClick={()=>setSidebarOpen(false)}/>}
-
+    <div className="min-h-screen bg-white flex">
       {/* Sidebar */}
-      <aside className={`fixed lg:relative top-0 left-0 h-full z-40 w-64 bg-white border-r border-zinc-200 flex flex-col transition-transform duration-300 ${sidebarOpen?"translate-x-0":"-translate-x-full lg:translate-x-0"}`}>
-        <div className="p-6 border-b border-zinc-100">
-          <img src="/logo.jpg" alt="Placify" className="h-8 w-auto object-contain mix-blend-multiply"/>
-          <div className="mt-3 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Company Portal</div>
+      <aside className="w-52 bg-[#F8F9FB] border-r border-zinc-200/60 flex flex-col min-h-screen sticky top-0">
+        <div className="p-5 pb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#0052CC] rounded-xl flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-white"/>
+            </div>
+            <div>
+              <div className="text-sm font-black text-zinc-900">PLACIFY</div>
+              <div className="text-[9px] text-zinc-400 font-medium">Intelligence OS</div>
+            </div>
+          </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          {NAV.map(n => {
-            const Icon = n.icon;
-            const isAct = active === n.id;
+        <nav className="flex-1 px-3 space-y-0.5">
+          {NAV.map(item => {
+            const Icon = item.icon;
+            const isActive = activeNav === item.id;
             return (
-              <button key={n.id}
-                onClick={() => { if (n.href) window.location.href = n.href; else setActive(n.id); setSidebarOpen(false); }}
-                className={`sidebar-link ${isAct?"active":""}`}>
-                <Icon className="w-4 h-4 flex-shrink-0"/>
-                {n.label}
+              <button key={item.id}
+                onClick={() => item.href ? window.location.href = item.href : setActiveNav(item.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${isActive ? "bg-[#0052CC] text-white" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"}`}>
+                <Icon className="w-4 h-4"/>
+                {item.label}
               </button>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-zinc-100 space-y-1">
-          <button className="sidebar-link" onClick={()=>window.location.href="/company/jobs"}>
-            <Plus className="w-4 h-4"/> Post New Job
+        <div className="p-3 space-y-0.5 border-t border-zinc-200/60 mt-auto">
+          <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-all">
+            <HelpCircle className="w-4 h-4"/>Support
           </button>
-          <button className="sidebar-link" onClick={()=>setSidebarOpen(false)}>
-            <Settings className="w-4 h-4"/> Settings
+          <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-all">
+            <Settings className="w-4 h-4"/>Settings
           </button>
-          <button className="sidebar-link text-red-500" onClick={()=>window.location.href="/"}>
-            <LogOut className="w-4 h-4"/> Sign Out
-          </button>
+          <div className="mt-3 bg-white border border-zinc-200 rounded-xl p-3">
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Enterprise Portal</div>
+            <div className="text-[9px] text-zinc-400">Placify Intelligence</div>
+          </div>
         </div>
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden p-2 rounded-xl hover:bg-zinc-100" onClick={()=>setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
-            </button>
-            <div>
-              <h1 className="text-lg font-black text-zinc-900">Hiring Dashboard</h1>
-              <p className="text-xs text-zinc-500 hidden sm:block">Welcome back, Acme Technologies</p>
-            </div>
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <header className="border-b border-zinc-200/60 bg-white px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+          <div className="relative flex-1 max-w-xl">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"/>
+            <input className="w-full bg-[#F5F7FA] border-0 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 focus:bg-white transition-all"
+              placeholder="Global search for candidates, jobs, or intelligence..."/>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="relative p-2.5 rounded-xl hover:bg-zinc-100 transition-colors">
-              <Bell className="w-5 h-5 text-zinc-600"/>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"/>
-            </button>
-            <button onClick={()=>window.location.href="/company/jobs"}
-              className="btn-brand text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5"/> Post Job
-            </button>
+          <div className="flex items-center gap-3 ml-4">
+            <button className="relative p-2 rounded-xl hover:bg-zinc-100"><Bell className="w-4 h-4 text-zinc-500"/><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"/></button>
+            <button className="p-2 rounded-xl hover:bg-zinc-100"><HelpCircle className="w-4 h-4 text-zinc-500"/></button>
+            <button className="p-2 rounded-xl hover:bg-zinc-100"><Settings className="w-4 h-4 text-zinc-500"/></button>
+            <div className="flex items-center gap-2 ml-2">
+              <div className="text-right"><div className="text-xs font-bold text-zinc-900">Alex Sterling</div><div className="text-[10px] text-zinc-400">HR Manager</div></div>
+              <div className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold">AS</div>
+            </div>
           </div>
         </header>
 
-        {/* Content */}
         <main className="flex-1 p-6 overflow-y-auto">
-          {/* KPI Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-            {KPIS.map((k,i) => (
-              <FadeIn key={i} delay={i*0.06}>
-                <div className="bg-white rounded-2xl p-4 border border-zinc-100 hover:shadow-sm transition-all">
-                  <div className={`w-9 h-9 rounded-xl ${k.bg} ${k.color} flex items-center justify-center mb-3`}>
-                    {k.icon}
+          {/* Welcome + Actions */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-black text-zinc-900">Welcome Back, Alex.</h1>
+              <p className="text-sm text-zinc-500 mt-1">Here's what's happening with your hiring funnel today.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
+                <Calendar className="w-3.5 h-3.5"/>Last 30 Days
+              </button>
+              <button onClick={() => window.location.href = "/company/jobs"} className="flex items-center gap-2 px-4 py-2.5 bg-[#0052CC] text-white rounded-xl text-xs font-bold hover:bg-[#003FA3] transition-colors">
+                <Plus className="w-3.5 h-3.5"/>New Job Request
+              </button>
+            </div>
+          </div>
+
+          {/* KPI Cards */}
+          <div className="grid grid-cols-5 gap-4 mb-6">
+            {STATS.map((stat, i) => (
+              <motion.div key={i} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:i*0.06}}
+                className="bg-white border border-zinc-100 rounded-2xl p-4 hover:shadow-sm transition-all">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center`}>
+                    {typeof stat.icon === "string" ? (
+                      <div className={`w-5 h-5 ${stat.color} font-bold text-sm`}>{stat.icon === "shield" ? "\u2713" : "\u2709"}</div>
+                    ) : (
+                      <stat.icon className={`w-5 h-5 ${stat.color}`}/>
+                    )}
                   </div>
-                  <div className="text-2xl font-black text-zinc-900">{k.value}</div>
-                  <div className="text-[11px] font-bold text-zinc-500 mt-0.5">{k.label}</div>
-                  <div className="text-[10px] text-emerald-600 font-semibold mt-1">{k.change}</div>
+                  <span className={`text-[10px] font-bold ${stat.negative ? "text-red-500" : "text-emerald-600"}`}>{stat.change}</span>
                 </div>
-              </FadeIn>
+                <div className="text-[10px] text-zinc-500 font-medium mb-0.5">{stat.label}</div>
+                <div className="text-2xl font-black text-zinc-900">{stat.value}</div>
+              </motion.div>
             ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
             {/* Hiring Funnel */}
-            <FadeIn className="lg:col-span-1">
-              <div className="bg-white rounded-3xl border border-zinc-100 p-6 h-full">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-sm font-black text-zinc-900">Hiring Funnel</h2>
-                  <span className="badge-brand">All Jobs</span>
+            <div className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-zinc-900">Hiring Funnel Performance</h2>
+                <div className="flex items-center gap-3 text-xs text-zinc-500">
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-[#0052CC] rounded-full"/>This Month</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-zinc-300 rounded-full"/>Average</span>
                 </div>
-                <div className="space-y-3">
-                  {PIPELINE.map((stage,i) => (
-                    <div key={i}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="font-semibold text-zinc-700">{stage.label}</span>
-                        <span className="font-bold text-zinc-900">{stage.count}</span>
-                      </div>
-                      <div className="progress-bar-bg">
-                        <motion.div
-                          className={`${stage.color} progress-bar-fill`}
-                          initial={{width:0}} animate={{width:`${stage.pct}%`}}
-                          transition={{duration:0.8, delay:i*0.1}}
-                          style={{borderRadius:"99px"}}
-                        />
-                      </div>
+              </div>
+              <div className="space-y-4">
+                {FUNNEL.map((item, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <div className="w-44 text-xs font-medium text-zinc-700 flex-shrink-0">{item.label}</div>
+                    <div className="flex-1 bg-zinc-100 rounded-full h-6 overflow-hidden">
+                      <motion.div className="h-full bg-[#0052CC] rounded-full" initial={{width:0}} animate={{width:`${item.pct}%`}} transition={{duration:0.8,delay:0.2+i*0.1}}/>
+                    </div>
+                    <div className="w-28 text-right text-xs font-bold text-zinc-700 flex-shrink-0">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Insight + Sources */}
+            <div className="space-y-4">
+              <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.4}}
+                className="bg-[#0052CC] rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-200"/>
+                  <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">AI Insight</span>
+                </div>
+                <h3 className="text-base font-black mb-2">Talent Quality is up 24%</h3>
+                <p className="text-xs text-blue-100 leading-relaxed mb-4">Our intelligence models suggest that the recent 'Tech Lead' campaign has attracted 3x higher-quality candidates compared to the industry average.</p>
+                <button className="w-full bg-white/20 hover:bg-white/30 text-white py-2.5 rounded-xl text-xs font-bold transition-colors backdrop-blur-sm">
+                  View Talent Report
+                </button>
+              </motion.div>
+
+              <div className="bg-white border border-zinc-100 rounded-2xl p-5">
+                <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Applicant Source</h3>
+                <div className="space-y-2.5">
+                  {SOURCES.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${s.color}`}/>
+                        <span className="text-zinc-700 font-medium">{s.name}</span>
+                      </span>
+                      <span className="font-bold text-zinc-900">{s.pct}%</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            </FadeIn>
-
-            {/* Active Jobs */}
-            <FadeIn className="lg:col-span-2" delay={0.1}>
-              <div className="bg-white rounded-3xl border border-zinc-100 p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-sm font-black text-zinc-900">Active Jobs</h2>
-                  <button className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1" onClick={()=>window.location.href="/company/jobs"}>
-                    View All <ChevronRight className="w-3.5 h-3.5"/>
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {RECENT_JOBS.map((job,i) => (
-                    <motion.div key={i} initial={{opacity:0,x:10}} animate={{opacity:1,x:0}} transition={{delay:0.3+i*0.08}}
-                      className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer"
-                      onClick={()=>window.location.href="/company/jobs"}>
-                      <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-4 h-4 text-zinc-600"/>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-zinc-900 truncate">{job.title}</h3>
-                          {job.urgent && <span className="badge-warn text-[9px] py-0.5 px-2">Urgent</span>}
-                        </div>
-                        <p className="text-xs text-zinc-500">{job.dept} · {job.applicants} applicants</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-sm font-black text-zinc-900">{job.ats_avg}%</div>
-                        <div className="text-[10px] text-zinc-400 font-bold">Avg ATS</div>
-                      </div>
-                      <div className="hidden sm:block">
-                        <span className={`badge-brand text-[10px] px-2 py-0.5`}>{job.stage}</span>
-                      </div>
-                    </motion.div>
+                <div className="flex gap-0.5 mt-3 h-1.5 rounded-full overflow-hidden">
+                  {SOURCES.map((s, i) => (
+                    <motion.div key={i} className={`h-full ${s.color}`} initial={{width:0}} animate={{width:`${s.pct}%`}} transition={{duration:0.6,delay:0.5+i*0.1}}/>
                   ))}
                 </div>
               </div>
-            </FadeIn>
+            </div>
           </div>
 
-          {/* Bottom Row */}
-          <div className="grid md:grid-cols-2 gap-6 mt-6">
-            {/* ATS Distribution */}
-            <FadeIn delay={0.2}>
-              <div className="bg-white rounded-3xl border border-zinc-100 p-6">
-                <h2 className="text-sm font-black text-zinc-900 mb-5">ATS Score Distribution</h2>
-                <div className="space-y-3">
-                  {[
-                    { range:"90-100%", count:32, pct:22, color:"bg-emerald-400" },
-                    { range:"80-90%", count:67, pct:46, color:"bg-blue-400" },
-                    { range:"70-80%", count:49, pct:33, color:"bg-amber-400" },
-                    { range:"<70%", count:51, pct:35, color:"bg-red-300" },
-                  ].map((r,i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-16 text-xs font-semibold text-zinc-600">{r.range}</div>
-                      <div className="flex-1 progress-bar-bg">
-                        <motion.div className={`${r.color} progress-bar-fill`} initial={{width:0}} animate={{width:`${r.pct}%`}}
-                          transition={{duration:0.7,delay:0.5+i*0.1}} style={{borderRadius:"99px"}}/>
+          {/* Candidate Pipeline */}
+          <div className="bg-white border border-zinc-100 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-zinc-900">Candidate Pipeline</h2>
+                <p className="text-xs text-zinc-500">Real-time status of top-tier talent</p>
+              </div>
+              <div className="flex bg-zinc-100 rounded-xl p-0.5">
+                {["Board","List","Timeline"].map(v => (
+                  <button key={v} onClick={() => setPipelineView(v)}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${pipelineView===v?"bg-white text-zinc-900 shadow-sm":"text-zinc-500"}`}>{v}</button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              {PIPELINE.map((stage, i) => (
+                <div key={i}>
+                  <div className="text-xs font-bold text-zinc-500 mb-3">{stage.stage} ({stage.count})</div>
+                  {stage.candidates.map((c, ci) => (
+                    <div key={ci} className="bg-[#F8F9FB] border border-zinc-100 rounded-2xl p-3.5 hover:border-blue-200 transition-all cursor-pointer">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-9 h-9 rounded-full bg-zinc-300 flex items-center justify-center text-xs font-bold text-white">{c.name.split(" ").map(n=>n[0]).join("")}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-zinc-900 truncate">{c.name}</div>
+                          <div className="text-[10px] text-zinc-500">{c.role}</div>
+                        </div>
+                        {c.badge && <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${c.badgeColor}`}>{c.badge}</span>}
                       </div>
-                      <div className="w-8 text-xs font-bold text-zinc-700 text-right">{r.count}</div>
+                      {c.skills && c.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {c.skills.map((s,si)=><span key={si} className="text-[9px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">{s}</span>)}
+                        </div>
+                      )}
+                      {c.time && <div className="text-[10px] text-zinc-400 mt-2 flex items-center gap-1"><Calendar className="w-3 h-3"/>{c.time}</div>}
+                      {c.salary && <div className="text-[10px] text-zinc-500 mt-2">{c.salary}</div>}
                     </div>
                   ))}
                 </div>
-              </div>
-            </FadeIn>
-
-            {/* Recent Activity */}
-            <FadeIn delay={0.25}>
-              <div className="bg-white rounded-3xl border border-zinc-100 p-6">
-                <h2 className="text-sm font-black text-zinc-900 mb-5">Recent Activity</h2>
-                <div className="space-y-3">
-                  {[
-                    { text:"Neha Joshi accepted interview for React Dev", time:"2m ago", icon:<CheckCircle className="w-4 h-4 text-emerald-500"/> },
-                    { text:"3 new applications for Data Scientist role", time:"14m ago", icon:<Users className="w-4 h-4 text-blue-500"/> },
-                    { text:"Arjun Nair's verification completed — 94%", time:"1h ago", icon:<Award className="w-4 h-4 text-violet-500"/> },
-                    { text:"Offer sent to Priya Sharma for DevOps role", time:"3h ago", icon:<Zap className="w-4 h-4 text-amber-500"/> },
-                    { text:"Job posting expired: UX Designer", time:"6h ago", icon:<XCircle className="w-4 h-4 text-red-400"/> },
-                  ].map((a,i) => (
-                    <div key={i} className="flex items-start gap-3 text-xs">
-                      <div className="mt-0.5 flex-shrink-0">{a.icon}</div>
-                      <div className="flex-1 text-zinc-700 leading-relaxed">{a.text}</div>
-                      <div className="text-zinc-400 whitespace-nowrap">{a.time}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </FadeIn>
+              ))}
+            </div>
           </div>
         </main>
       </div>

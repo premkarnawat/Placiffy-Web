@@ -1,211 +1,167 @@
 "use client";
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  BarChart2, Shield, Briefcase, CalendarCheck, TrendingUp,
+  ChevronRight, MapPin, DollarSign, Sparkles, CheckCircle,
+  Clock, ArrowRight, ExternalLink
+} from "lucide-react";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Upload, ChevronRight, HelpCircle } from 'lucide-react';
-import { GlassCard } from '../glass-card';
+const STATS = [
+  { label:"ATS Match Score", value:"94%", sub:"Top 5%", change:"+2.4%", icon:BarChart2, color:"text-[#0052CC]", bg:"bg-blue-50" },
+  { label:"Trust Score", value:"8.2", sub:"High institutional reliability", suffix:"/10", icon:Shield, color:"text-emerald-600", bg:"bg-emerald-50", badge:"PREMIUM" },
+  { label:"Applied Jobs", value:"24", sub:"", icon:Briefcase, color:"text-violet-600", bg:"bg-violet-50" },
+  { label:"Interviews", value:"06", sub:"2 pending scheduling", icon:CalendarCheck, color:"text-amber-600", bg:"bg-amber-50", alert:true },
+];
+
+const MATCHED_JOBS = [
+  { title:"Senior UX Engineer", company:"Stripe", location:"Remote / San Francisco", salary:"$180k - $240k", equity:"0.1% Equity", match:98, skills:["TypeScript","React","Design Systems"], logo:"S", logoColor:"bg-violet-100 text-violet-600" },
+  { title:"Frontend Lead", company:"Vercel", location:"Fully Remote", salary:"$210k - $275k", match:95, skills:["Next.js","Vercel Edge","Leadership"], logo:"V", logoColor:"bg-zinc-900 text-white" },
+  { title:"Product Architect", company:"Linear", location:"New York, NY", salary:"$190k - $250k", match:92, skills:["Distributed Systems","TypeScript"], logo:"L", logoColor:"bg-blue-100 text-blue-600" },
+];
 
 export default function DashboardTab() {
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [aiInsight, setAiInsight] = useState<string | null>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFileName(file.name);
-      setUploadProgress(20);
-      
-      // Simulate progress uploads
-      const timer = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev === null) return null;
-          if (prev >= 100) {
-            clearInterval(timer);
-            setAiInsight("Based on your profile, you are in the top 6% of candidates for Senior Product roles at Fortune 500 tech firms.");
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 300);
-    }
-  };
-
   return (
-    <div className="space-y-8 text-left">
-      
-      {/* Title */}
-      <div className="flex justify-between items-center border-b border-zinc-200/50 pb-5">
+    <div className="space-y-6 max-w-5xl">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Application Dashboard</h1>
-          <p className="text-xs text-zinc-400 font-semibold mt-1">Step 1: Resume Verification & Intelligence Analysis</p>
-        </div>
-        
-        {/* User avatar mockup */}
-        <div className="w-10 h-10 rounded-full border border-zinc-200 overflow-hidden shadow-sm hover:scale-105 transition-transform cursor-pointer">
-          <img 
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" 
-            alt="Avatar" 
-            className="w-full h-full object-cover" 
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Upload card (Col span 7) */}
-        <div className="lg:col-span-7">
-          <GlassCard className="border border-zinc-200 bg-white p-10 hover:shadow-lg transition-shadow duration-300 relative overflow-hidden group">
-            <div className="flex flex-col items-center justify-center text-center py-10 space-y-6">
-              
-              <div className="w-16 h-16 rounded-full bg-[#E6F0FF] text-[#0052CC] flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
-                <Upload className="w-7 h-7" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-zinc-800">Upload your Resume</h3>
-                <p className="text-xs text-zinc-450 mt-1 max-w-sm mx-auto leading-relaxed">
-                  Drag and drop your PDF or DOCX file here to begin the PLACIFY intelligent matching process.
-                </p>
-              </div>
-
-              <div className="relative">
-                <input 
-                  type="file" 
-                  accept=".pdf,.docx,.txt"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <button type="button" className="bg-[#0052CC] hover:bg-[#0040A3] text-white font-bold uppercase tracking-wider text-xs px-8 py-3.5 rounded-xl shadow-md transition-colors duration-300">
-                  Browse Files
-                </button>
-              </div>
-
-              {fileName && (
-                <span className="text-xs font-bold text-zinc-600 bg-zinc-50 border border-zinc-150 px-3 py-1 rounded">
-                  {fileName}
-                </span>
-              )}
-            </div>
-
-            {uploadProgress !== null && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-100">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${uploadProgress}%` }}
-                  className="h-full bg-[#0052CC]"
-                />
-              </div>
-            )}
-          </GlassCard>
+          <h1 className="text-2xl font-black text-zinc-900">Welcome Back, Alex</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Your technical profile is performing well. We've identified 12 new roles that match your skill set and career trajectory.
+          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3 h-3"/> Verification Status: Verified Professional
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-200 px-2.5 py-1 rounded-lg">
+              <Clock className="w-3 h-3"/> Last active: 2 hours ago
+            </span>
+          </div>
         </div>
 
-        {/* Current Step & AI Insight (Col span 5) */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Current Step */}
-          <GlassCard className="border border-zinc-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0052CC] shrink-0">
-                {/* Minimal Hourglass SVG */}
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 2h14M5 22h14M19 2v4a7 7 0 0 1-7 7 7 7 0 0 1-7-7V2M5 22v-4a7 7 0 0 1 7-7 7 7 0 0 1 7 7v4" />
-                </svg>
-              </div>
-              <div className="flex-1 text-left">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider block">CURRENT STEP</span>
-                <h4 className="text-lg font-bold text-zinc-900 tracking-tight mt-0.5">Resume Analysis</h4>
-                
-                {/* 4 stage steps */}
-                <div className="flex gap-1 mt-2.5">
-                  <div className="flex-1 h-1 bg-[#0052CC] rounded-full" />
-                  <div className="flex-1 h-1 bg-zinc-100 rounded-full" />
-                  <div className="flex-1 h-1 bg-zinc-100 rounded-full" />
-                  <div className="flex-1 h-1 bg-zinc-100 rounded-full" />
-                </div>
-              </div>
-            </div>
-          </GlassCard>
-
-          {/* AI Insight */}
-          <GlassCard className="border border-zinc-200 bg-white p-6 shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[9px] bg-[#E6FFFA] border border-[#B2F5EA] text-[#00A3C4] px-2 py-0.5 rounded font-bold uppercase tracking-wider">AI INSIGHT</span>
-              <HelpCircle className="w-4 h-4 text-zinc-300 hover:text-zinc-400 cursor-pointer" />
-            </div>
-            
-            <p className="text-sm font-medium italic text-zinc-700 leading-relaxed font-sans">
-              "{aiInsight || "Please upload your resume to generate immediate AI-guided career scoring models."}"
-            </p>
-
-            <a href="#passport" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0052CC] hover:underline mt-5">
-              Explore Detailed Analysis <ChevronRight className="w-3.5 h-3.5" />
+        {/* Profile Completion Ring */}
+        <div className="flex items-center gap-3 bg-[#F8F9FB] border border-zinc-100 rounded-2xl px-4 py-3">
+          <div className="relative w-14 h-14">
+            <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 56 56">
+              <circle cx="28" cy="28" r="24" stroke="#E4E7EC" strokeWidth="4" fill="none"/>
+              <circle cx="28" cy="28" r="24" stroke="#0052CC" strokeWidth="4" fill="none"
+                strokeLinecap="round" strokeDasharray={`${70 * 1.508} 999`}/>
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-[#0052CC]">70%</span>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-zinc-900">Profile Completion</div>
+            <div className="text-[10px] text-zinc-500">Increase to 80% to unlock apps.</div>
+            <a href="/profile" className="text-[10px] font-bold text-[#0052CC] flex items-center gap-0.5 hover:underline mt-0.5">
+              Update Now <ArrowRight className="w-2.5 h-2.5"/>
             </a>
-          </GlassCard>
-
+          </div>
         </div>
-
       </div>
 
-      {/* Market Benchmarking (Col span 12) */}
-      <GlassCard className="border border-zinc-200 bg-white p-8 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-          
-          <div className="md:col-span-8 space-y-6">
-            <div>
-              <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Market Benchmarking</h3>
-              <p className="text-xs text-zinc-500 mt-2 leading-relaxed max-w-xl">
-                We've compared your resume against 12,000+ similar roles filled in the last 180 days. Your current experience trajectory aligns perfectly with Principal-level transitions.
-              </p>
-            </div>
-
-            <div className="flex gap-8 pt-4 border-t border-zinc-100">
-              <div>
-                <div className="text-2xl font-bold text-zinc-900 font-sans">$165k - $190k</div>
-                <div className="text-[9px] uppercase font-bold text-zinc-400 tracking-widest mt-1">EST. MARKET VALUATION</div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {STATS.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div key={i} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.08}}
+              className="bg-white border border-zinc-100 rounded-2xl p-4 hover:shadow-sm transition-all">
+              <div className="flex items-start justify-between mb-3">
+                <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center ${stat.color}`}>
+                  <Icon className="w-4 h-4"/>
+                </div>
+                {stat.badge && <span className="text-[8px] font-black text-[#0052CC] bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-wider">{stat.badge}</span>}
+                {stat.alert && <span className="text-[8px] font-bold text-amber-600">!</span>}
               </div>
-              <div className="border-l border-zinc-200 pl-8">
-                <div className="text-2xl font-bold text-zinc-900 font-sans">Elite</div>
-                <div className="text-[9px] uppercase font-bold text-zinc-400 tracking-widest mt-1">PEER RANKING</div>
+              <div className="flex items-end gap-1">
+                <span className="text-3xl font-black text-zinc-900 leading-none">{stat.value}</span>
+                {stat.suffix && <span className="text-sm text-zinc-400 font-medium mb-0.5">{stat.suffix}</span>}
               </div>
-            </div>
-          </div>
+              {stat.sub && <div className={`text-[10px] mt-1 font-medium ${stat.alert ? "text-amber-600" : "text-zinc-500"}`}>{stat.alert ? "! " : ""}{stat.sub}</div>}
+              {stat.change && (
+                <div className="flex items-center gap-1 mt-1.5">
+                  <TrendingUp className="w-3 h-3 text-emerald-500"/>
+                  <span className="text-[10px] font-bold text-emerald-600">{stat.change}</span>
+                  <div className="flex-1 h-1 bg-zinc-100 rounded-full ml-1">
+                    <motion.div className="h-full bg-[#0052CC] rounded-full" initial={{width:0}} animate={{width:"75%"}} transition={{duration:1,delay:0.5+i*0.1}}/>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
 
-          <div className="md:col-span-4 flex justify-center">
-            {/* Hologram Laptop SVG Graphics matching Image 1 */}
-            <div className="relative w-44 h-44 flex items-center justify-center">
-              <svg className="w-full h-full text-zinc-900" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Glowing mesh background */}
-                <circle cx="50" cy="50" r="30" fill="url(#orb-grad)" filter="blur(10px)" opacity="0.3" />
-                
-                {/* 3D Laptop Perspective */}
-                {/* Screen frame */}
-                <path d="M25,25 L75,25 L85,65 L15,65 Z" fill="#18181b" stroke="#3f3f46" strokeWidth="1" />
-                {/* Inner Screen */}
-                <path d="M27,27 L73,27 L82,63 L18,63 Z" fill="#09090b" />
-                
-                {/* Analytical charts on screen */}
-                <path d="M25,55 L35,45 L45,52 L55,38 L65,48 L75,32" stroke="#00d2ff" strokeWidth="1.2" strokeLinecap="round" />
-                <path d="M25,58 L35,50 L45,55 L55,42 L65,51 L75,38" stroke="#0052cc" strokeWidth="1" strokeLinecap="round" opacity="0.7" />
-                
-                {/* Laptop keyboard base */}
-                <path d="M15,65 L85,65 L95,78 L5,78 Z" fill="#27272a" stroke="#3f3f46" strokeWidth="1" />
-                {/* Hologram glow projections */}
-                <path d="M5,78 Q50,90 95,78" stroke="#0052cc" strokeWidth="0.8" opacity="0.5" />
-                
-                <defs>
-                  <linearGradient id="orb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#00d2ff" />
-                    <stop offset="100%" stopColor="#0052cc" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
+      {/* Jobs Matched */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-bold text-zinc-900">Jobs Matched For You</h2>
+            <p className="text-xs text-zinc-500">Powered by our 'Identity Intelligence' matching engine.</p>
           </div>
-
+          <a href="/jobs" className="text-xs font-bold text-[#0052CC] flex items-center gap-1 hover:underline">
+            View All Matches <ChevronRight className="w-3 h-3"/>
+          </a>
         </div>
-      </GlassCard>
 
+        <div className="grid md:grid-cols-3 gap-4">
+          {MATCHED_JOBS.map((job, i) => (
+            <motion.div key={i} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.3+i*0.1}}
+              className="bg-white border border-zinc-100 rounded-2xl p-4 hover:border-blue-200 hover:shadow-sm transition-all group">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-10 h-10 rounded-xl ${job.logoColor} flex items-center justify-center font-bold text-sm`}>
+                    {job.logo}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-zinc-900">{job.title}</div>
+                    <div className="text-xs text-zinc-500">{job.company}</div>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${job.match >= 95 ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-blue-50 text-[#0052CC] border border-blue-200"}`}>
+                  {job.match}% Match
+                </span>
+              </div>
+
+              <div className="space-y-1.5 mb-3 text-xs text-zinc-500">
+                <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3"/> {job.location}</div>
+                <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3"/> {job.salary} {job.equity ? `\u2022 ${job.equity}` : ""}</div>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {job.skills.map((s, si) => (
+                  <span key={si} className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">{s}</span>
+                ))}
+              </div>
+
+              <button disabled className="w-full py-2.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-400 bg-zinc-50 cursor-not-allowed">
+                Apply Now
+              </button>
+              <div className="text-[9px] text-amber-600 font-bold text-center mt-1.5">Complete 80% of your profile to unlock applications</div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Insight Banner */}
+      <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.6}}
+        className="bg-blue-50/70 border border-blue-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#0052CC] flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-white"/>
+          </div>
+          <div>
+            <div className="text-xs font-black text-[#0052CC] uppercase tracking-wider mb-0.5">Placify AI Insight</div>
+            <p className="text-sm text-zinc-700">
+              Based on your recent certification in "Distributed Architecture", you are now in the top 2% of candidates for 14 active "Principal Engineer" roles in our network. Update your Passport to verify this skill.
+            </p>
+          </div>
+        </div>
+        <button className="bg-zinc-900 text-white text-xs font-bold px-5 py-3 rounded-xl hover:bg-zinc-800 transition-colors whitespace-nowrap flex items-center gap-1.5">
+          Verify New Skill
+        </button>
+      </motion.div>
     </div>
   );
 }
