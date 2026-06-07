@@ -1,930 +1,731 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
-  Shield, Sparkles, ArrowRight, CheckCircle, Layers, Cpu, Award, Zap,
-  X, ChevronDown, Check, Globe, RefreshCw, BarChart2, User, Briefcase,
-  Mail, Phone, MapPin, Star, Play, Building2, Users, TrendingUp, Lock,
-  FileCheck, Search, MessageSquare, Send, Menu, Rocket, Target, Heart
+  Menu, X, Zap, ChevronRight, Shield, ShieldCheck, CheckCircle2,
+  Brain, Cloud, Palette, Globe, Star, ArrowRight, Check, Clock,
+  Users, FileSearch, Award, Lock, Cpu, BarChart3, Fingerprint,
+  BadgeCheck, TrendingUp, Sparkles, Building2, Phone, Mail,
+  MapPin, Twitter, Linkedin, Github, Instagram, ChevronDown,
+  Briefcase, Target, Eye, Layers
 } from 'lucide-react';
-import { Navbar } from '@/components/navbar';
-import { AnimatedBackground } from '@/components/ui/animated-bg';
 
-/* ─ Fade-in utility ─ */
-function FadeIn({ children, delay = 0, direction = "up", className = "" }: {
-  children: React.ReactNode; delay?: number; direction?: "up"|"down"|"left"|"right"|"none"; className?: string;
-}) {
+/* --- helpers --- */
+const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
+const scaleIn = { hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 } };
+const slideLeft = { hidden: { opacity: 0, x: -40 }, visible: { opacity: 1, x: 0 } };
+const slideRight = { hidden: { opacity: 0, x: 40 }, visible: { opacity: 1, x: 0 } };
+
+function SectionHeading({ badge, title, subtitle, light = false }: { badge?: string; title: string; subtitle: string; light?: boolean }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  const dirs = { up:[0,40], down:[0,-40], left:[40,0], right:[-40,0], none:[0,0] };
-  const [x, y] = dirs[direction];
+  const inView = useInView(ref, { once: true, margin: '-80px' });
   return (
-    <motion.div ref={ref} initial={{ opacity:0, x, y }} animate={inView ? { opacity:1, x:0, y:0 } : {}}
-      transition={{ duration:0.75, delay, ease:[0.23,1,0.32,1] }} className={className}>
-      {children}
+    <motion.div ref={ref} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6 }} className="text-center max-w-3xl mx-auto mb-16">
+      {badge && <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-5 ${light ? 'bg-white/15 text-white/90' : 'bg-blue-50 text-[#1A56DB] border border-blue-100'}`}>{badge}</span>}
+      <h2 className={`font-serif text-4xl md:text-5xl mb-5 ${light ? 'text-white' : 'text-[#111827]'}`}>{title}</h2>
+      <p className={`text-lg leading-relaxed ${light ? 'text-blue-100' : 'text-[#6B7280]'}`}>{subtitle}</p>
     </motion.div>
   );
 }
 
-/* ─ Animated Counter ─ */
-function Counter({ value, suffix="" }: { value: number; suffix?: string }) {
+function AnimatedCounter({ target, suffix = '', duration = 2 }: { target: number; suffix?: string; duration?: number }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (!inView) return;
     let start = 0;
-    const step = value / 60;
-    const timer = setInterval(() => {
+    const step = target / (duration * 60);
+    const interval = setInterval(() => {
       start += step;
-      if (start >= value) { setCount(value); clearInterval(timer); }
+      if (start >= target) { setCount(target); clearInterval(interval); }
       else setCount(Math.floor(start));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [inView, value]);
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+    }, 1000 / 60);
+    return () => clearInterval(interval);
+  }, [inView, target, duration]);
+  return <span ref={ref}>{count}{suffix}</span>;
 }
 
-/* ─ Stats data ─ */
-const STATS = [
-  { value: 2800, suffix: "+", label: "Verified Candidates" },
-  { value: 94, suffix: "%", label: "Placement Rate" },
-  { value: 150, suffix: "+", label: "Partner Companies" },
-  { value: 72, suffix: "hrs", label: "Avg. Time-to-Hire" },
-];
-
-/* ─ Services ─ */
-const SERVICES = [
-  {
-    icon: <Cpu className="w-6 h-6"/>,
-    title: "AI Resume Screening",
-    desc: "Intelligent parsing of resumes with semantic matching against JD requirements. Our AI cross-checks skills, experience, and cultural fit automatically.",
-    color: "from-violet-500/10 to-purple-500/10",
-  },
-  {
-    icon: <Shield className="w-6 h-6"/>,
-    title: "Candidate Verification",
-    desc: "End-to-end background verification covering employment history, education credentials, certifications, and skill assessments with fraud detection.",
-    color: "from-emerald-500/10 to-teal-500/10",
-  },
-  {
-    icon: <Layers className="w-6 h-6"/>,
-    title: "Smart Talent Pipeline",
-    desc: "Ashby-style Kanban board for managing candidate stages. Drag, drop, and move talent through hiring stages with full audit trails.",
-    color: "from-blue-500/10 to-cyan-500/10",
-  },
-  {
-    icon: <BarChart2 className="w-6 h-6"/>,
-    title: "Hiring Analytics",
-    desc: "Real-time dashboards tracking pipeline velocity, offer acceptance, diversity metrics, and recruiter performance with actionable insights.",
-    color: "from-amber-500/10 to-orange-500/10",
-  },
-  {
-    icon: <FileCheck className="w-6 h-6"/>,
-    title: "Candidate Passport",
-    desc: "A verified, shareable digital profile with QR code — trusted credentials candidates carry from role to role, reducing re-screening costs.",
-    color: "from-rose-500/10 to-pink-500/10",
-  },
-  {
-    icon: <Globe className="w-6 h-6"/>,
-    title: "Enterprise Integrations",
-    desc: "Native connectors to ATS platforms, HRMS systems, LinkedIn, and job boards. Sync your existing tools without workflow disruption.",
-    color: "from-indigo-500/10 to-blue-500/10",
-  },
-];
-
-/* ─ Workflow steps ─ */
-const CANDIDATE_STEPS = [
-  { num: "01", title: "Upload Resume", desc: "Submit your resume or LinkedIn profile. Our AI parser extracts all structured data in seconds." },
-  { num: "02", title: "AI Verification", desc: "We verify employment history, education, skills, and run integrity checks automatically." },
-  { num: "03", title: "Receive Passport", desc: "Get your verified digital Passport — a shareable URL, QR code, and PDF with trust scores." },
-  { num: "04", title: "Get Matched", desc: "Our semantic engine matches you to live opportunities that align with your verified profile." },
-];
-const COMPANY_STEPS = [
-  { num: "01", title: "Post Job Description", desc: "Paste your JD. Our AI synthesizes required skills, weights, and candidate persona automatically." },
-  { num: "02", title: "Semantic Matching", desc: "We scan our verified talent pool and surface pre-screened candidates ranked by fit score." },
-  { num: "03", title: "Review Pipeline", desc: "Manage candidates in a Kanban board with notes, interview scores, and collaboration tools." },
-  { num: "04", title: "Hire with Confidence", desc: "Every shortlisted candidate is 100% verified. Reduce bad hires and reduce re-screening by 85%." },
-];
-
-/* ─ Pricing ─ */
-const PLANS = [
-  {
-    name: "Starter",
-    price: "₹9,999",
-    period: "/month",
-    desc: "Perfect for startups and small teams beginning structured hiring.",
-    features: ["Up to 5 active roles", "50 candidate screenings/mo", "Basic pipeline kanban", "Email support", "Standard reports"],
-    cta: "Get Started",
-    popular: false,
-  },
-  {
-    name: "Growth",
-    price: "₹24,999",
-    period: "/month",
-    desc: "Built for scaling teams that need speed, accuracy, and integrations.",
-    features: ["Up to 25 active roles", "Unlimited screenings", "Advanced AI matching", "Priority support", "Analytics dashboard", "ATS integrations", "Candidate Passport"],
-    cta: "Start Free Trial",
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    desc: "Tailored solutions for large enterprises with complex hiring needs.",
-    features: ["Unlimited roles & screenings", "Custom AI models", "Dedicated account manager", "SLA guarantees", "Custom integrations", "HRMS sync", "White-label option"],
-    cta: "Contact Sales",
-    popular: false,
-  },
-];
-
-/* ─ Testimonials ─ */
-const TESTIMONIALS = [
-  { name: "Ananya Sharma", role: "VP Talent, FinCore Technologies", text: "Placify reduced our time-to-hire from 45 days to 11 days. The candidate verification alone saved us 3 bad hires last quarter.", stars: 5 },
-  { name: "Rahul Mehra", role: "HR Director, NeoScale Ventures", text: "The AI matching is remarkably accurate. We saw a 91% offer acceptance rate — up from 64% — within the first month.", stars: 5 },
-  { name: "Priya Kulkarni", role: "Chief People Officer, BuildRight Corp", text: "The Candidate Passport is a game-changer. Candidates love it, and we trust every shortlist that comes through.", stars: 5 },
-];
-
-/* ─ FAQs ─ */
-const FAQS = [
-  { q: "How does the AI verification work?", a: "Our AI cross-references candidate-provided data against public records, employment databases, educational registries, and GitHub/portfolio analysis using a multi-layer verification pipeline." },
-  { q: "How long does it take to get a Candidate Passport?", a: "Most profiles are verified and Passport-activated within 24–48 hours of submission. Expedited processing is available for enterprise clients." },
-  { q: "Can we integrate Placify with our existing ATS?", a: "Yes. We support native integrations with Greenhouse, Lever, Workday, SAP SuccessFactors, and offer a REST API for custom integrations." },
-  { q: "Is our data secure?", a: "All data is encrypted at rest (AES-256) and in transit (TLS 1.3). We are SOC 2 Type II compliant and GDPR-ready." },
-  { q: "What is the minimum contract duration?", a: "Our Starter and Growth plans are available month-to-month with no lock-in. Enterprise plans are typically annual with custom terms." },
-];
-
-/* ─ Company logos (text placeholders with premium styling) ─ */
-const LOGOS = ["TechCorp", "NeoScale", "BuildRight", "FinCore", "DataPeak", "InnoVenture", "CloudNova", "GrowthLab"];
-
-export default function Home() {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authTab, setAuthTab] = useState<'candidate' | 'company' | 'admin'>('company');
-  const [showDemoModal, setShowDemoModal] = useState(false);
-  const [demoForm, setDemoForm] = useState({ name: '', email: '', company: '', size: '10-50', message: '' });
-  const [demoSubmitted, setDemoSubmitted] = useState(false);
-  const [authForm, setAuthForm] = useState({ email: '', password: '' });
-  const [authLoading, setAuthLoading] = useState(false);
-  const [workflowTab, setWorkflowTab] = useState<'candidate'|'company'>('company');
-  const [openFaq, setOpenFaq] = useState<number|null>(null);
-  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
-  const [contactSent, setContactSent] = useState(false);
-
-  // Live counters
-  const [liveCount, setLiveCount] = useState({ passports: 2847, matches: 18921 });
+/* ============ HEADER ============ */
+function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
-    const id = setInterval(() => setLiveCount(p => ({ passports: p.passports + Math.floor(Math.random()*2), matches: p.matches + Math.floor(Math.random()*4) })), 3500);
-    return () => clearInterval(id);
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
   }, []);
-
-  const submitDemo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demoForm.name || !demoForm.email) return;
-    setDemoSubmitted(true);
-    setTimeout(() => { setShowDemoModal(false); setDemoSubmitted(false); setDemoForm({ name:'', email:'', company:'', size:'10-50', message:'' }); }, 2800);
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setTimeout(() => {
-      setAuthLoading(false);
-      setShowAuthModal(false);
-      window.location.href = '/dashboard';
-    }, 1400);
-  };
-
-  const submitContact = (e: React.FormEvent) => {
-    e.preventDefault();
-    setContactSent(true);
-    setTimeout(() => setContactSent(false), 3000);
-    setContactForm({ name:'', email:'', message:'' });
-  };
+  const navLinks = ['How it Works', 'Services', 'AI Hiring', 'Pricing'];
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
-      <Navbar onLogin={(tab) => { setAuthTab(tab); setShowAuthModal(true); }} onDemo={() => setShowDemoModal(true)} />
+    <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'bg-transparent'}`}>
+      <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
+        <a href="#" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1A56DB] to-[#3B82F6] flex items-center justify-center">
+            <Zap className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-xl font-extrabold tracking-tight text-[#111827]">PLACIFY</span>
+        </a>
+        <nav className="hidden md:flex items-center gap-8">
+          {navLinks.map(l => (
+            <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`} className="text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] transition-colors">{l}</a>
+          ))}
+        </nav>
+        <div className="hidden md:flex items-center gap-4">
+          <a href="/login" className="text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] transition-colors">Login</a>
+          <a href="/register" className="px-5 py-2.5 bg-[#1A56DB] text-white text-[13px] font-bold rounded-xl hover:bg-[#1E40AF] transition-colors shadow-[0_2px_8px_rgba(26,86,219,0.3)]">Sign Up</a>
+        </div>
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-[#111827]">
+          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="md:hidden overflow-hidden bg-white border-t border-gray-100">
+            <div className="px-6 py-6 space-y-4">
+              {navLinks.map(l => <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMobileOpen(false)} className="block text-sm font-semibold text-[#374151]">{l}</a>)}
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <a href="/login" className="flex-1 text-center py-2.5 text-sm font-semibold text-[#6B7280] border border-gray-200 rounded-xl">Login</a>
+                <a href="/register" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-[#1A56DB] rounded-xl">Sign Up</a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
+  );
+}
+/* ============ HERO ============ */
+function HeroSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <section ref={ref} className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-white">
+      <div className="absolute inset-0 bg-grid opacity-60" />
+      <div className="absolute top-20 -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-50 to-blue-100/30 blur-3xl" />
+      <div className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-50 to-purple-50/20 blur-3xl" />
 
-      {/* ══════════════════════════════════════════════════════════════ HERO */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden hero-mesh pt-20">
-        <AnimatedBackground />
-
-        {/* Grid overlay */}
-        <div className="absolute inset-0 z-0" style={{
-          backgroundImage: 'linear-gradient(rgba(201,169,110,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,169,110,0.04) 1px, transparent 1px)',
-          backgroundSize: '64px 64px'
-        }} />
-
-        <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 badge-gold mb-8"
-          >
-            <Sparkles className="w-3 h-3" />
-            <span>AI-Powered Hiring Operating System</span>
-            <Sparkles className="w-3 h-3" />
+      <div className="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/60 mb-8">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-amber-700">Best Hiring Intelligence</span>
           </motion.div>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-6xl md:text-7xl lg:text-8xl font-bold leading-[1.06] tracking-tight mb-6"
-          >
-            <span className="font-serif italic text-dark-gradient">Hire Smarter.</span>
-            <br />
-            <span className="text-dark-gradient">Hire </span>
-            <span className="text-gold-gradient font-serif italic">Verified.</span>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.15 }}
+            className="font-serif text-5xl md:text-6xl lg:text-[68px] leading-[1.08] text-[#111827] mb-6">
+            Hire Better.<br/>
+            <span className="text-[#1A56DB]">Hire Faster.</span><br/>
+            Hire Verified.
           </motion.h1>
 
-          {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
-          >
-            Placify is the verified talent platform that eliminates mis-hires, slashes screening time, and builds trust between companies and candidates through AI-powered verification.
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-lg text-[#6B7280] leading-relaxed max-w-lg mb-10">
+            The ultimate Hiring Intelligence Operating System for modern enterprises. Leverage AI-driven verification and data-rich talent scoring.
           </motion.p>
 
-          {/* CTA Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
-          >
-            <button onClick={() => setShowDemoModal(true)} className="btn-primary text-sm px-8 py-4 rounded-2xl glow-gold-hover group flex items-center gap-2">
-              <span>Book a Free Demo</span>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-wrap gap-4">
+            <a href="#services" className="group inline-flex items-center gap-2 px-7 py-3.5 bg-[#1A56DB] text-white font-bold text-sm rounded-xl shadow-[0_4px_16px_rgba(26,86,219,0.35)] hover:bg-[#1E40AF] hover:shadow-[0_8px_30px_rgba(26,86,219,0.45)] transition-all duration-300">
+              Explore PLACIFY
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={() => { setAuthTab('candidate'); setShowAuthModal(true); }}
-              className="btn-outline text-sm px-8 py-4 rounded-2xl flex items-center gap-2"
-            >
-              <User className="w-4 h-4" /> Candidate Login
-            </button>
-            <button
-              onClick={() => { setAuthTab('company'); setShowAuthModal(true); }}
-              className="btn-outline text-sm px-8 py-4 rounded-2xl flex items-center gap-2"
-            >
-              <Briefcase className="w-4 h-4" /> Company Login
-            </button>
+            </a>
+            <a href="#contact" className="inline-flex items-center gap-2 px-7 py-3.5 text-[#1A56DB] font-bold text-sm rounded-xl border-2 border-[#1A56DB]/20 hover:border-[#1A56DB]/50 hover:bg-blue-50/50 transition-all duration-300">
+              Book a Demo
+            </a>
           </motion.div>
 
-          {/* Live Stats Ticker */}
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12"
-          >
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-zinc-500 font-medium">
-                <span className="text-zinc-800 font-bold tabular-nums">{liveCount.passports.toLocaleString()}</span> Passports Issued Live
-              </span>
+          <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex items-center gap-6 mt-10 pt-8 border-t border-gray-100">
+            <div className="flex -space-x-2">
+              {[0, 1, 2, 3, 4].map(i => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-white" style={{ background: `linear-gradient(135deg, ${['#1A56DB','#3B82F6','#6366F1','#8B5CF6','#EC4899'][i]}, ${['#3B82F6','#60A5FA','#818CF8','#A78BFA','#F472B6'][i]})` }} />
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-xs text-zinc-500 font-medium">
-                <span className="text-zinc-800 font-bold tabular-nums">{liveCount.matches.toLocaleString()}</span> Matches Made
-              </span>
-            </div>
+            <p className="text-sm text-[#6B7280]"><span className="font-bold text-[#111827]">500+</span> enterprises trust PLACIFY</p>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-40"
-        >
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Scroll</span>
-          <ChevronDown className="w-4 h-4 text-zinc-400" />
-        </motion.div>
-      </section>
+        <motion.div initial={{ opacity: 0, x: 50, rotateY: -8 }} animate={inView ? { opacity: 1, x: 0, rotateY: 0 } : {}} transition={{ duration: 0.8, delay: 0.3 }}
+          className="relative flex justify-center lg:justify-end">
+          <motion.div
+            animate={{ y: [-8, 8, -8] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-full max-w-[400px]"
+          >
+            <div className="relative bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
+              <div className="bg-gradient-to-r from-[#1A56DB] to-[#3B82F6] p-6 pb-12 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-white/90" />
+                    <span className="text-white font-bold text-sm tracking-wide">CANDIDATE PASSPORT</span>
+                  </div>
+                  <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full text-[10px] font-bold text-white tracking-wider">VERIFIED</span>
+                </div>
+                <p className="text-blue-100 text-xs mt-3 relative z-10">Issued by PLACIFY Intelligence Platform</p>
+              </div>
 
-      {/* ══════════════════════════════════════════════════════════════ MARQUEE */}
-      <div className="py-6 border-y border-zinc-100 bg-zinc-50/60 overflow-hidden">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS].map((logo, i) => (
-            <span key={i} className="mx-10 text-sm font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-3">
-              <span className="w-1 h-1 rounded-full bg-zinc-200 inline-block"/>
-              {logo}
-            </span>
+              <div className="p-6 -mt-6">
+                <div className="flex items-end gap-4 mb-6">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1A56DB] to-[#6366F1] flex items-center justify-center text-white text-xl font-bold shadow-lg ring-4 ring-white">
+                    AP
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#111827] text-lg">Arjun Patel</h3>
+                    <p className="text-[#6B7280] text-sm">Senior Full-Stack Engineer</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3.5 border border-green-100">
+                    <p className="text-[10px] font-bold text-green-600 tracking-wider uppercase mb-1">ATS Score</p>
+                    <p className="text-2xl font-extrabold text-green-700">98.4<span className="text-sm font-bold">%</span></p>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3.5 border border-blue-100">
+                    <p className="text-[10px] font-bold text-[#1A56DB] tracking-wider uppercase mb-1">Trust Index</p>
+                    <p className="text-2xl font-extrabold text-[#1A56DB]">RA<span className="text-sm font-bold">+</span></p>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  {[
+                    { label: 'Identity Verified', icon: Fingerprint, color: 'text-emerald-600 bg-emerald-50' },
+                    { label: 'Employment History', icon: Briefcase, color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Skills Assessment', icon: Award, color: 'text-purple-600 bg-purple-50' },
+                  ].map((b) => (
+                    <div key={b.label} className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50/80">
+                      <div className={`w-8 h-8 rounded-lg ${b.color} flex items-center justify-center`}>
+                        <b.icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-semibold text-[#374151]">{b.label}</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <motion.div animate={{ y: [-5, 5, -5] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              className="absolute -left-6 top-32 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2 border border-gray-100">
+              <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-green-600 uppercase">Match Rate</p>
+                <p className="text-sm font-extrabold text-[#111827]">94.2%</p>
+              </div>
+            </motion.div>
+
+            <motion.div animate={{ y: [5, -5, 5] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              className="absolute -right-4 bottom-20 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2 border border-gray-100">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+                <ShieldCheck className="w-4 h-4 text-[#1A56DB]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-[#1A56DB] uppercase">Verified</p>
+                <p className="text-sm font-extrabold text-[#111827]">100%</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+/* ============ EVOLUTION OF HIRING ============ */
+function EvolutionSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  const traditional = [
+    { title: 'Manual Resume Sifting', desc: 'Recruiters spend 6-8 seconds per resume' },
+    { title: 'Gut-Feel Decisions', desc: 'No data, no validation' },
+    { title: 'Ghost Post-Credentials', desc: 'Interviewing unreliable talent, ghost candidates in interviews' },
+  ];
+  const placify = [
+    { title: 'AI Match Precision', desc: '94%+ accuracy in candidate-role matching' },
+    { title: 'Verifiable Verification', desc: 'Background, skill, and trust scoring for every candidate' },
+    { title: 'Joinable Candidates', desc: 'Candidates with real commitment scores, verified identity' },
+  ];
+
+  return (
+    <section id="how-it-works" className="py-24 md:py-32 bg-[#F8FAFC]">
+      <div className="max-w-7xl mx-auto px-6" ref={ref}>
+        <SectionHeading badge="Why Placify" title="The Evolution of Hiring" subtitle="Traditional hiring is broken, manual, and risky. PLACIFY injects intelligence into every step of the funnel." />
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideLeft} transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="px-6 py-5 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <X className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#111827]">Traditional Hiring</h3>
+                <p className="text-xs text-[#6B7280]">Outdated, risky, slow</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              {traditional.map((item, i) => (
+                <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                  className="flex items-start gap-4 p-4 rounded-xl bg-red-50/50 border border-red-100/50">
+                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="w-4 h-4 text-red-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#111827] text-sm mb-1">{item.title}</h4>
+                    <p className="text-[#6B7280] text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideRight} transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-white rounded-2xl border border-blue-200/60 overflow-hidden shadow-sm ring-1 ring-blue-100/50">
+            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#1A56DB] flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#111827]">Placify Intelligence</h3>
+                <p className="text-xs text-[#1A56DB]">AI-powered, verified, fast</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              {placify.map((item, i) => (
+                <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
+                  className="flex items-start gap-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100/50">
+                  <div className="w-8 h-8 rounded-lg bg-[#1A56DB] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#111827] text-sm mb-1">{item.title}</h4>
+                    <p className="text-[#6B7280] text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+/* ============ CAPABILITIES ============ */
+function CapabilitiesSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  const caps = [
+    { icon: FileSearch, title: 'ATS Screening', desc: 'AI-powered 94% accuracy matching. Real-time skill detection, experience validation, and salary benchmarking.', color: '#1A56DB', bg: 'bg-blue-50' },
+    { icon: ShieldCheck, title: 'Background Verification', desc: 'Automated checks for education, past employment, professional certifications & identity.', color: '#059669', bg: 'bg-emerald-50' },
+    { icon: Layers, title: 'Work Samples', desc: 'Real-time hands-on challenges designed by industry experts to evaluate practical execution.', color: '#7C3AED', bg: 'bg-purple-50' },
+    { icon: Shield, title: 'AI Trust Score', desc: 'Proprietary algorithm aggregating 12+ data signals into a single reliability index.', color: '#D97706', bg: 'bg-amber-50' },
+  ];
+
+  return (
+    <section id="services" className="py-24 md:py-32 bg-white">
+      <div className="max-w-7xl mx-auto px-6" ref={ref}>
+        <SectionHeading badge="Capabilities" title="Platform Capabilities" subtitle="Production-grade tools for every stage of talent acquisition." />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {caps.map((c, i) => (
+            <motion.div key={i} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
+              transition={{ duration: 0.5, delay: 0.15 * i }}
+              whileHover={{ y: -6, boxShadow: '0 20px 50px rgba(0,0,0,0.08)' }}
+              className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:border-blue-100 transition-all duration-300 cursor-default">
+              <div className={`w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center mb-5`}>
+                <c.icon className="w-6 h-6" style={{ color: c.color }} />
+              </div>
+              <h3 className="font-bold text-[#111827] text-lg mb-2">{c.title}</h3>
+              <p className="text-[#6B7280] text-sm leading-relaxed">{c.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6, delay: 0.5 }}
+          className="grid lg:grid-cols-5 gap-6 rounded-3xl overflow-hidden">
+          <div className="lg:col-span-3 bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-3xl p-8 md:p-10 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(26,86,219,0.15),transparent_60%)]" />
+            <div className="relative z-10">
+              <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold text-blue-300 tracking-wider uppercase mb-4">One Unified Interface</span>
+              <h3 className="text-white font-bold text-2xl md:text-3xl mb-3">One Unified Interface for All Hiring</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md">
+                Manage end-to-end hiring from a single dashboard. Track candidates, run verification, and score talent — all in one place.
+              </p>
+              <div className="space-y-3">
+                {[85, 70, 95, 60].map((w, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400" />
+                    </div>
+                    <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={inView ? { width: `${w}%` } : {}} transition={{ duration: 1.2, delay: 0.8 + i * 0.15 }}
+                        className="h-full rounded-full bg-gradient-to-r from-[#1A56DB] to-[#3B82F6]" />
+                    </div>
+                    <span className="text-[11px] text-gray-500 font-mono w-8">{w}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 md:p-10 border border-blue-100/50 flex flex-col justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 border border-blue-100">
+              <Shield className="w-7 h-7 text-[#1A56DB]" />
+            </div>
+            <h3 className="font-bold text-[#111827] text-xl mb-3">AI Trust Score</h3>
+            <p className="text-[#6B7280] text-sm leading-relaxed mb-6">
+              Our proprietary algorithm aggregates 12+ data signals including employment history, education verification, skill assessments, and behavioral analysis into a single, actionable reliability index.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Data Signals', val: '12+' },
+                { label: 'Accuracy', val: '99.2%' },
+                { label: 'Processing', val: '<2s' },
+                { label: 'Coverage', val: 'Global' },
+              ].map((s) => (
+                <div key={s.label} className="bg-white rounded-xl p-3 border border-blue-100/50">
+                  <p className="text-[10px] font-bold text-[#1A56DB] uppercase tracking-wider">{s.label}</p>
+                  <p className="text-lg font-extrabold text-[#111827]">{s.val}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+/* ============ INDUSTRY SECTORS ============ */
+function SectorsSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  const sectors = [
+    { icon: Brain, label: 'AI & Machine Learning' },
+    { icon: Cloud, label: 'DevOps & Cloud' },
+    { icon: Palette, label: 'UI/UX Design' },
+    { icon: Globe, label: 'Media & Crypto' },
+  ];
+
+  return (
+    <section id="ai-hiring" className="py-24 md:py-32 bg-gradient-to-br from-[#1A56DB] to-[#1E40AF] relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl" />
+      </div>
+      <div className="relative max-w-7xl mx-auto px-6" ref={ref}>
+        <SectionHeading light title="Hiring Intelligence for Every Sector" subtitle="From AI startups to enterprise cloud, PLACIFY adapts to your industry's unique talent requirements." />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {sectors.map((s, i) => (
+            <motion.div key={i} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
+              transition={{ duration: 0.5, delay: 0.1 * i }}
+              whileHover={{ y: -6, scale: 1.03 }}
+              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center border border-white/15 hover:bg-white/20 transition-all duration-300 cursor-default group">
+              <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-5 group-hover:bg-white/25 transition-colors">
+                <s.icon className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-white font-bold text-lg">{s.label}</h3>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6, delay: 0.5 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-white/10">
+          {[
+            { label: 'Candidates Verified', val: '150K+' },
+            { label: 'Enterprise Clients', val: '500+' },
+            { label: 'Avg Hire Time', val: '14 days' },
+            { label: 'Accuracy Rate', val: '94%' },
+          ].map((s, i) => (
+            <div key={i} className="text-center">
+              <p className="text-3xl md:text-4xl font-extrabold text-white mb-1">{s.val}</p>
+              <p className="text-blue-200 text-sm font-medium">{s.label}</p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+/* ============ PRICING ============ */
+function PricingSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const [annual, setAnnual] = useState(false);
+
+  const plans = [
+    {
+      name: 'Startup',
+      price: annual ? 399 : 499,
+      desc: 'Perfect for small teams getting started with intelligent hiring.',
+      features: ['10 Active Job Postings', '50 Verified Candidates/mo', 'AI Screening', 'Email Support', 'Basic Analytics'],
+      cta: 'Start 14-Day Trial',
+      popular: false,
+    },
+    {
+      name: 'Growth',
+      price: annual ? 1039 : 1299,
+      desc: 'Scale your hiring with advanced tools and priority support.',
+      features: ['50 Active Job Postings', 'Bulk Screening Unlocked', 'Priority Support & Analytics Toolkit', 'Custom Workflows', 'Team Collaboration'],
+      cta: 'Get Started Now',
+      popular: true,
+    },
+    {
+      name: 'Enterprise',
+      price: null,
+      desc: 'Tailored solutions for large organizations with complex needs.',
+      features: ['Unlimited Job Postings', 'API Access', 'Custom Integrations', '24/7 STS Inspection', 'Dedicated Account Manager'],
+      cta: 'Talk to Sales',
+      popular: false,
+    },
+  ];
+
+  return (
+    <section id="pricing" className="py-24 md:py-32 bg-[#F8FAFC]">
+      <div className="max-w-7xl mx-auto px-6" ref={ref}>
+        <SectionHeading badge="Pricing" title="Transparent Intelligence Pricing" subtitle="Choose the plan that matches your hiring needs. All plans include core AI features." />
+
+        <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex justify-center mb-14">
+          <div className="inline-flex items-center bg-white rounded-xl p-1.5 border border-gray-200 shadow-sm">
+            <button onClick={() => setAnnual(false)} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${!annual ? 'bg-[#1A56DB] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111827]'}`}>Monthly</button>
+            <button onClick={() => setAnnual(true)} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${annual ? 'bg-[#1A56DB] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111827]'}`}>
+              Annually <span className={annual ? 'text-green-200' : 'text-emerald-500'}>(Save 20%)</span>
+            </button>
+          </div>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {plans.map((p, i) => (
+            <motion.div key={p.name} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
+              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+              whileHover={{ y: -8, rotateX: 2, rotateY: i === 0 ? 2 : i === 2 ? -2 : 0 }}
+              className={`relative rounded-3xl p-8 transition-all duration-300 ${
+                p.popular
+                  ? 'bg-gradient-to-br from-[#1A56DB] to-[#1E40AF] text-white shadow-[0_20px_60px_rgba(26,86,219,0.3)] scale-[1.03] z-10'
+                  : 'bg-white border border-gray-200 shadow-sm hover:shadow-lg'
+              }`}>
+              {p.popular && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full text-[10px] font-extrabold text-white uppercase tracking-widest shadow-lg">
+                  Most Popular
+                </div>
+              )}
+              <h3 className={`font-bold text-lg mb-2 ${p.popular ? 'text-white' : 'text-[#111827]'}`}>{p.name}</h3>
+              <p className={`text-sm mb-5 ${p.popular ? 'text-blue-100' : 'text-[#6B7280]'}`}>{p.desc}</p>
+
+              <div className="mb-6">
+                {p.price !== null ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-4xl font-extrabold ${p.popular ? 'text-white' : 'text-[#111827]'}`}>${p.price.toLocaleString()}</span>
+                    <span className={`text-sm ${p.popular ? 'text-blue-200' : 'text-[#6B7280]'}`}>/mo</span>
+                  </div>
+                ) : (
+                  <span className={`text-4xl font-extrabold ${p.popular ? 'text-white' : 'text-[#111827]'}`}>Custom</span>
+                )}
+              </div>
+
+              <div className="space-y-3 mb-8">
+                {p.features.map(f => (
+                  <div key={f} className="flex items-center gap-3">
+                    <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${p.popular ? 'text-blue-200' : 'text-emerald-500'}`} />
+                    <span className={`text-sm ${p.popular ? 'text-blue-50' : 'text-[#374151]'}`}>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
+                p.popular
+                  ? 'bg-white text-[#1A56DB] hover:bg-blue-50 shadow-lg'
+                  : 'bg-[#1A56DB] text-white hover:bg-[#1E40AF] shadow-[0_4px_16px_rgba(26,86,219,0.3)]'
+              }`}>
+                {p.cta} <ArrowRight className="w-4 h-4" />
+              </motion.button>
+            </motion.div>
           ))}
         </div>
       </div>
+    </section>
+  );
+}
+/* ============ CTA / CONTACT ============ */
+function CTASection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const [formData, setFormData] = useState({ name: '', email: '', companySize: '', message: '' });
 
-      {/* ══════════════════════════════════════════════════════════════ STATS */}
-      <section className="py-24 px-6 bg-white" id="about">
-        <div className="max-w-7xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="badge-gold mb-4 inline-block">Our Impact</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-dark-gradient mt-2">
-              Numbers That <span className="font-serif italic text-gold-gradient">Speak</span>
-            </h2>
-          </FadeIn>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {STATS.map((s, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <div className="glass rounded-3xl p-8 text-center card-lift border border-zinc-100 group">
-                  <div className="text-5xl font-black text-dark-gradient mb-2 tabular-nums">
-                    <Counter value={s.value} suffix={s.suffix} />
-                  </div>
-                  <p className="text-sm text-zinc-500 font-semibold uppercase tracking-wider">{s.label}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ SERVICES */}
-      <section id="services" className="py-28 px-6 bg-zinc-50/50">
-        <div className="max-w-7xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="badge-gold mb-4 inline-block">What We Do</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-2">
-              <span className="text-dark-gradient">Everything You Need</span>
-              <br />
-              <span className="font-serif italic text-gold-gradient">To Hire Confidently</span>
-            </h2>
-            <p className="text-zinc-500 max-w-xl mx-auto mt-4 font-medium leading-relaxed">
-              A complete hiring operating system — from intelligent sourcing to verified onboarding.
+  return (
+    <section id="contact" className="py-24 md:py-32 bg-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid opacity-40" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-50/50 to-transparent rounded-full blur-3xl" />
+      <div className="relative max-w-7xl mx-auto px-6" ref={ref}>
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideLeft} transition={{ duration: 0.6 }}>
+            <span className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 bg-blue-50 text-[#1A56DB] border border-blue-100">Get Started</span>
+            <h2 className="font-serif text-4xl md:text-5xl text-[#111827] mb-5">Upgrade Your Hiring Intelligence Today.</h2>
+            <p className="text-lg text-[#6B7280] leading-relaxed mb-8">
+              Stop wasting time with ATS failures. Join 500+ top-tier companies using PLACIFY to build their dream teams.
             </p>
-          </FadeIn>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SERVICES.map((s, i) => (
-              <FadeIn key={i} delay={i * 0.08}>
-                <div className={`relative rounded-3xl p-7 border border-zinc-100 bg-gradient-to-br ${s.color} card-lift group cursor-default overflow-hidden`}>
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-zinc-700 mb-5 group-hover:scale-110 transition-transform">
-                    {s.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-zinc-900 mb-2">{s.title}</h3>
-                  <p className="text-sm text-zinc-600 leading-relaxed">{s.desc}</p>
-
-                  {/* Hover arrow */}
-                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowRight className="w-5 h-5 text-zinc-400" />
-                  </div>
+            <div className="space-y-4 mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-emerald-600" />
                 </div>
-              </FadeIn>
-            ))}
-          </div>
+                <span className="text-sm font-semibold text-[#374151]">Trusted by 500+ Enterprises Globally</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                </div>
+                <span className="text-sm font-semibold text-[#374151]">ISO 4,100 &amp; SOC2 Compliant Platform</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { val: '500+', label: 'Companies' },
+                { val: '150K+', label: 'Hires Made' },
+                { val: '99.2%', label: 'Uptime' },
+              ].map(s => (
+                <div key={s.label} className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-xl font-extrabold text-[#1A56DB]">{s.val}</p>
+                  <p className="text-xs font-medium text-[#6B7280] mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideRight} transition={{ duration: 0.6, delay: 0.2 }}>
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-[0_8px_40px_rgba(0,0,0,0.06)] p-8 md:p-10">
+              <h3 className="font-bold text-xl text-[#111827] mb-1">Book Your Intelligence Demo</h3>
+              <p className="text-sm text-[#6B7280] mb-8">Send to us or book your 1:1 demo and get started</p>
+
+              <form className="space-y-5" onSubmit={e => e.preventDefault()}>
+                <div>
+                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Full Name</label>
+                  <input type="text" placeholder="John Doe" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Work Email</label>
+                  <input type="email" placeholder="john@company.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Company Size</label>
+                  <select value={formData.companySize} onChange={e => setFormData({ ...formData, companySize: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all appearance-none">
+                    <option value="">Select company size</option>
+                    <option value="1-50">1-50 employees</option>
+                    <option value="51-200">51-200 employees</option>
+                    <option value="201-1000">201-1,000 employees</option>
+                    <option value="1000+">1,000+ employees</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Message</label>
+                  <textarea rows={4} placeholder="Tell us about your hiring needs..." value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all resize-none" />
+                </div>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 bg-[#1A56DB] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(26,86,219,0.35)] hover:bg-[#1E40AF] transition-colors">
+                  Book My Intelligence Demo <ArrowRight className="w-4 h-4" />
+                </motion.button>
+              </form>
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
+/* ============ FOOTER ============ */
+function Footer() {
+  const columns = [
+    { title: 'Product', links: ['Features', 'ATS', 'Verification', 'Passport', 'Trust Score'] },
+    { title: 'Resources', links: ['Blog', 'Case Studies', 'Documentation', 'API Reference'] },
+    { title: 'Legal', links: ['Privacy Policy', 'Terms', 'SOC2 Compliance', 'Data Processing'] },
+  ];
 
-      {/* ══════════════════════════════════════════════════════════════ HOW IT WORKS */}
-      <section id="how-it-works" className="py-28 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-12">
-            <span className="badge-gold mb-4 inline-block">How It Works</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-2">
-              <span className="text-dark-gradient">Simple Process,</span>{" "}
-              <span className="font-serif italic text-gold-gradient">Remarkable Results</span>
-            </h2>
-          </FadeIn>
-
-          {/* Tab switcher */}
-          <div className="flex items-center justify-center mb-12">
-            <div className="inline-flex glass rounded-2xl p-1.5 border border-zinc-100 shadow-sm">
-              {(['company', 'candidate'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setWorkflowTab(tab)}
-                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all capitalize ${
-                    workflowTab === tab
-                      ? 'bg-zinc-900 text-white shadow-md'
-                      : 'text-zinc-500 hover:text-zinc-700'
-                  }`}
-                >
-                  {tab === 'company' ? '🏢 For Companies' : '👤 For Candidates'}
-                </button>
+  return (
+    <footer className="bg-[#F8FAFC] border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1A56DB] to-[#3B82F6] flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-xl font-extrabold tracking-tight text-[#111827]">PLACIFY</span>
+            </div>
+            <p className="text-sm text-[#6B7280] leading-relaxed mb-6 max-w-xs">
+              Making hiring intelligent, fair, and verified for the modern workforce.
+            </p>
+            <div className="flex items-center gap-3">
+              {[Twitter, Linkedin, Github, Instagram].map((Icon, i) => (
+                <a key={i} href="#" className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-[#6B7280] hover:text-[#1A56DB] hover:border-blue-200 transition-all">
+                  <Icon className="w-4 h-4" />
+                </a>
               ))}
             </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={workflowTab}
-              initial={{ opacity: 0, x: workflowTab === 'company' ? -20 : 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: workflowTab === 'company' ? 20 : -20 }}
-              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 relative"
-            >
-              {(workflowTab === 'company' ? COMPANY_STEPS : CANDIDATE_STEPS).map((step, i) => (
-                <div key={i} className="relative">
-                  {i < 3 && (
-                    <div className="hidden lg:block absolute top-10 left-full w-full h-px z-0">
-                      <div className="w-2/3 h-px bg-gradient-to-r from-zinc-200 to-transparent ml-4" />
-                    </div>
-                  )}
-                  <div className="glass rounded-3xl p-6 border border-zinc-100 card-lift relative z-10 h-full">
-                    <div className="text-4xl font-black text-gold-gradient mb-4 font-serif">{step.num}</div>
-                    <h3 className="text-base font-bold text-zinc-900 mb-2">{step.title}</h3>
-                    <p className="text-sm text-zinc-500 leading-relaxed">{step.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ REAL-TIME FEATURE */}
-      <section className="py-28 px-6 bg-zinc-900 relative overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-yellow-500/8 to-amber-500/5 blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <FadeIn direction="left">
-              <span className="badge-gold mb-4 inline-block">Live Platform</span>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-6 leading-tight">
-                Real-Time Hiring<br />
-                <span className="font-serif italic text-gold-gradient">Intelligence Dashboard</span>
-              </h2>
-              <p className="text-zinc-400 leading-relaxed mb-8">
-                Watch candidates move through your pipeline in real time. Get live notifications on assessment completions, verification updates, and match scores — all in one unified workspace.
-              </p>
+          {columns.map(col => (
+            <div key={col.title}>
+              <h4 className="font-bold text-[#111827] text-sm mb-4">{col.title}</h4>
               <ul className="space-y-3">
-                {[
-                  "Live candidate progress tracking",
-                  "Instant verification status updates",
-                  "AI-scored match recommendations",
-                  "Team collaboration & notes",
-                  "Offer management & e-signatures",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-zinc-300 text-sm">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    {item}
-                  </li>
+                {col.links.map(link => (
+                  <li key={link}><a href="#" className="text-sm text-[#6B7280] hover:text-[#1A56DB] transition-colors">{link}</a></li>
                 ))}
               </ul>
-            </FadeIn>
-
-            {/* Dashboard mockup */}
-            <FadeIn direction="right" delay={0.2}>
-              <div className="glass-dark rounded-3xl p-6 shadow-2xl glow-gold">
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                  <span className="ml-2 text-xs text-zinc-500 font-medium">Placify Dashboard</span>
-                </div>
-
-                {/* Mini KPI row */}
-                <div className="grid grid-cols-3 gap-3 mb-5">
-                  {[
-                    { label: "Active Pipelines", value: "14", icon: <Layers className="w-3 h-3"/> },
-                    { label: "Avg. Match Score", value: "92%", icon: <Target className="w-3 h-3"/> },
-                    { label: "Time to Hire", value: "11d", icon: <TrendingUp className="w-3 h-3"/> },
-                  ].map((kpi, i) => (
-                    <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/5">
-                      <div className="flex items-center gap-1 text-zinc-500 mb-1 text-[10px]">{kpi.icon} {kpi.label}</div>
-                      <div className="text-xl font-black text-white">{kpi.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pipeline rows */}
-                {[
-                  { name: "Neha Joshi", role: "Senior Engineer", score: 96, stage: "Interview", color: "text-blue-400" },
-                  { name: "Arjun Nair", role: "Product Designer", score: 91, stage: "Offer Sent", color: "text-emerald-400" },
-                  { name: "Sneha Rao", role: "Data Scientist", score: 88, stage: "Assessment", color: "text-amber-400" },
-                  { name: "Kiran Verma", role: "DevOps Lead", score: 94, stage: "Shortlisted", color: "text-purple-400" },
-                ].map((c, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + i * 0.12 }}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] mb-2 hover:bg-white/[0.07] transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-700 flex items-center justify-center text-white text-xs font-bold">
-                      {c.name[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-white truncate">{c.name}</div>
-                      <div className="text-[10px] text-zinc-500">{c.role}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs font-black text-white">{c.score}%</div>
-                      <div className={`text-[10px] font-semibold ${c.color}`}>{c.stage}</div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ PRICING */}
-      <section id="pricing" className="py-28 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="badge-gold mb-4 inline-block">Pricing Plans</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-2">
-              <span className="text-dark-gradient">Transparent Pricing,</span>
-              <br />
-              <span className="font-serif italic text-gold-gradient">Real ROI</span>
-            </h2>
-            <p className="text-zinc-500 max-w-lg mx-auto mt-4 font-medium">
-              No hidden fees. No per-hire charges. Just predictable pricing that scales with your team.
-            </p>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-3 gap-6 items-center">
-            {PLANS.map((plan, i) => (
-              <FadeIn key={i} delay={i * 0.12}>
-                <div className={`rounded-3xl p-8 relative overflow-hidden ${
-                  plan.popular
-                    ? 'pricing-popular'
-                    : 'glass border border-zinc-100 card-lift'
-                }`}>
-                  {plan.popular && (
-                    <div className="absolute top-5 right-5 badge-gold text-[10px] py-1 px-3">
-                      Most Popular
-                    </div>
-                  )}
-
-                  <div className={`text-sm font-bold uppercase tracking-widest mb-1 ${plan.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                    {plan.name}
-                  </div>
-                  <div className="flex items-end gap-1 mb-2">
-                    <span className={`text-4xl font-black ${plan.popular ? 'text-white' : 'text-dark-gradient'}`}>
-                      {plan.price}
-                    </span>
-                    {plan.period && <span className={`text-sm mb-2 ${plan.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>{plan.period}</span>}
-                  </div>
-                  <p className={`text-sm mb-7 leading-relaxed ${plan.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>{plan.desc}</p>
-
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((f, fi) => (
-                      <li key={fi} className="flex items-start gap-2.5 text-sm">
-                        <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-amber-400' : 'text-emerald-500'}`} />
-                        <span className={plan.popular ? 'text-zinc-300' : 'text-zinc-700'}>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    onClick={() => setShowDemoModal(true)}
-                    className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-zinc-900 hover:from-amber-500 hover:to-yellow-600 shadow-lg'
-                        : 'btn-primary'
-                    }`}
-                  >
-                    {plan.popular ? <span>{plan.cta}</span> : plan.cta}
-                  </button>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ TESTIMONIALS */}
-      <section className="py-24 px-6 bg-zinc-50/60">
-        <div className="max-w-7xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="badge-gold mb-4 inline-block">Testimonials</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-2">
-              <span className="text-dark-gradient">Loved by </span>
-              <span className="font-serif italic text-gold-gradient">HR Leaders</span>
-            </h2>
-          </FadeIn>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <FadeIn key={i} delay={i * 0.12}>
-                <div className="glass rounded-3xl p-7 border border-zinc-100 card-lift h-full flex flex-col">
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: t.stars }).map((_, si) => (
-                      <Star key={si} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-zinc-700 text-sm leading-relaxed flex-1 mb-5 italic">"{t.text}"</p>
-                  <div>
-                    <div className="font-bold text-zinc-900 text-sm">{t.name}</div>
-                    <div className="text-xs text-zinc-500 font-medium">{t.role}</div>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ FAQ */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-3xl mx-auto">
-          <FadeIn className="text-center mb-14">
-            <span className="badge-gold mb-4 inline-block">FAQ</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-2 text-dark-gradient">
-              Common <span className="font-serif italic text-gold-gradient">Questions</span>
-            </h2>
-          </FadeIn>
-          <div className="space-y-3">
-            {FAQS.map((faq, i) => (
-              <FadeIn key={i} delay={i * 0.05}>
-                <div className="glass rounded-2xl border border-zinc-100 overflow-hidden">
-                  <button
-                    className="w-full flex items-center justify-between p-5 text-left"
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  >
-                    <span className="font-semibold text-zinc-900 text-sm pr-4">{faq.q}</span>
-                    <ChevronDown className={`w-4 h-4 text-zinc-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
-                  </button>
-                  <AnimatePresence>
-                    {openFaq === i && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
-                      >
-                        <p className="px-5 pb-5 text-sm text-zinc-500 leading-relaxed">{faq.a}</p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ CONTACT */}
-      <section id="contact" className="py-28 px-6 bg-zinc-50/60">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
-            <FadeIn direction="left">
-              <span className="badge-gold mb-4 inline-block">Contact Us</span>
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-2 mb-6">
-                <span className="text-dark-gradient">Let's Start a</span>
-                <br />
-                <span className="font-serif italic text-gold-gradient">Conversation</span>
-              </h2>
-              <p className="text-zinc-500 leading-relaxed mb-10">
-                Ready to transform your hiring? Our team is here to help you get started, answer questions, and tailor Placify to your organization's needs.
-              </p>
-
-              <div className="space-y-5">
-                {[
-                  { icon: <Mail className="w-5 h-5"/>, label: "Email Us", value: "hello@placify.in" },
-                  { icon: <Phone className="w-5 h-5"/>, label: "Call Us", value: "+91 98765 43210" },
-                  { icon: <MapPin className="w-5 h-5"/>, label: "Office", value: "Bengaluru, Karnataka, India" },
-                ].map((c, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-2xl bg-zinc-900 text-white flex items-center justify-center flex-shrink-0">
-                      {c.icon}
-                    </div>
-                    <div>
-                      <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">{c.label}</div>
-                      <div className="text-sm font-bold text-zinc-900">{c.value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </FadeIn>
-
-            <FadeIn direction="right" delay={0.15}>
-              <div className="glass rounded-3xl p-8 border border-zinc-100 shadow-sm">
-                {contactSent ? (
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex flex-col items-center justify-center py-12 text-center"
-                  >
-                    <CheckCircle className="w-12 h-12 text-emerald-500 mb-4" />
-                    <h3 className="text-xl font-bold text-zinc-900 mb-2">Message Sent!</h3>
-                    <p className="text-zinc-500 text-sm">We'll get back to you within 24 hours.</p>
-                  </motion.div>
-                ) : (
-                  <form onSubmit={submitContact} className="space-y-5">
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Your Name</label>
-                      <input className="input-premium" type="text" required placeholder="John Doe" value={contactForm.name}
-                        onChange={e => setContactForm(p => ({...p, name: e.target.value}))} />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Email Address</label>
-                      <input className="input-premium" type="email" required placeholder="john@company.com" value={contactForm.email}
-                        onChange={e => setContactForm(p => ({...p, email: e.target.value}))} />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Message</label>
-                      <textarea className="input-premium resize-none" rows={4} required placeholder="Tell us about your hiring needs..."
-                        value={contactForm.message} onChange={e => setContactForm(p => ({...p, message: e.target.value}))} />
-                    </div>
-                    <button type="submit" className="btn-primary w-full py-4 rounded-2xl flex items-center justify-center gap-2 text-sm">
-                      <span>Send Message</span>
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </form>
-                )}
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ FOOTER */}
-      <footer className="bg-zinc-900 text-white pt-20 pb-10 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-14">
-            <div className="md:col-span-2">
-              <img src="/logo.jpg" alt="Placify" className="h-10 w-auto rounded-lg object-contain mb-4 bg-white/5 p-1" />
-              <p className="text-zinc-400 text-sm leading-relaxed max-w-sm mb-6">
-                The verified hiring operating system for modern enterprises. Faster hires. Zero mis-hires. Total confidence.
-              </p>
-              <div className="flex gap-3">
-                {['LinkedIn', 'Twitter', 'GitHub'].map(s => (
-                  <a key={s} href="#" className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all text-xs font-bold">
-                    {s[0]}
-                  </a>
-                ))}
-              </div>
             </div>
+          ))}
 
-            {[
-              { title: "Product", links: ["AI Screening", "Candidate Passport", "Talent Pipeline", "Analytics", "Integrations"] },
-              { title: "Company", links: ["About Us", "Careers", "Blog", "Privacy Policy", "Terms of Service"] },
-            ].map((col, i) => (
-              <div key={i}>
-                <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-5">{col.title}</div>
-                <ul className="space-y-3">
-                  {col.links.map(link => (
-                    <li key={link}>
-                      <a href="#" className="text-zinc-400 text-sm hover:text-white transition-colors hover-underline">{link}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="section-divider mb-8" />
-
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-zinc-600 text-xs">© 2025 Placify Technologies Pvt. Ltd. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              <button onClick={() => { setAuthTab('candidate'); setShowAuthModal(true); }} className="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Candidate Login</button>
-              <button onClick={() => { setAuthTab('company'); setShowAuthModal(true); }} className="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Company Login</button>
-              <button onClick={() => { setAuthTab('admin'); setShowAuthModal(true); }} className="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Admin Login</button>
-            </div>
+          <div>
+            <h4 className="font-bold text-[#111827] text-sm mb-4">Contact</h4>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-2 text-sm text-[#6B7280]"><Mail className="w-3.5 h-3.5" />hello@placify.io</li>
+              <li className="flex items-center gap-2 text-sm text-[#6B7280]"><Phone className="w-3.5 h-3.5" />+1 (415) 555-0142</li>
+              <li className="flex items-center gap-2 text-sm text-[#6B7280]"><MapPin className="w-3.5 h-3.5" />San Francisco, CA</li>
+            </ul>
           </div>
         </div>
-      </footer>
 
-      {/* ══════════════════════════════════════════════════════════════ DEMO MODAL */}
-      <AnimatePresence>
-        {showDemoModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.93, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.93, y: 20 }}
-              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-zinc-100"
-            >
-              {/* Top accent */}
-              <div className="h-1 w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600" />
-
-              <div className="p-8">
-                <button onClick={() => setShowDemoModal(false)} className="absolute top-5 right-5 p-2 rounded-xl hover:bg-zinc-100 transition-colors">
-                  <X className="w-4 h-4 text-zinc-500" />
-                </button>
-
-                {demoSubmitted ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-8"
-                  >
-                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="w-8 h-8 text-emerald-500" />
-                    </div>
-                    <h3 className="text-xl font-black text-zinc-900 mb-2">Demo Requested!</h3>
-                    <p className="text-zinc-500 text-sm">Our team will reach out within 2 business hours to schedule your personalized demo.</p>
-                  </motion.div>
-                ) : (
-                  <>
-                    <div className="mb-6">
-                      <img src="/logo.jpg" alt="Placify" className="h-8 w-auto mb-4 mix-blend-multiply" />
-                      <h2 className="text-2xl font-black text-zinc-900 mb-1">Book a Free Demo</h2>
-                      <p className="text-sm text-zinc-500">See Placify in action — tailored to your hiring workflow.</p>
-                    </div>
-
-                    <form onSubmit={submitDemo} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Full Name *</label>
-                          <input className="input-premium" type="text" required placeholder="John Doe"
-                            value={demoForm.name} onChange={e => setDemoForm(p => ({...p, name: e.target.value}))} />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Work Email *</label>
-                          <input className="input-premium" type="email" required placeholder="john@co.com"
-                            value={demoForm.email} onChange={e => setDemoForm(p => ({...p, email: e.target.value}))} />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Company</label>
-                          <input className="input-premium" type="text" placeholder="Your Company"
-                            value={demoForm.company} onChange={e => setDemoForm(p => ({...p, company: e.target.value}))} />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Team Size</label>
-                          <select className="input-premium text-sm" value={demoForm.size}
-                            onChange={e => setDemoForm(p => ({...p, size: e.target.value}))}>
-                            <option>1–10</option><option>10–50</option><option>50–250</option><option>250+</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">What are you looking for?</label>
-                        <textarea className="input-premium resize-none" rows={3} placeholder="Tell us about your hiring challenges..."
-                          value={demoForm.message} onChange={e => setDemoForm(p => ({...p, message: e.target.value}))} />
-                      </div>
-                      <button type="submit" className="btn-primary w-full py-4 rounded-2xl text-sm flex items-center justify-center gap-2">
-                        <span>Request Demo</span>
-                        <Rocket className="w-4 h-4" />
-                      </button>
-                    </form>
-                  </>
-                )}
-              </div>
-            </motion.div>
+        <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-[#6B7280]">&copy; 2026 Placify Hiring Intelligence. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A56DB] transition-colors">Privacy</a>
+            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A56DB] transition-colors">Terms</a>
+            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A56DB] transition-colors">Cookies</a>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
-      {/* ══════════════════════════════════════════════════════════════ AUTH MODAL */}
-      <AnimatePresence>
-        {showAuthModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.93, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.93, y: 20 }}
-              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-zinc-100"
-            >
-              <div className="h-1 w-full bg-gradient-to-r from-zinc-700 via-zinc-500 to-zinc-900" />
-
-              <div className="p-8">
-                <button onClick={() => setShowAuthModal(false)} className="absolute top-5 right-5 p-2 rounded-xl hover:bg-zinc-100 transition-colors">
-                  <X className="w-4 h-4 text-zinc-500" />
-                </button>
-
-                <div className="text-center mb-7">
-                  <img src="/logo.jpg" alt="Placify" className="h-10 w-auto mx-auto mb-3 mix-blend-multiply" />
-                  <p className="text-xs text-zinc-500">Select your portal and sign in</p>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex bg-zinc-50 rounded-2xl p-1.5 gap-1 mb-7 border border-zinc-100">
-                  {([
-                    { label: '🏢 Company', val: 'company' },
-                    { label: '👤 Candidate', val: 'candidate' },
-                    { label: '🛡️ Admin', val: 'admin' },
-                  ] as const).map(t => (
-                    <button key={t.val} onClick={() => setAuthTab(t.val)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authTab === t.val ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-700'}`}>
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Email Address</label>
-                    <input className="input-premium" type="email" required placeholder="you@company.com"
-                      value={authForm.email} onChange={e => setAuthForm(p => ({...p, email: e.target.value}))} />
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Password</label>
-                      <button type="button" className="text-[11px] text-amber-600 hover:underline font-semibold">Forgot Password?</button>
-                    </div>
-                    <input className="input-premium" type="password" required placeholder="••••••••••••"
-                      value={authForm.password} onChange={e => setAuthForm(p => ({...p, password: e.target.value}))} />
-                  </div>
-                  <button type="submit" disabled={authLoading}
-                    className="btn-primary w-full py-4 rounded-2xl text-sm flex items-center justify-center gap-2 mt-2">
-                    {authLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
-                    <span>{authLoading ? 'Authenticating...' : `Enter ${authTab === 'company' ? 'Company' : authTab === 'candidate' ? 'Candidate' : 'Admin'} Portal`}</span>
-                  </button>
-                </form>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
+/* ============ PAGE ============ */
+export default function LandingPage() {
+  return (
+    <main className="min-h-screen bg-white font-sans">
+      <Header />
+      <HeroSection />
+      <EvolutionSection />
+      <CapabilitiesSection />
+      <SectorsSection />
+      <PricingSection />
+      <CTASection />
+      <Footer />
+    </main>
   );
 }
