@@ -7,6 +7,8 @@ import {
   Search, Bell, Settings, LogOut, HelpCircle, UserPlus, Menu, X, MessageSquare, ChevronDown, User
 } from 'lucide-react';
 import Link from 'next/link';
+import AIAssistant from '@/components/candidate/AIAssistant';
+import { supabase } from '@/lib/supabase';
 
 export default function CandidateLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
@@ -14,12 +16,20 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
     }
+    if (user) {
+      supabase.from('candidates').select('profile_photo_url').eq('user_id', user.id).single().then(({data}) => {
+        if (data?.profile_photo_url) setProfilePhoto(data.profile_photo_url);
+      });
+    }
   }, [user, isLoading, router]);
+
 
   if (isLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
@@ -30,9 +40,12 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
     { name: 'Jobs', href: '/candidate/jobs', icon: Briefcase },
     { name: 'Applications', href: '/candidate/applications', icon: FileText },
     { name: 'Messages', href: '/candidate/messages', icon: MessageSquare },
+    { name: 'Resume', href: '/candidate/resume', icon: FileText },
     { name: 'Verification', href: '/candidate/verification', icon: Shield },
     { name: 'Trust Score', href: '/candidate/trust-score', icon: Award },
     { name: 'Passport', href: '/candidate/passport', icon: CreditCard },
+    { name: 'Support', href: '/candidate/support', icon: HelpCircle },
+    { name: 'Help Center', href: '/candidate/help', icon: HelpCircle },
   ];
 
   return (
@@ -133,7 +146,7 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
                 className="flex items-center gap-2 hover:bg-gray-50 p-1 pr-2 rounded-full transition-colors border border-transparent hover:border-gray-200"
               >
                 <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 overflow-hidden flex-shrink-0">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={profilePhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
                 <ChevronDown size={14} className="text-gray-500" />
               </button>

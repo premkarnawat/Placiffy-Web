@@ -144,7 +144,7 @@ export default function SupportPage() {
                 </div>
               ) : (
                 tickets.map(ticket => (
-                  <div key={ticket.id} className="p-5 hover:bg-gray-50 transition-colors cursor-pointer group flex items-start justify-between">
+                  <div key={ticket.id} className="p-5 hover:bg-gray-50 transition-colors cursor-pointer group flex items-start justify-between" onClick={() => window.location.href = `/candidate/support/${ticket.id}`}>
                     <div className="flex items-start gap-4">
                       <div className={`mt-1 rounded-full p-2 ${ticket.status === 'open' ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
                         {ticket.status === 'open' ? <Clock size={16} /> : <CheckCircle size={16} />}
