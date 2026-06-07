@@ -1,4 +1,10 @@
-'use client';
+﻿# -*- coding: utf-8 -*-
+import os
+
+dir_path = r"app\candidate\applications"
+os.makedirs(dir_path, exist_ok=True)
+
+content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -187,3 +193,8 @@ export default function ApplicationsPage() {
     </div>
   );
 }
+"""
+
+with open(os.path.join(dir_path, "page.tsx"), "w", encoding="utf-8") as f:
+    f.write(content)
+print("Applications Page scaffolded!")

@@ -1,4 +1,6 @@
-'use client';
+﻿# -*- coding: utf-8 -*-
+with open(r"components\candidate\profile\PersonalForm.tsx", "w", encoding="utf-8") as f:
+    f.write("""'use client';
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Upload, Camera, Loader2 } from 'lucide-react';
@@ -71,3 +73,4 @@ export default function PersonalForm({ data, onChange, userId }: { data: any, on
     </div>
   );
 }
+""")

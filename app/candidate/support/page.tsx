@@ -53,7 +53,7 @@ export default function SupportPage() {
         ticket_id: data.id,
         sender_id: user?.id,
         content: newTicket.description
-      });
+      }).select().single();
 
       toast('success', 'Ticket Created', 'Your support ticket has been submitted.');
       setIsCreating(false);
