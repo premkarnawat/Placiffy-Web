@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
-    const { messages, candidateContext } = await req.json();
+    const { messages, candidateContext, userId } = await req.json();
 
     const groqApiKey = process.env.GROQ_API_KEY;
     if (!groqApiKey) {
@@ -41,7 +42,18 @@ Always be encouraging, concise, and highly actionable. Format your responses wit
     }
 
     const data = await response.json();
-    return NextResponse.json({ reply: data.choices[0].message.content });
+    const replyText = data.choices[0].message.content;
+
+    // Log to Supabase for conversation history (memory)
+    if (userId) {
+      const lastUserMsg = messages[messages.length - 1];
+      await supabase.from('ai_chat_history').insert([
+        { user_id: userId, role: 'user', content: lastUserMsg.content },
+        { user_id: userId, role: 'assistant', content: replyText }
+      ]);
+    }
+
+    return NextResponse.json({ reply: replyText });
 
   } catch (error: any) {
     console.error('AI Chat Error:', error);

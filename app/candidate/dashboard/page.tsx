@@ -12,14 +12,33 @@ export default function CandidateDashboard() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    if (user) fetchData();
+    if (user) {
+      fetchData();
+      
+      const channel = supabase.channel(`dash_${user.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, () => fetchData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchData())
+        .subscribe();
+        
+      return () => { supabase.removeChannel(channel); };
+    }
   }, [user]);
 
   const fetchData = async () => {
     try {
       const { data: cand } = await supabase.from('candidates').select('*').eq('user_id', user?.id).single();
       const { count: appCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id);
-      setData({ cand, appCount: appCount || 0 });
+      const { count: msgCount } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', user?.id).eq('read', false);
+      const { count: interviewCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('stage', ['Interview Scheduled', 'Interview Completed']);
+      const { count: offerCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('stage', ['Offer Released', 'Offer Accepted', 'Joined']);
+      
+      setData({ 
+        cand, 
+        appCount: appCount || 0,
+        msgCount: msgCount || 0,
+        interviewCount: interviewCount || 0,
+        offerCount: offerCount || 0
+      });
     } catch (e) {
       console.error(e);
     }
@@ -91,17 +110,17 @@ export default function CandidateDashboard() {
           </div>
           <div className="bg-purple-50 rounded-3xl p-5 border border-purple-100 flex flex-col justify-center cursor-pointer hover:shadow-md transition-shadow" onClick={()=>router.push('/candidate/messages')}>
             <MessageSquare size={24} className="text-purple-600 mb-2" />
-            <span className="text-3xl font-extrabold text-gray-900">3</span>
+            <span className="text-3xl font-extrabold text-gray-900">{data.msgCount || 0}</span>
             <span className="text-sm font-medium text-gray-600">Messages</span>
           </div>
           <div className="bg-green-50 rounded-3xl p-5 border border-green-100 flex flex-col justify-center cursor-pointer hover:shadow-md transition-shadow">
             <TrendingUp size={24} className="text-green-600 mb-2" />
-            <span className="text-3xl font-extrabold text-gray-900">0</span>
+            <span className="text-3xl font-extrabold text-gray-900">{data.interviewCount || 0}</span>
             <span className="text-sm font-medium text-gray-600">Interviews</span>
           </div>
           <div className="bg-amber-50 rounded-3xl p-5 border border-amber-100 flex flex-col justify-center cursor-pointer hover:shadow-md transition-shadow">
             <Activity size={24} className="text-amber-600 mb-2" />
-            <span className="text-3xl font-extrabold text-gray-900">0</span>
+            <span className="text-3xl font-extrabold text-gray-900">{data.offerCount || 0}</span>
             <span className="text-sm font-medium text-gray-600">Offers</span>
           </div>
         </div>
@@ -125,7 +144,7 @@ export default function CandidateDashboard() {
             <div className="flex gap-4 p-4 rounded-2xl bg-amber-50/50 border border-amber-100">
               <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 font-bold">1</div>
               <div>
-                <h4 className="font-bold text-gray-900 text-sm">Missing "AWS" Skill</h4>
+                <h4 className="font-bold text-gray-900 text-sm">Missing &quot;AWS&quot; Skill</h4>
                 <p className="text-xs text-gray-600 mt-1">Adding AWS to your skills would increase your match rate for 14 active jobs.</p>
               </div>
             </div>

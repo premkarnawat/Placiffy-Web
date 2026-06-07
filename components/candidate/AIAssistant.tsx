@@ -54,7 +54,7 @@ export default function AIAssistant() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, { role: 'user', content: userMessage }],
-          candidateContext: context || {}
+          candidateContext: context || {}, userId: user?.id
         })
       });
 

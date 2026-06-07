@@ -1,28 +1,44 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Book, HelpCircle, ShieldCheck, Zap, Briefcase, ChevronRight, FileText, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function HelpCenterPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   
-  const faqs = [
-    { q: "How is my Trust Score calculated?", a: "Your Trust Score is an aggregate of your ATS match accuracy, verified employment history, portfolio integrity, and reliability metrics. Completing Expert Verification boosts it to RA+ Status.", category: "Trust Score" },
-    { q: "What does ATS Score mean?", a: "ATS Score represents how well your vector embedding matches the required vector space of a given job description using our Llama-3 parsing engine.", category: "ATS Matching" },
-    { q: "How do I verify my work experience?", a: "Navigate to the Verification tab and submit your profile for review. Our expert network will validate your claims and update your status to 'Verified'.", category: "Verification" },
-    { q: "Can I delete my active resume?", a: "No, you must upload a new resume to replace the active one. Previous resumes are archived securely.", category: "Resume" }
-  ];
+  
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [kbArticles, setKbArticles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: fData } = await supabase.from('faqs').select('*');
+        const { data: kData } = await supabase.from('knowledge_base').select('*');
+        setFaqs(fData || []);
+        setKbArticles(kData || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const categories = [
-    { name: "Verification Process", icon: <ShieldCheck size={24} className="text-green-500"/>, count: 12 },
-    { name: "ATS Optimization", icon: <Zap size={24} className="text-amber-500"/>, count: 8 },
-    { name: "Managing Applications", icon: <Briefcase size={24} className="text-blue-500"/>, count: 15 },
-    { name: "Candidate Passport", icon: <FileText size={24} className="text-indigo-500"/>, count: 6 }
+    { name: "Verification Process", icon: <ShieldCheck size={24} className="text-green-500"/>, count: kbArticles.filter(a => a.category === 'Verification').length || 1 },
+    { name: "ATS Optimization", icon: <Zap size={24} className="text-amber-500"/>, count: kbArticles.filter(a => a.category === 'ATS Matching').length || 1 },
+    { name: "Managing Applications", icon: <Briefcase size={24} className="text-blue-500"/>, count: kbArticles.filter(a => a.category === 'Applications').length || 1 },
+    { name: "Candidate Passport", icon: <FileText size={24} className="text-indigo-500"/>, count: kbArticles.filter(a => a.category === 'Passport').length || 1 }
   ];
 
-  const filteredFaqs = searchQuery ? faqs.filter(f => f.q.toLowerCase().includes(searchQuery.toLowerCase()) || f.a.toLowerCase().includes(searchQuery.toLowerCase())) : faqs;
+
+  const filteredFaqs = searchQuery ? faqs.filter(f => f.question?.toLowerCase().includes(searchQuery.toLowerCase()) || f.answer?.toLowerCase().includes(searchQuery.toLowerCase())) : faqs;
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-12">
@@ -55,14 +71,14 @@ export default function HelpCenterPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2"><Search size={20}/> Search Results</h2>
               {filteredFaqs.length === 0 ? (
-                <p className="text-gray-500 bg-gray-50 p-6 rounded-2xl border border-gray-100">No results found for "{searchQuery}". Try a different keyword.</p>
+                <p className="text-gray-500 bg-gray-50 p-6 rounded-2xl border border-gray-100">No results found for &quot;{searchQuery}&quot;. Try a different keyword.</p>
               ) : (
                 <div className="space-y-4">
                   {filteredFaqs.map((faq, i) => (
                     <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                       <span className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block">{faq.category}</span>
-                      <h3 className="font-bold text-gray-900 text-lg mb-2">{faq.q}</h3>
-                      <p className="text-gray-600 leading-relaxed">{faq.a}</p>
+                      <h3 className="font-bold text-gray-900 text-lg mb-2">{faq.question}</h3>
+                      <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
                     </div>
                   ))}
                 </div>
@@ -91,8 +107,8 @@ export default function HelpCenterPage() {
                 <div className="space-y-4">
                   {faqs.map((faq, i) => (
                     <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                      <h3 className="font-bold text-gray-900 mb-2 flex items-start gap-3"><HelpCircle size={20} className="text-blue-500 shrink-0 mt-0.5"/> {faq.q}</h3>
-                      <p className="text-gray-600 ml-8">{faq.a}</p>
+                      <h3 className="font-bold text-gray-900 mb-2 flex items-start gap-3"><HelpCircle size={20} className="text-blue-500 shrink-0 mt-0.5"/> {faq.question}</h3>
+                      <p className="text-gray-600 ml-8">{faq.answer}</p>
                     </div>
                   ))}
                 </div>
