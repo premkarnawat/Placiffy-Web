@@ -1,4 +1,5 @@
-'use client';
+﻿# -*- coding: utf-8 -*-
+content = """'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -203,3 +204,6 @@ export default function CommunicationHub() {
     </div>
   );
 }
+"""
+with open(r"app\candidate\messages\page.tsx", "w", encoding="utf-8") as f: f.write(content)
+print("Injected Candidate Messaging Hub!")

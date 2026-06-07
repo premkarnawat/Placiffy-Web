@@ -10,6 +10,17 @@ import PyPDF2
 
 from groq import Groq
 import json
+import numpy as np
+
+# Lazy load sentence_transformers to avoid massive cold starts if not used
+embedder = None
+def get_embedder():
+    global embedder
+    if embedder is None:
+        from sentence_transformers import SentenceTransformer
+        # all-MiniLM-L6-v2 is fast and creates 384-dimensional embeddings
+        embedder = SentenceTransformer("all-MiniLM-L6-v2")
+    return embedder
 
 from app.config import get_settings
 from app.auth import hash_password, verify_password, create_access_token, get_current_user, require_candidate

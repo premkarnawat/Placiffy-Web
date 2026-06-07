@@ -1,4 +1,5 @@
-'use client';
+﻿# -*- coding: utf-8 -*-
+content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -218,3 +219,9 @@ export default function CandidateJobs() {
     </div>
   );
 }
+"""
+
+with open(r"app\candidate\jobs\page.tsx", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Injected ATS Vector Match Jobs Page!")
