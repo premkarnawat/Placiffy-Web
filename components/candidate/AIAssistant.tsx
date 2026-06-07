@@ -5,7 +5,6 @@ import { Bot, X, Send, User, Sparkles, Loader2, Minimize2, Languages } from 'luc
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 
-
 export default function AIAssistant() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +13,7 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const [context, setContext] = useState<any>(null);
   const [language, setLanguage] = useState<'English' | 'Hindi'>('English');
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function AIAssistant() {
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }, { role: 'assistant', content: '' }]);
     setLoading(true);
 
     try {
@@ -56,25 +56,49 @@ export default function AIAssistant() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: userMessage }],
+          messages: messages.filter(m => m.content).map(m => ({ role: m.role, content: m.content })).concat({ role: 'user', content: userMessage }),
           candidateContext: context || {}, 
           userId: user?.id,
           language,
           pageContext,
-          role: 'Candidate'
+          role: 'Candidate',
+          conversationId
         })
       });
 
       if (!res.ok) throw new Error('API Error');
-      const data = await res.json();
-      
-      if (data.reply) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-      } else {
-        throw new Error('No reply from Groq');
+
+      const returnedConvId = res.headers.get('X-Conversation-Id');
+      if (returnedConvId && !conversationId) {
+        setConversationId(returnedConvId);
       }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No stream found');
+      
+      const decoder = new TextDecoder('utf-8');
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          const lastIndex = newMsgs.length - 1;
+          newMsgs[lastIndex].content += chunk;
+          return newMsgs;
+        });
+      }
+      
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to my servers right now. Please [Create a Support Ticket](/candidate/support) if this persists." }]);
+      console.error('Stream error:', error);
+      setMessages(prev => {
+        const newMsgs = [...prev];
+        newMsgs[newMsgs.length - 1].content = "I'm having trouble connecting to my servers right now. Please [Create a Support Ticket](/candidate/support) if this persists.";
+        return newMsgs;
+      });
     } finally {
       setLoading(false);
     }
@@ -119,42 +143,34 @@ export default function AIAssistant() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
-            {messages.length === 0 && !loading && (
-              <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                <Bot size={48} className="text-blue-200 mb-4" />
-                <p className="text-gray-500 font-medium text-sm">Loading AI connection...</p>
-              </div>
-            )}
-            
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
-                {m.role === 'assistant' && <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Bot size={16}/></div>}
-                <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-gray-900 text-white rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'}`}>
-                  {m.role === 'assistant' ? (
-                    <div className="whitespace-pre-wrap">{m.content}</div>
-                  ) : (
-                    m.content
-                  )}
-                  {/* Support Injection */}
-                  {m.role === 'assistant' && (m.content.includes('Support Ticket') || m.content.includes('Contact the Placify Team')) && (
-                    <a href="/candidate/support" className="mt-3 inline-flex items-center gap-2 bg-blue-50 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors text-xs no-underline">
-                      <Sparkles size={14} /> Create Support Ticket
-                    </a>
-                  )}
+            {messages.map((m, i) => {
+              if (!m.content && m.role === 'assistant') {
+                return (
+                  <div key={i} className="flex justify-start gap-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Bot size={16}/></div>
+                    <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1 items-center">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-75"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></div>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
+                  {m.role === 'assistant' && <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Bot size={16}/></div>}
+                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'bg-gray-900 text-white rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'}`}>
+                    {m.content}
+                    {/* Support Injection */}
+                    {m.role === 'assistant' && (m.content.includes('Support Ticket') || m.content.includes('Contact the Placify Team')) && (
+                      <a href="/candidate/support" className="mt-3 inline-flex items-center gap-2 bg-blue-50 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors text-xs no-underline">
+                        <Sparkles size={14} /> Create Support Ticket
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            
-            {loading && (
-              <div className="flex justify-start gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Bot size={16}/></div>
-                <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-75"></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></div>
-                </div>
-              </div>
-            )}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 
