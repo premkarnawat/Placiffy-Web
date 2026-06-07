@@ -49,19 +49,41 @@ export default function RegisterPage() {
   const handleUpload = async () => {
     if (!file) return;
     setIsUploading(true);
-    // Simulate parsing and extracting details
-    setTimeout(() => {
-      setFormData(prev => ({
-        ...prev,
-        fullName: 'Alex Montgomery',
-        email: 'alex.m@example.design',
-        headline: 'Senior Product Designer & AI Orchestrator',
-        skills: 'Design Systems, AI Prompting, React / Framer, UX Research',
-        location: 'San Francisco, CA'
-      }));
-      setIsUploading(false);
+    
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append('file', file);
+      
+      const res = await fetch(`${API_URL}/api/resume/parse-public`, {
+        method: 'POST',
+        body: formDataObj
+      });
+      
+      if (!res.ok) throw new Error('Failed to parse resume');
+      
+      const data = await res.json();
+      if (data.status === 'success' && data.extracted_data) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: data.extracted_data.fullName || prev.fullName,
+          email: data.extracted_data.email || prev.email,
+          headline: data.extracted_data.headline || prev.headline,
+          skills: data.extracted_data.skills || prev.skills,
+          location: data.extracted_data.location || prev.location
+        }));
+      }
+      
+      toast('success', 'Resume parsed successfully');
       setStep(2);
-    }, 2000);
+    } catch (err: any) {
+      toast('error', 'Upload Error', err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const handleSocialLogin = (provider: string) => {
+    toast('info', `${provider} Integration`, `${provider} OAuth is currently being configured in the Supabase Dashboard. Please use Email/Password or Resume upload for now.`);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -154,16 +176,16 @@ export default function RegisterPage() {
                 className="p-8"
               >
                 <div className="space-y-4">
-                  <button className="w-full flex items-center justify-center gap-3 bg-[#1A56DB] hover:bg-blue-700 text-white py-3.5 rounded-xl font-medium transition-colors shadow-sm">
+                  <button onClick={() => handleSocialLogin('LinkedIn')} className="w-full flex items-center justify-center gap-3 bg-[#1A56DB] hover:bg-blue-700 text-white py-3.5 rounded-xl font-medium transition-colors shadow-sm">
                     <Linkedin size={20} />
                     Continue with LinkedIn
                   </button>
                   <div className="grid grid-cols-2 gap-4">
-                    <button className="flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-xl font-medium transition-colors">
+                    <button onClick={() => handleSocialLogin('Google')} className="flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-xl font-medium transition-colors">
                       <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
                       Google
                     </button>
-                    <button className="flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-xl font-medium transition-colors">
+                    <button onClick={() => handleSocialLogin('GitHub')} className="flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-xl font-medium transition-colors">
                       <Github size={20} />
                       GitHub
                     </button>

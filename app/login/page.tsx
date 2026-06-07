@@ -16,6 +16,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const handleSocialLogin = (provider: string) => {
+    toast('info', `${provider} Integration`, `${provider} OAuth is currently being configured in the Supabase Dashboard. Please use Email/Password for now.`);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -113,10 +116,10 @@ export default function LoginPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors">
+            <button type="button" onClick={() => handleSocialLogin('LinkedIn')} className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors">
               <Linkedin size={18} className="text-blue-700" /> LinkedIn
             </button>
-            <button className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors">
+            <button type="button" onClick={() => handleSocialLogin('GitHub')} className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors">
               <Github size={18} /> GitHub
             </button>
           </div>

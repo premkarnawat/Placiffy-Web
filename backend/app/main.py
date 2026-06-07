@@ -170,6 +170,22 @@ async def get_me(user: dict = Depends(get_current_user)):
         return resp.json()[0]
 
 # --- CANDIDATE ENDPOINTS ---
+@app.post("/api/resume/parse-public", tags=["Candidate"])
+async def parse_resume_public(file: UploadFile = File(...)):
+    content = await file.read()
+    # In a real app, parse the PDF here using PyPDF2 or similar.
+    # For now, return mock parsed data
+    return {
+        "status": "success",
+        "extracted_data": {
+            "fullName": "Alex Montgomery",
+            "email": "alex.m@example.design",
+            "headline": "Senior Product Designer",
+            "skills": "React, TypeScript, Figma, UI/UX",
+            "location": "San Francisco, CA"
+        }
+    }
+
 @app.get("/api/candidates/profile", tags=["Candidate"])
 async def get_candidate_profile(user: dict = Depends(require_candidate)):
     async with httpx.AsyncClient() as client:
