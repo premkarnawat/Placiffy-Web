@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -129,7 +130,8 @@ export default function RegisterPage() {
         }
   
         if (!authData.session) {
-          toast('info', 'Verification', 'Please check your email to verify your account');
+          // If confirm email is enabled in Supabase, show a success screen
+          setRegistrationSuccess(true);
           return;
         }
         
@@ -203,7 +205,31 @@ export default function RegisterPage() {
 
         <div className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <AnimatePresence mode="wait">
-            {step === 1 && (
+              {registrationSuccess ? (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-white p-12 text-center"
+                >
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="text-green-600" size={40} />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
+                  <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+                    Your candidate account has been created successfully. 
+                    If you haven't received a confirmation email, you can log in below.
+                  </p>
+                  <button 
+                    onClick={() => router.push('/login')}
+                    type="button"
+                    className="inline-flex items-center justify-center gap-2 bg-[#1A56DB] hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-medium transition-colors shadow-sm"
+                  >
+                    Proceed to Login <ArrowRight size={18} />
+                  </button>
+                </motion.div>
+              ) : step === 1 && (
               <motion.div 
                 key="step1"
                 initial={{ opacity: 0, x: -20 }}

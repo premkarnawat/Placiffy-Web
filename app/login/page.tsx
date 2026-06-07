@@ -25,21 +25,29 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+              const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+  
+        if (authError) {
+          throw new Error(authError.message);
+        }
+        
+        // Fetch user role from public.users table to know where to route
+        const { data: userData } = await supabase.from('users').select('*').eq('id', authData.user.id).single();
+        const role = userData?.role || 'candidate';
+        const name = userData?.name || 'User';
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Login failed');
-      }
-
-      const { access_token, user } = await res.json();
-      login(access_token, user);
-      
-      toast('success' , 'Welcome back!', 'Login successful');
+        login(authData.session.access_token, {
+          id: authData.user.id,
+          email: authData.user.email || '',
+          role: role,
+          name: name
+        });
+        
+        toast('success' , 'Welcome back!', 'Login successful');
+        const user = { role }; // Local mock for router push
       
       if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'company') router.push('/company/dashboard');
