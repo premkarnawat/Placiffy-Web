@@ -7,8 +7,6 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timezone
 import io
 import PyPDF2
-import pdfplumber
-import docx
 
 from groq import Groq
 import json
