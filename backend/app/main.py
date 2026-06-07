@@ -182,22 +182,16 @@ async def parse_resume_public(file: UploadFile = File(...)):
         filename = file.filename.lower()
         
         text = ""
+
         try:
-            if filename.endswith(".docx") or filename.endswith(".doc"):
-                doc = docx.Document(io.BytesIO(content))
-                text = "\n".join([para.text for para in doc.paragraphs])
-            else:
-                # Default to PDF
-                with pdfplumber.open(io.BytesIO(content)) as pdf:
-                    for page in pdf.pages:
-                        page_text = page.extract_text()
-                        if page_text:
-                            text += page_text + "\n"
+            pdf = PyPDF2.PdfReader(io.BytesIO(content))
+            for page in pdf.pages:
+                text += page.extract_text() + "\n"
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Could not read file {filename}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Could not read PDF file: {e}")
             
         if not text.strip():
-            raise HTTPException(status_code=400, detail="Document contains no readable text. Please ensure it is a text-based document, not a scanned image.")
+            raise HTTPException(status_code=400, detail="PDF contains no readable text. Please ensure it is a text-based PDF, not an image.")
             
         # Use Groq to extract details
         if not settings.groq_api_key:
