@@ -501,3 +501,210 @@ async def candidate_insights(request: Request, user: dict = Depends(require_cand
 
 def health_check():
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+# =====================================================================
+# COMPANY PORTAL - HIRING OS API ENDPOINTS
+# =====================================================================
+
+@app.post("/api/company/onboard", tags=["Company"])
+@limiter.limit("5/minute")
+async def company_onboard(request: Request, payload: dict, user: dict = Depends(get_current_user)):
+    """
+    Registers a new company workspace and links the user as the Owner.
+    Expects payload: { name, official_email, website, industry, size, hq_location, linkedin_url, gst, contact_name, designation, phone }
+    """
+    async with httpx.AsyncClient() as client:
+        # 1. Create Company
+        company_data = {
+            "name": payload.get("name"),
+            "official_email": payload.get("official_email"),
+            "website": payload.get("website"),
+            "industry": payload.get("industry"),
+            "size": payload.get("size"),
+            "hq_location": payload.get("hq_location"),
+            "linkedin_url": payload.get("linkedin_url"),
+            "gst": payload.get("gst", "")
+        }
+        comp_resp = await client.post(
+            supabase_url("companies"),
+            headers=supabase_headers(),
+            json=company_data
+        )
+        if comp_resp.status_code not in (200, 201):
+            raise HTTPException(status_code=400, detail="Failed to create company")
+            
+        company = comp_resp.json()[0]
+        
+        # 2. Get Owner Role
+        role_resp = await client.get(
+            f"{supabase_url('company_roles')}?role_name=eq.Owner",
+            headers=supabase_headers()
+        )
+        
+        roles = role_resp.json()
+        role_id = None
+        if not roles:
+            # Create Owner role if not exists
+            new_role = await client.post(
+                supabase_url("company_roles"),
+                headers=supabase_headers(),
+                json={"role_name": "Owner", "permissions": {"all": True}}
+            )
+            role_id = new_role.json()[0]["id"]
+        else:
+            role_id = roles[0]["id"]
+            
+        # 3. Create Company User Mapping
+        await client.post(
+            supabase_url("company_users"),
+            headers=supabase_headers(),
+            json={
+                "company_id": company["id"],
+                "user_id": user["id"],
+                "contact_name": payload.get("contact_name"),
+                "designation": payload.get("designation"),
+                "phone": payload.get("phone"),
+                "role_id": role_id
+            }
+        )
+        
+        # 4. Update Auth User Type
+        await client.patch(
+            f"{supabase_url('users')}?id=eq.{user['id']}",
+            headers=supabase_headers(),
+            json={"user_type": "company"}
+        )
+        
+        return {"status": "success", "company": company}
+
+@app.post("/api/company/jobs/create", tags=["Company"])
+@limiter.limit("20/minute")
+async def create_job(request: Request, background_tasks: BackgroundTasks, payload: dict, user: dict = Depends(get_current_user)):
+    """
+    Creates a new Job Workspace. Offloads Vector Generation to BackgroundTasks.
+    """
+    async with httpx.AsyncClient() as client:
+        # Get company_id for user
+        cu_resp = await client.get(
+            f"{supabase_url('company_users')}?user_id=eq.{user['id']}",
+            headers=supabase_headers()
+        )
+        cu = cu_resp.json()
+        if not cu:
+            raise HTTPException(status_code=403, detail="Not associated with a company")
+            
+        company_id = cu[0]["company_id"]
+        
+        # Insert raw Job instantly
+        job_data = {
+            "company_id": company_id,
+            "title": payload.get("title"),
+            "department": payload.get("department"),
+            "description": payload.get("description"),
+            "required_skills": payload.get("required_skills", []),
+            "preferred_skills": payload.get("preferred_skills", []),
+            "experience": payload.get("experience"),
+            "education": payload.get("education"),
+            "location": payload.get("location"),
+            "work_model": payload.get("work_model"),
+            "salary_range": payload.get("salary_range"),
+            "employment_type": payload.get("employment_type"),
+            "notice_period": payload.get("notice_period"),
+            "priority": payload.get("priority", "Medium"),
+            "open_positions": payload.get("open_positions", 1)
+        }
+        
+        job_resp = await client.post(
+            supabase_url("jobs"),
+            headers=supabase_headers(),
+            json=job_data
+        )
+        
+        job = job_resp.json()[0]
+        
+        # Create Job Workspace instantly
+        await client.post(
+            supabase_url("job_workspaces"),
+            headers=supabase_headers(),
+            json={"job_id": job["id"], "company_id": company_id}
+        )
+        
+        # Offload AI generation
+        async def process_job_ai(job_id, desc, skills):
+            text = f"Title: {job_data['title']}. Skills: {', '.join(skills)}. Desc: {desc}"
+            def get_job_embedding(t):
+                from app.main import get_embedder
+                return get_embedder().encode(t).tolist()
+            
+            try:
+                import asyncio
+                emb = await asyncio.to_thread(get_job_embedding, text)
+                
+                async with httpx.AsyncClient() as c:
+                    await c.patch(
+                        f"{supabase_url('jobs')}?id=eq.{job_id}",
+                        headers=supabase_headers(),
+                        json={"job_embedding": emb}
+                    )
+            except Exception as e:
+                print(f"Error generating job embedding: {e}")
+                
+        background_tasks.add_task(process_job_ai, job["id"], job_data["description"], job_data["required_skills"])
+        
+        return {"status": "queued", "job": job}
+
+
+@app.post("/api/ats/match", tags=["Company"])
+@limiter.limit("10/minute")
+async def ats_match_candidates(request: Request, payload: dict, user: dict = Depends(get_current_user)):
+    """
+    AI Sourcing Engine. Runs a pgvector semantic match against all parsed candidate resumes.
+    Automatically adds the top matched candidates to the job's candidate_shortlists pipeline.
+    """
+    job_id = payload.get("job_id")
+    match_count = payload.get("match_count", 20)
+    
+    if not job_id:
+        raise HTTPException(status_code=400, detail="job_id is required")
+        
+    async with httpx.AsyncClient() as client:
+        # 1. Call Supabase RPC for pgvector matching
+        rpc_resp = await client.post(
+            f"{settings.supabase_url}/rest/v1/rpc/match_candidates_to_job",
+            headers=supabase_headers(),
+            json={
+                "target_job_id": job_id,
+                "match_threshold": 0.30,  # 30% similarity baseline
+                "match_count": match_count
+            }
+        )
+        
+        matches = rpc_resp.json()
+        if not matches or "error" in matches:
+            return {"status": "no_matches", "matches": []}
+            
+        # 2. Add them to the Kanban pipeline (candidate_shortlists)
+        # Avoid duplicates by ignoring constraints (using upsert or just insert ignoring)
+        inserts = []
+        for match in matches:
+            inserts.append({
+                "job_id": job_id,
+                "candidate_id": match["candidate_id"],
+                "added_by": user["id"],
+                "status": "Sourcing",
+                "ai_match_score": match["similarity"] * 100 # Convert to percentage
+            })
+            
+        if inserts:
+            # Prefer=resolution=ignore-duplicates prevents crashing if candidate already in pipeline
+            headers = supabase_headers()
+            headers["Prefer"] = "resolution=ignore-duplicates"
+            
+            await client.post(
+                supabase_url("candidate_shortlists"),
+                headers=headers,
+                json=inserts
+            )
+            
+        return {"status": "success", "sourced_count": len(inserts), "matches": matches}

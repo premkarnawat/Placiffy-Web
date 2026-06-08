@@ -1,133 +1,248 @@
 "use client";
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Camera, MapPin, ArrowRight, Loader2, Linkedin, ChevronDown } from "lucide-react";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { Building2, UploadCloud, ChevronRight, Loader2, Globe, MapPin, Briefcase, Mail, Phone, User, FileText } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
+import { motion } from 'framer-motion';
 
-const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Education", "E-commerce", "Manufacturing", "Consulting", "Media", "Real Estate", "Other"];
-const SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
-
-export default function CompanyRegisterPage() {
-  const [form, setForm] = useState({ name: "", email: "", website: "", industry: "", size: "", location: "" });
+export default function CompanyRegistration() {
+  const router = useRouter();
+  const { toast } = useToast();
+  
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    official_email: '',
+    website: '',
+    industry: 'Technology',
+    size: '1-10',
+    hq_location: '',
+    linkedin_url: '',
+    gst: '',
+    contact_name: '',
+    designation: '',
+    phone: ''
+  });
 
-  const update = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const fileName = `logo_${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from("company_logos").upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from("company_logos").getPublicUrl(fileName);
+      setLogoUrl(data.publicUrl);
+      toast("success", "Logo Uploaded", "Your company logo is set.");
+    } catch (err: any) {
+      toast("error", "Upload Failed", err.message);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step === 1) return setStep(2);
+    
     setLoading(true);
-    setTimeout(() => {
-      window.location.href = "/company/dashboard";
-    }, 2000);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Authentication required. Please login first.");
+
+      const payload = { ...formData, logo_url: logoUrl };
+      
+      const res = await fetch(`${API_URL}/api/company/onboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || "Registration failed");
+      }
+      
+      toast("success", "Company Registered", "Welcome to Placify Hiring OS!");
+      router.push("/company/dashboard");
+      
+    } catch (err: any) {
+      toast("error", "Registration Failed", err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/20 to-violet-50/20 relative overflow-hidden flex items-center justify-center p-4">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-blue-100/30 via-violet-100/20 to-transparent rounded-full blur-3xl pointer-events-none"/>
-
-      <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{duration:0.5}}
-        className="w-full max-w-lg relative z-10">
-
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-zinc-900 tracking-tight">PLACIFY</h1>
-          <h2 className="text-xl font-bold text-zinc-700 mt-2">Create Your Hiring Workspace</h2>
-          <p className="text-sm text-zinc-500 mt-1">Start hiring verified talent faster with Placify.</p>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
+        <div className="flex justify-center items-center gap-2 mb-4">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+            <Building2 className="text-white" size={24} />
+          </div>
+          <span className="text-3xl font-extrabold text-gray-900 tracking-tight">PLACIFY</span>
         </div>
+        <h2 className="text-3xl font-bold text-gray-900">Create Your Workspace</h2>
+        <p className="mt-2 text-sm text-gray-600">Start hiring verified talent faster.</p>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-zinc-200/50 border border-zinc-100 p-8">
-          {/* Logo Upload */}
-          <div className="flex justify-center mb-6">
-            <button className="w-20 h-20 rounded-full border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center text-zinc-400 hover:border-[#0052CC] hover:text-[#0052CC] transition-all">
-              <Camera className="w-5 h-5 mb-1"/>
-              <span className="text-[8px] font-bold uppercase">Upload Logo</span>
-            </button>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sm:mx-auto sm:w-full sm:max-w-2xl"
+      >
+        <div className="bg-white py-8 px-4 shadow-xl shadow-blue-900/5 sm:rounded-3xl sm:px-10 border border-slate-100">
+          
+          {/* Progress Indicator */}
+          <div className="flex items-center justify-between mb-8">
+            <div className={`flex-1 h-2 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-slate-100'}`}></div>
+            <div className="w-4"></div>
+            <div className={`flex-1 h-2 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-slate-100'}`}></div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Company Name</label>
-              <input className="w-full border border-zinc-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 focus:border-[#0052CC] transition-all"
-                placeholder="e.g. Acme Tech" value={form.name} onChange={e => update("name", e.target.value)} required/>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Official Email</label>
-                <input type="email" className="w-full border border-zinc-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 focus:border-[#0052CC] transition-all"
-                  placeholder="name@company.com" value={form.email} onChange={e => update("email", e.target.value)} required/>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Website URL</label>
-                <input className="w-full border border-zinc-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 focus:border-[#0052CC] transition-all"
-                  placeholder="https://..." value={form.website} onChange={e => update("website", e.target.value)}/>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Industry</label>
-                <div className="relative">
-                  <select className="w-full border border-zinc-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 appearance-none bg-white text-zinc-600"
-                    value={form.industry} onChange={e => update("industry", e.target.value)}>
-                    <option value="">Select Industry</option>
-                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"/>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {step === 1 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex justify-center mb-8">
+                  <label className="relative cursor-pointer group">
+                    <div className={`w-28 h-28 rounded-full border-2 border-dashed flex flex-col items-center justify-center transition-colors ${logoUrl ? 'border-blue-500 bg-white' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-blue-400'}`}>
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" className="w-full h-full object-contain rounded-full p-2" />
+                      ) : (
+                        <>
+                          <UploadCloud className="text-slate-400 group-hover:text-blue-500 mb-1" size={28} />
+                          <span className="text-xs text-slate-500 font-medium text-center px-2">Upload<br/>Logo</span>
+                        </>
+                      )}
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                  </label>
                 </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Company Size</label>
-                <div className="relative">
-                  <select className="w-full border border-zinc-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 appearance-none bg-white text-zinc-600"
-                    value={form.size} onChange={e => update("size", e.target.value)}>
-                    <option value="">Team Size</option>
-                    {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"/>
+
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Company Name</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Building2 className="text-slate-400" size={18}/></div>
+                      <input required type="text" name="name" value={formData.name} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="e.g. Acme Corp" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Official Email</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail className="text-slate-400" size={18}/></div>
+                      <input required type="email" name="official_email" value={formData.official_email} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="hr@acme.com" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Website</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Globe className="text-slate-400" size={18}/></div>
+                      <input type="url" name="website" value={formData.website} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="https://acme.com" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Industry</label>
+                    <select name="industry" value={formData.industry} onChange={handleChange} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50">
+                      <option>Technology</option>
+                      <option>Finance</option>
+                      <option>Healthcare</option>
+                      <option>Retail</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Company Size</label>
+                    <select name="size" value={formData.size} onChange={handleChange} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50">
+                      <option>1-10</option>
+                      <option>11-50</option>
+                      <option>51-200</option>
+                      <option>201-500</option>
+                      <option>500+</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5">Location</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"/>
-                <input className="w-full border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[#0052CC]/20 focus:border-[#0052CC] transition-all"
-                  placeholder="Global HQ City" value={form.location} onChange={e => update("location", e.target.value)}/>
-              </div>
-            </div>
+                <button type="submit" className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors mt-8">
+                  Continue to Contact Details <ChevronRight size={18} />
+                </button>
+              </motion.div>
+            )}
 
-            <button type="submit" disabled={loading}
-              className="w-full bg-[#0052CC] hover:bg-[#003FA3] text-white py-3.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin"/> : null}
-              Create Workspace <ArrowRight className="w-4 h-4"/>
-            </button>
+            {step === 2 && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Headquarters Location</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><MapPin className="text-slate-400" size={18}/></div>
+                      <input required type="text" name="hq_location" value={formData.hq_location} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="San Francisco, CA" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Person Name</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="text-slate-400" size={18}/></div>
+                      <input required type="text" name="contact_name" value={formData.contact_name} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="Jane Doe" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Designation</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Briefcase className="text-slate-400" size={18}/></div>
+                      <input required type="text" name="designation" value={formData.designation} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="Head of Talent" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Phone className="text-slate-400" size={18}/></div>
+                      <input required type="tel" name="phone" value={formData.phone} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="+1 (555) 000-0000" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">GST / Tax ID (Optional)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FileText className="text-slate-400" size={18}/></div>
+                      <input type="text" name="gst" value={formData.gst} onChange={handleChange} className="pl-10 block w-full rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-3 px-4 bg-slate-50" placeholder="GSTIN..." />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-8">
+                  <button type="button" onClick={() => setStep(1)} className="w-1/3 flex justify-center py-3.5 px-4 border border-slate-200 rounded-xl shadow-sm text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                    Back
+                  </button>
+                  <button type="submit" disabled={loading} className="w-2/3 flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-70">
+                    {loading ? <Loader2 className="animate-spin" size={18} /> : null}
+                    {loading ? 'Creating Workspace...' : 'Complete Registration'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
           </form>
-
-          {/* Social Register */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-zinc-200"/>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Or register with</span>
-            <div className="flex-1 h-px bg-zinc-200"/>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button className="py-3 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              Google
-            </button>
-            <button className="py-3 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all flex items-center justify-center gap-2">
-              <Linkedin className="w-4 h-4 text-[#0A66C2]"/>
-              LinkedIn
-            </button>
-          </div>
         </div>
-
-        <p className="text-center text-sm text-zinc-500 mt-6">
-          Already have a workspace?{" "}
-          <a href="/login" className="text-[#0052CC] font-bold hover:underline">Sign In</a>
-        </p>
       </motion.div>
     </div>
   );
