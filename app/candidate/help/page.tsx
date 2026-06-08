@@ -12,8 +12,7 @@ export default function HelpCenterPage() {
   
   const [faqs, setFaqs] = useState<any[]>([]);
   const [kbArticles, setKbArticles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {

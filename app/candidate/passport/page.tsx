@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { ShieldCheck, Download, Share2, Calendar, FileText, CheckCircle2, Lock, Activity, Eye, FileBadge } from 'lucide-react';
+import { ShieldCheck, Download, Share2, Calendar, FileText, CheckCircle2, Lock, Activity, FileBadge } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function CandidatePassportPage() {

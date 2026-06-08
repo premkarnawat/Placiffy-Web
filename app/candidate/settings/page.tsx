@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { Shield, Lock, Bell, Database, Save, CheckCircle, Settings } from 'lucide-react';
+import { Database, Save, Settings } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function SettingsPage() {

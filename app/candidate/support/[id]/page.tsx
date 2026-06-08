@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MessageSquare, Send, Clock, CheckCircle2, AlertCircle, Paperclip } from 'lucide-react';
+import { ArrowLeft, Send, Clock, Paperclip } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function TicketDetailsPage() {

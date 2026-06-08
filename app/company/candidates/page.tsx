@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Upload, ArrowLeft, Award, CheckCircle, XCircle, Clock, ChevronRight, Filter, RefreshCw, X, User } from "lucide-react";
+import { Search, Upload, ArrowLeft, CheckCircle, XCircle, ChevronRight, RefreshCw, X, User } from "lucide-react";
 
 const COLUMNS = [
   { id:"applicants", label:"Applicants", color:"bg-zinc-100 text-zinc-600", count:42 },

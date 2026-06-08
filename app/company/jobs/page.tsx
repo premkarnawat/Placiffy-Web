@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Search, Briefcase, Users, X, RefreshCw, CheckCircle,
-  Sparkles, MapPin, DollarSign, Clock, ChevronRight, Filter,
-  Menu, ArrowLeft
+  Plus, Search, Briefcase, X, RefreshCw, CheckCircle,
+  Sparkles, MapPin, Clock, ChevronRight, Filter,
+  ArrowLeft
 } from "lucide-react";
 
 interface Job { id:number; title:string; dept:string; location:string; type:string; applicants:number; ats_avg:number; posted:string; status:"Active"|"Paused"|"Closed"; }

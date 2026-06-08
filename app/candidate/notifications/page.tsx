@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { Bell, Search, Filter, MessageSquare, Briefcase, ShieldCheck, Zap, AlertCircle, CheckCircle2, Trash2, Check, X } from 'lucide-react';
+import { Bell, Search, MessageSquare, Briefcase, ShieldCheck, Zap, Trash2, Check, X } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function NotificationsPage() {
@@ -14,7 +14,7 @@ export default function NotificationsPage() {
   const [filtered, setFiltered] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('All');
+  const [typesetTypeFilter] = useState('All');
 
   const fetchNotifications = async () => {
     try {
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
       result = result.filter(n => n.type === typeFilter.toLowerCase());
     }
     setFiltered(result);
-  }, [searchQuery, typeFilter, notifications]);
+  }, [searchQuery, typenotifications]);
 
   const markAsRead = async (id: string) => {
     try {

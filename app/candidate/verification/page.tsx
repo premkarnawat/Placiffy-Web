@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { ShieldCheck, FileText, CheckCircle2, Circle, Clock, Lock, ArrowRight, Upload, AlertCircle } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Circle, Clock, Lock, ArrowRight, Upload, AlertCircle } from 'lucide-react';
 
 export default function VerificationPage() {
   const { user } = useAuth();

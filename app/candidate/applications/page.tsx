@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { Briefcase, Search, Filter, Calendar, MapPin, Building, CheckCircle2, Clock, AlertCircle, ChevronRight, XCircle } from 'lucide-react';
+import { Briefcase, Search, Calendar, MapPin, Building, CheckCircle2, Clock, ChevronRight, XCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function ApplicationsPage() {
@@ -14,7 +14,7 @@ export default function ApplicationsPage() {
   const [filtered, setFiltered] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statussetStatusFilter] = useState('All');
 
   const STAGES = ['Applied', 'Under Review', 'Verification', 'Interview Scheduled', 'Interview Completed', 'Offer Released', 'Offer Accepted', 'Joined', 'Rejected'];
 
@@ -49,7 +49,7 @@ export default function ApplicationsPage() {
       result = result.filter(a => a.status === statusFilter.toLowerCase());
     }
     setFiltered(result);
-  }, [searchQuery, statusFilter, applications]);
+  }, [searchQuery, statusapplications]);
 
   const getStatusColor = (status: string) => {
     switch(status?.toLowerCase()) {

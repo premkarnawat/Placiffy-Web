@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { MessageSquare, Send, Paperclip, MoreVertical, Search, CheckCircle2, User as UserIcon } from 'lucide-react';
+import { MessageSquare, Send, Paperclip, MoreVertical, Search, CheckCircle2,  } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function CommunicationHub() {

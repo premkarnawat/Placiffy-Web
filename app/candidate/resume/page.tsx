@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { FileText, Upload, Download, Trash2, RefreshCw, Eye, CheckCircle2, AlertCircle, Clock, FileUp } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, RefreshCw, Eye, CheckCircle2, Clock, FileUp } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function ResumeManagementPage() {

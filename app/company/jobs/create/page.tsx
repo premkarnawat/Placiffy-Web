@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Sparkles, BarChart2, Send, X, Bold, Italic, List, Link2,
-  Briefcase, Users, MessageSquare, BarChart2 as Chart, Settings,
-  HelpCircle, Building2, ChevronDown, Clock
+  Settings,
+  HelpCircle, ChevronDown, Clock
 } from "lucide-react";
 
 const NAV = [

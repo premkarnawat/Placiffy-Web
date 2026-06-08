@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Search, MapPin, Briefcase, DollarSign, Clock, CheckCircle2, Lock, ArrowRight, Loader2, Filter, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { MapPin, Briefcase, DollarSign, CheckCircle2, Lock, ArrowRight, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
@@ -17,8 +17,7 @@ export default function CandidateJobs() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [profileScore, setProfileScore] = useState(0);
   const [isFetching, setIsFetching] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedJob, setSelectedJob] = useState<any>(null); // For ATS Explanation Panel
+    const [selectedJob, setSelectedJob] = useState<any>(null); // For ATS Explanation Panel
 
   useEffect(() => {
     if (user) fetchJobsAndProfile();

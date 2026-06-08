@@ -14,8 +14,7 @@ export default function SupportPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newTicket, setNewTicket] = useState({ category: 'Technical Issue', subject: '', description: '' });
   const [isLoading, setIsLoading] = useState(true);
-  const [kbArticles, setKbArticles] = useState<any[]>([]);
-
+  
   const categories = ['Technical Issue', 'Profile Issue', 'Verification Issue', 'ATS Issue', 'Interview Issue', 'Offer Issue', 'Billing Issue', 'General Inquiry'];
 
   useEffect(() => {
