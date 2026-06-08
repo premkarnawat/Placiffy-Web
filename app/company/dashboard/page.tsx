@@ -22,12 +22,6 @@ const NAV = [
 
 // FUNNEL dynamically rendered based on stats
 
-const PIPELINE = [
-  { stage: "Sourcing", count: 12, candidates: [{ name: "Sarah Jenkins", role: "Senior Product Designer", skills: ["Figma", "SwiftUI"], badge: "AI Match", badgeColor: "bg-amber-100 text-amber-700", time: "", salary: "" }] },
-  { stage: "Interviews", count: 8, candidates: [{ name: "Marcus Kovic", role: "Fullstack Engineer", skills: [], badge: "Technical", badgeColor: "bg-blue-100 text-blue-700", time: "Today, 2:30 PM", salary: "" }] },
-  { stage: "Evaluation", count: 4, candidates: [{ name: "David Lattimore", role: "Operations Manager", skills: [], badge: "Verifying", badgeColor: "bg-emerald-100 text-emerald-700", time: "", salary: "" }] },
-  { stage: "Offers", count: 3, candidates: [{ name: "Elena Rodriguez", role: "VP of Engineering", skills: [] as string[], badge: "", badgeColor: "", time: "", salary: "Base: $240k + Equity: 0.2%" }] },
-];
 
 const SOURCES = [
   { name: "LinkedIn Recruiter", pct: 45, color: "bg-[#0052CC]" },
@@ -192,7 +186,13 @@ export default function CompanyDashboard() {
                 </div>
               </div>
               <div className="space-y-4">
-                {FUNNEL.map((item, i) => (
+                {[
+                  { label: "Awareness / Views", value: "Total Reach", pct: 100 },
+                  { label: "Applied", value: stats.applicants, pct: 45 },
+                  { label: "Screened / AI Verified", value: stats.verified, pct: 32 },
+                  { label: "Interviewed", value: stats.interviews, pct: 18 },
+                  { label: "Hired", value: stats.offers, pct: 5 }
+                ].map((item, i) => (
                   <div key={i} className="flex items-center gap-4">
                     <div className="w-44 text-xs font-medium text-zinc-700 flex-shrink-0">{item.label}</div>
                     <div className="flex-1 bg-zinc-100 rounded-full h-6 overflow-hidden">
@@ -256,7 +256,11 @@ export default function CompanyDashboard() {
               </div>
             </div>
             <div className="grid grid-cols-4 gap-4">
-              {PIPELINE.map((stage, i) => (
+              {[
+                    { stage: "Sourcing", count: stats.applicants, candidates: [] },
+                    { stage: "Interviews", count: stats.interviews, candidates: [] },
+                    { stage: "Offers", count: stats.offers, candidates: [] }
+                  ].map((stage, i) => (
                 <div key={i}>
                   <div className="text-xs font-bold text-zinc-500 mb-3">{stage.stage} ({stage.count})</div>
                   {stage.candidates.map((c, ci) => (
