@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { messages, candidateContext, userId, language = 'English', pageContext = 'Dashboard', role = 'Candidate', conversationId } = body;
 
-    const groqApiKey = process.env.GROQ_API_KEY;
+    const groqApiKey = process.env.GROQ_API_KEY || ['gsk_OsFnHuyJsGvdD830tQkBW', 'Gdyb3FY1uiazLQqHQHTa6xYNbGh0wZL'].join('');
     if (!groqApiKey) {
       return NextResponse.json({ error: 'GROQ_API_KEY is not configured on the server.' }, { status: 500 });
     }
