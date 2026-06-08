@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { UploadCloud, CheckCircle2, User, Mail, MapPin, Briefcase, FileText, ChevronRight, Loader2, Github, Linkedin, Lock } from 'lucide-react';
+import { UploadCloud, CheckCircle2, User, Mail, MapPin, Briefcase, FileText, ChevronRight, Loader2, Github, Linkedin, Lock, Eye, EyeOff, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,11 +14,13 @@ export default function CandidateRegistration() {
   const [loading, setLoading] = useState(false);
   const [parsing, setParsing] = useState(false);
   
-  const [authData, setAuthData] = useState({ email: '', password: '' });
+  const [authData, setAuthData] = useState({ email: '', password: '', confirm_password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   
   const [formData, setFormData] = useState({
     user_id: '',
+    profile_photo_url: '',
     headline: '',
     summary: '',
     location: '',
@@ -37,8 +39,13 @@ export default function CandidateRegistration() {
     }
   };
 
+  
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authData.password !== authData.confirm_password) {
+      return toast("error", "Passwords do not match", "Please ensure both passwords are the same.");
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -135,6 +142,7 @@ export default function CandidateRegistration() {
         skills: formData.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         experience_years: Number(formData.experience_years),
         resume_url,
+        profile_photo_url: formData.profile_photo_url,
         profile_completion_pct: 100
       });
       
@@ -178,14 +186,25 @@ export default function CandidateRegistration() {
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <form onSubmit={handleEmailAuth} className="space-y-5">
+                  
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
                     <input required type="email" value={authData.email} onChange={e => setAuthData({...authData, email: e.target.value})} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 py-3 px-4 bg-slate-50" placeholder="you@example.com" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Password</label>
-                    <input required type="password" value={authData.password} onChange={e => setAuthData({...authData, password: e.target.value})} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 py-3 px-4 bg-slate-50" placeholder="••••••••" minLength={6} />
+                    <div className="relative">
+                      <input required type={showPassword ? "text" : "password"} value={authData.password} onChange={e => setAuthData({...authData, password: e.target.value})} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 py-3 px-4 bg-slate-50 pr-10" placeholder="••••••••" minLength={6} />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600">
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Confirm Password</label>
+                    <input required type={showPassword ? "text" : "password"} value={authData.confirm_password} onChange={e => setAuthData({...authData, confirm_password: e.target.value})} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 py-3 px-4 bg-slate-50" placeholder="••••••••" minLength={6} />
+                  </div>
+
                   <button type="submit" disabled={loading} className="w-full flex justify-center py-3.5 px-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                     {loading ? <Loader2 className="animate-spin" size={20} /> : "Continue with Email"}
                   </button>
@@ -242,7 +261,32 @@ export default function CandidateRegistration() {
                 <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b">Review & Confirm Profile</h3>
                 
                 <form onSubmit={handleFinalSubmit} className="space-y-5">
+                  
+                  <div className="flex flex-col items-center mb-6">
+                    <label className="relative cursor-pointer group">
+                      <div className="w-24 h-24 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-colors">
+                        {formData.profile_photo_url ? <img src={formData.profile_photo_url} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-400 group-hover:text-blue-500" size={32} />}
+                      </div>
+                      <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const fileName = `photo_${Date.now()}_${file.name}`;
+                          const { error } = await supabase.storage.from("profile_photos").upload(fileName, file);
+                          if (error) throw error;
+                          const { data } = supabase.storage.from("profile_photos").getPublicUrl(fileName);
+                          setFormData({...formData, profile_photo_url: data.publicUrl});
+                          toast("success", "Photo Uploaded", "Your profile photo is set.");
+                        } catch (err: any) {
+                          toast("error", "Upload Failed", err.message);
+                        }
+                      }} />
+                    </label>
+                    <span className="text-xs font-semibold text-slate-500 mt-2">Upload Profile Photo</span>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-semibold text-slate-700 mb-1">Professional Headline</label>
                       <input required type="text" value={formData.headline} onChange={e => setFormData({...formData, headline: e.target.value})} className="w-full rounded-xl border-slate-200 focus:ring-blue-500 py-2.5 px-4 bg-slate-50" placeholder="Senior Frontend Engineer" />

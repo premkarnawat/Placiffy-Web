@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Building2, UploadCloud, ChevronRight, Loader2, Globe, MapPin, Briefcase, Mail, Phone, User, FileText, Lock } from 'lucide-react';
+import { Building2, UploadCloud, ChevronRight, Loader2, Globe, MapPin, Briefcase, Mail, Phone, User, FileText, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,12 +12,14 @@ export default function CompanyRegistration() {
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
   
   const [formData, setFormData] = useState({
     name: '',
     official_email: '',
     password: '',
+    confirm_password: '',
     website: '',
     industry: 'Technology',
     size: '1-10',
@@ -49,9 +51,16 @@ export default function CompanyRegistration() {
     }
   };
 
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step === 1) return setStep(2);
+    if (step === 1) {
+      if (formData.password !== formData.confirm_password) {
+        return toast("error", "Passwords do not match", "Please ensure both passwords are the same.");
+      }
+      return setStep(2);
+    }
+
     
     setLoading(true);
     try {
@@ -162,8 +171,17 @@ export default function CompanyRegistration() {
 
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1"><Lock size={14}/> Password</label>
-                      <input required type="password" name="password" minLength={6} value={formData.password} onChange={handleChange} className="w-full rounded-xl border-slate-200 focus:ring-indigo-500 py-2.5 px-4 bg-slate-50" placeholder="••••••••" />
+                      <div className="relative">
+                        <input required type={showPassword ? "text" : "password"} name="password" minLength={6} value={formData.password} onChange={handleChange} className="w-full rounded-xl border-slate-200 focus:ring-indigo-500 py-2.5 px-4 bg-slate-50 pr-10" placeholder="••••••••" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       <span className="text-xs text-slate-500 mt-1">Must be at least 6 characters</span>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1"><Lock size={14}/> Confirm Password</label>
+                      <input required type={showPassword ? "text" : "password"} name="confirm_password" minLength={6} value={formData.confirm_password} onChange={handleChange} className="w-full rounded-xl border-slate-200 focus:ring-indigo-500 py-2.5 px-4 bg-slate-50" placeholder="••••••••" />
                     </div>
                     
                     <div>
