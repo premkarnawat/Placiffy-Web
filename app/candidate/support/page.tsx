@@ -25,7 +25,6 @@ export default function SupportPage() {
     try {
       const { data, error } = await supabase.from('support_tickets').select('*').eq('user_id', user?.id).order('created_at', { ascending: false });
       const { data: kbData } = await supabase.from('knowledge_base').select('title, category').limit(5);
-      setKbArticles(kbData || []);
       if (error) throw error;
       setTickets(data || []);
     } catch (e) {

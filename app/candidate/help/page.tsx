@@ -23,7 +23,6 @@ export default function HelpCenterPage() {
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
       }
     };
     fetchData();
