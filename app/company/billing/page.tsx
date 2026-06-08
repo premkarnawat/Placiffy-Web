@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { CreditCard, Download, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { CreditCard, Download, CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function CompanyBilling() {

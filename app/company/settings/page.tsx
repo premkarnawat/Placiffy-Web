@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { Settings as SettingsIcon, UploadCloud, Shield, Bell, Loader2 } from "lucide-react";
+import { Settings as SettingsIcon, UploadCloud, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function CompanySettings() {

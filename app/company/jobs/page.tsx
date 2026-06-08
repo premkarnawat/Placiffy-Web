@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { motion } from "framer-motion";
-import { Plus, Search, Users, MapPin, Briefcase, Zap, Loader2, ChevronRight } from "lucide-react";
+import { Plus, MapPin, Briefcase, Zap, Loader2, ChevronRight } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/components/ui/toast";
 

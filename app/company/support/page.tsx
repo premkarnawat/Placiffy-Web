@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { HelpCircle, Plus, Search, Loader2, MessageSquare } from "lucide-react";
+import { HelpCircle, Plus, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function SupportCenter() {

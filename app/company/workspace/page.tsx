@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Zap, Loader2, Clock, CheckCircle2, AlertCircle, Phone, ArrowRight, ExternalLink } from "lucide-react";
+import { User, Zap, Loader2, AlertCircle, ArrowRight, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 type PipelineStage = 'Sourcing' | 'Interview' | 'Offer' | 'Joined';
