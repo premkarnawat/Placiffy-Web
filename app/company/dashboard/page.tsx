@@ -11,11 +11,20 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "jobs", label: "Job Workspaces", icon: Briefcase, href: "/company/jobs" },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/company/dashboard" },
+  { id: "create_job", label: "Create Job", icon: Plus, href: "/company/jobs/create" },
+  { id: "jobs", label: "Job Workspace", icon: Briefcase, href: "/company/workspace" },
   { id: "candidates", label: "Candidate Pool", icon: Users, href: "/company/candidates" },
-  { id: "messaging", label: "Messaging", icon: MessageSquare, href: "/messages" },
-  { id: "analytics", label: "Analytics", icon: BarChart2 },
+  { id: "messaging", label: "Messages", icon: MessageSquare, href: "/company/messages" },
+  { id: "reports", label: "Reports", icon: BarChart2, href: "/company/reports" },
+  { id: "analytics", label: "Analytics", icon: BarChart2, href: "/company/analytics" },
+];
+
+const BOTTOM_NAV = [
+  { id: "billing", label: "Billing", icon: LayoutDashboard, href: "/company/billing" },
+  { id: "support", label: "Support", icon: HelpCircle, href: "/company/support" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/company/settings" },
+  { id: "ai", label: "AI Assistant", icon: Sparkles, href: "/company/ai-assistant" },
 ];
 
 
@@ -71,7 +80,7 @@ export default function CompanyDashboard() {
       {/* Sidebar */}
       <aside className="w-52 bg-[#F8F9FB] border-r border-zinc-200/60 flex flex-col min-min-h-screen sticky top-0">
         <div className="p-5 pb-6">
-          <div className="flex items-center gap-2">
+          <a href="/company/dashboard" className="flex items-center gap-2 cursor-pointer">
             <div className="w-8 h-8 bg-[#0052CC] rounded-xl flex items-center justify-center">
               <Building2 className="w-4 h-4 text-white"/>
             </div>
@@ -79,7 +88,7 @@ export default function CompanyDashboard() {
               <div className="text-sm font-black text-zinc-900">PLACIFY</div>
               <div className="text-[9px] text-zinc-400 font-medium">Intelligence OS</div>
             </div>
-          </div>
+          </a>
         </div>
 
         <nav className="flex-1 px-3 space-y-0.5">
@@ -98,18 +107,17 @@ export default function CompanyDashboard() {
         </nav>
 
         <div className="p-3 space-y-0.5 border-t border-zinc-200/60 mt-auto">
-          <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-all">
-            <HelpCircle className="w-4 h-4"/>Support
-          </button>
-          <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-all">
-            <Settings className="w-4 h-4"/>Settings
-          </button>
-          <div className="mt-3 bg-white border border-zinc-200 rounded-xl p-3">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Enterprise Portal</div>
-            <div className="text-[9px] text-zinc-400">Placify Intelligence</div>
-          </div>
+          {BOTTOM_NAV.map(item => {
+            const Icon = item.icon;
+            return (
+              <button key={item.id} onClick={() => window.location.href = item.href} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-all">
+                <Icon className="w-4 h-4"/>
+                {item.label}
+              </button>
+            )
+          })}
         </div>
-      </aside>
+</aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col">
@@ -138,7 +146,7 @@ export default function CompanyDashboard() {
               <h1 className="text-3xl font-black text-zinc-900">Welcome Back, Alex.</h1>
               <p className="text-sm text-zinc-500 mt-1">Here's what's happening with your hiring funnel today.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <a href="/company/dashboard" className="flex items-center gap-2 cursor-pointer">
               <button className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
                 <Calendar className="w-3.5 h-3.5"/>Last 30 Days
               </button>

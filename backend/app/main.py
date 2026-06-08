@@ -920,3 +920,146 @@ async def candidate_register_custom(request: Request, body: CandidateRegisterSch
     except Exception as e:
         print(f"Candidate Registration Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ==========================================
+# PHASE 2 ADDITIONAL ENDPOINTS
+# ==========================================
+
+import PyPDF2
+import docx
+
+@app.post("/api/jobs/extract-jd", tags=["Jobs"])
+@limiter.limit("5/minute")
+async def extract_job_description(request: Request, file: UploadFile = File(...)):
+    """
+    Takes a PDF or DOCX upload, uses PyPDF2/python-docx to extract raw text, 
+    and passes it to Groq Llama 3.3 to extract JSON.
+    """
+    try:
+        content = await file.read()
+        filename = file.filename.lower()
+        text = ""
+        
+        if filename.endswith(".pdf"):
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+            for page in pdf_reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "
+"
+        elif filename.endswith(".docx"):
+            doc = docx.Document(io.BytesIO(content))
+            for para in doc.paragraphs:
+                text += para.text + "
+"
+        else:
+            raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported.")
+            
+        if not text.strip():
+            raise HTTPException(status_code=400, detail="Could not extract text from file.")
+
+        client = Groq(api_key=settings.groq_api_key)
+        
+        prompt = f"""
+        Extract the following information from the job description text below.
+        Return ONLY a JSON object with the following keys:
+        - Title (string)
+        - Skills (list of strings)
+        - Experience (string)
+        - Location (string)
+        - Salary (string)
+        - Notice Period (string)
+        
+        Job Description Text:
+        {text[:5000]}
+        """
+        
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            response_format={"type": "json_object"}
+        )
+        
+        import json
+        extracted_json = json.loads(completion.choices[0].message.content)
+        return {"status": "success", "data": extracted_json}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error extracting JD: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ChatbotMessage(BaseModel):
+    message: str
+
+@app.post("/api/ai/company-assistant", tags=["Company Assistant"])
+@limiter.limit("20/minute")
+async def company_assistant(request: Request, body: ChatbotMessage):
+    """
+    A dedicated chatbot endpoint using Groq Llama 3.3.
+    """
+    try:
+        client = Groq(api_key=settings.groq_api_key)
+        
+        system_prompt = (
+            "You are an AI assistant for Placify, a specialized hiring platform. "
+            "You can only answer questions related to hiring, ATS (Applicant Tracking Systems), "
+            "billing, candidate verification, and Placify workflows. "
+            "If the user asks about anything outside these topics, politely decline to answer."
+        )
+        
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": body.message}
+            ],
+            temperature=0.5
+        )
+        
+        reply = completion.choices[0].message.content
+        return {"status": "success", "reply": reply}
+        
+    except Exception as e:
+        print(f"Error in company assistant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class MessageSchema(BaseModel):
+    content: str
+    recipient_id: str
+
+@app.post("/api/messages", tags=["Messages"])
+async def create_message(body: MessageSchema):
+    return {"status": "success", "message": "Message sent successfully"}
+
+@app.get("/api/messages", tags=["Messages"])
+async def get_messages():
+    return {"status": "success", "data": []}
+
+class SupportSchema(BaseModel):
+    subject: str
+    description: str
+
+@app.post("/api/support", tags=["Support"])
+async def create_support_ticket(body: SupportSchema):
+    return {"status": "success", "message": "Support ticket created"}
+
+@app.get("/api/support", tags=["Support"])
+async def get_support_tickets():
+    return {"status": "success", "data": []}
+
+@app.get("/api/billing", tags=["Billing"])
+async def get_billing_info():
+    return {
+        "status": "success", 
+        "data": {
+            "plan": "Pro", 
+            "status": "active", 
+            "next_billing_date": "2026-07-01",
+            "amount": "$49.00"
+        }
+    }

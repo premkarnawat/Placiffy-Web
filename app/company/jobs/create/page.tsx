@@ -9,7 +9,58 @@ import { motion } from 'framer-motion';
 export default function CreateJobWorkspace() {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  
+  const [customFields, setCustomFields] = useState<{type: string, label: string}[]>([]);
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldType, setNewFieldType] = useState("text");
+
+  const addCustomField = () => {
+    if (!newFieldLabel.trim()) return;
+    setCustomFields(prev => [...prev, { type: newFieldType, label: newFieldLabel.trim() }]);
+    setNewFieldLabel("");
+  };
+
+const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setExtracting(true);
+    toast("info", "Extracting JD", "Our AI is reading your document...");
+    
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
+    const formDataObj = new FormData();
+    formDataObj.append("file", file);
+    
+    try {
+        const res = await fetch(`${API_URL}/api/jobs/extract-jd`, {
+            method: "POST",
+            body: formDataObj
+        });
+        
+        if (!res.ok) throw new Error("Failed to extract data");
+        const json = await res.json();
+        const data = json.data;
+        
+        setFormData(prev => ({
+            ...prev,
+            title: data.Title || prev.title,
+            required_skills: Array.isArray(data.Skills) ? data.Skills.join(", ") : (data.Skills || prev.required_skills),
+            experience: data.Experience || prev.experience,
+            location: data.Location || prev.location,
+            salary_range: data.Salary || prev.salary_range,
+            notice_period: data["Notice Period"] || prev.notice_period
+        }));
+        
+        toast("success", "Auto-Filled", "AI successfully populated the form from your JD!");
+    } catch (err: any) {
+        toast("error", "Extraction Failed", err.message);
+    } finally {
+        setExtracting(false);
+    }
+  };
   
   const [formData, setFormData] = useState({
     title: '',
@@ -46,7 +97,8 @@ export default function CreateJobWorkspace() {
         ...formData,
         required_skills: formData.required_skills.split(',').map(s => s.trim()).filter(Boolean),
         preferred_skills: formData.preferred_skills.split(',').map(s => s.trim()).filter(Boolean),
-        open_positions: parseInt(formData.open_positions as any) || 1
+        open_positions: parseInt(formData.open_positions as any) || 1,
+      custom_fields: customFields
       };
 
       const res = await fetch(`${API_URL}/api/company/jobs/create`, {
@@ -80,6 +132,18 @@ export default function CreateJobWorkspace() {
           <Briefcase className="text-blue-600" size={32}/> Create Job Workspace
         </h1>
         <p className="text-gray-500 mt-1">Configure the job requirements to activate the AI Sourcing Engine.</p>
+        
+        <div className="mt-6 bg-blue-50 border border-blue-100 p-6 rounded-2xl flex flex-col sm:flex-row items-center gap-6 justify-between">
+            <div>
+                <h3 className="font-bold text-blue-900 text-lg">Have a Job Description document?</h3>
+                <p className="text-blue-700 text-sm mt-1">Upload a PDF or DOCX file, and our AI will automatically extract and fill this form for you.</p>
+            </div>
+            <label className="shrink-0 cursor-pointer px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                {extracting ? <Loader2 className="w-5 h-5 animate-spin"/> : <Briefcase className="w-5 h-5"/>}
+                {extracting ? "Extracting..." : "Upload JD"}
+                <input type="file" accept=".pdf,.docx" className="hidden" onChange={handleFileUpload} disabled={extracting}/>
+            </label>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-8">
@@ -168,8 +232,8 @@ export default function CreateJobWorkspace() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1"><DollarSign size={14}/> Salary Range</label>
-              <input required type="text" name="salary_range" value={formData.salary_range} onChange={handleChange} className="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2.5 px-4 bg-gray-50" placeholder="$120k - $150k" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1"><span className="font-bold text-gray-400">₹</span> Salary Range (LPA)</label>
+              <input required type="text" name="salary_range" value={formData.salary_range} onChange={handleChange} className="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2.5 px-4 bg-gray-50" placeholder="₹12 LPA - ₹15 LPA" />
             </div>
 
             <div>
