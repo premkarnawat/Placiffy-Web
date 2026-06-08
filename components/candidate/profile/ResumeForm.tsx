@@ -1,3 +1,4 @@
+"use client";
 ﻿import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { FileText, UploadCloud, Loader2, CheckCircle2, ShieldCheck, Download, Trash2, Zap } from "lucide-react";
