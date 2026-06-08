@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { User, Briefcase, GraduationCap, Code, FolderGit2, ShieldCheck, Settings, UploadCloud, Loader2, Award, Heart, FileText } from 'lucide-react';
+import { User, Briefcase, GraduationCap, Code, FolderGit2, ShieldCheck, UploadCloud, Loader2, Award, Heart, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 import PersonalForm from '@/components/candidate/profile/PersonalForm';
@@ -29,8 +28,7 @@ const SECTIONS = [
 
 export default function ProfileEditor() {
   const { user, isLoading: authLoading } = useAuth();
-  const router = useRouter();
-  const { toast } = useToast();
+    const { toast } = useToast();
 
   const [activeSection, setActiveSection] = useState('personal');
   const [isSaving, setIsSaving] = useState(false);

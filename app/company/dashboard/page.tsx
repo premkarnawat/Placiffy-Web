@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import {
   LayoutDashboard, Briefcase, Users, MessageSquare, BarChart2,
   Bell, HelpCircle, Settings, Search, Plus, Calendar, ChevronRight,
-  TrendingUp, Sparkles, LogOut, Building2
+  Sparkles, Building2
 } from "lucide-react";
 
 const NAV = [
@@ -47,8 +47,7 @@ export default function CompanyDashboard() {
   const [pipelineView, setPipelineView] = useState("Board");
   const { user } = useAuth();
   const [stats, setStats] = useState({ activeJobs: 0, applicants: 0, verified: 0, interviews: 0, offers: 0 });
-  const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     if (user) fetchStats();
   }, [user]);
@@ -73,7 +72,7 @@ export default function CompanyDashboard() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
