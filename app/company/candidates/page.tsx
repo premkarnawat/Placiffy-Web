@@ -1,189 +1,195 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Upload, ArrowLeft, CheckCircle, XCircle, ChevronRight, RefreshCw, X, User } from "lucide-react";
+import { User, Mail, Zap, Loader2, Clock, CheckCircle2, AlertCircle, Phone, ArrowRight, ExternalLink } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
-const COLUMNS = [
-  { id:"applicants", label:"Applicants", color:"bg-zinc-100 text-zinc-600", count:42 },
-  { id:"ats_matched", label:"ATS Matched", color:"bg-blue-100 text-blue-700", count:28 },
-  { id:"interested", label:"Interested", color:"bg-indigo-100 text-indigo-700", count:19 },
-  { id:"verification", label:"Verification", color:"bg-violet-100 text-violet-700", count:14 },
-  { id:"verified", label:"Verified", color:"bg-emerald-100 text-emerald-700", count:11 },
-  { id:"interview", label:"Interview", color:"bg-amber-100 text-amber-700", count:8 },
-  { id:"offer", label:"Offer Sent", color:"bg-orange-100 text-orange-700", count:4 },
-  { id:"joined", label:"Joined", color:"bg-green-100 text-green-700", count:3 },
-];
+type PipelineStage = 'Sourcing' | 'Interview' | 'Offer' | 'Joined';
+const STAGES: PipelineStage[] = ['Sourcing', 'Interview', 'Offer', 'Joined'];
 
-interface Candidate { id:number; name:string; role:string; ats:number; trust:number; stage:string; skills:string[]; verified:boolean; }
+export default function CandidatePipeline() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeJob, setActiveJob] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
 
-const CANDIDATES: Candidate[] = [
-  { id:1, name:"Neha Joshi", role:"Senior React Dev", ats:96, trust:94, stage:"interview", skills:["React","TypeScript","Node.js"], verified:true },
-  { id:2, name:"Arjun Nair", role:"React Developer", ats:91, trust:89, stage:"verified", skills:["React","Redux","GraphQL"], verified:true },
-  { id:3, name:"Priya Sharma", role:"Frontend Eng", ats:87, trust:85, stage:"ats_matched", skills:["React","CSS","JavaScript"], verified:false },
-  { id:4, name:"Kiran Verma", role:"Full Stack Dev", ats:94, trust:91, stage:"offer", skills:["React","Python","AWS"], verified:true },
-  { id:5, name:"Rohan Gupta", role:"React Lead", ats:88, trust:82, stage:"ats_matched", skills:["React","Next.js","TypeScript"], verified:false },
-  { id:6, name:"Ananya Singh", role:"UI Developer", ats:82, trust:79, stage:"applicants", skills:["React","Figma","CSS"], verified:false },
-];
+  useEffect(() => {
+    if (user) fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-export default function CompanyCandidatesPage() {
-  const [view, setView] = useState<"kanban"|"list">("kanban");
-  const [candidates, setCandidates] = useState<Candidate[]>(CANDIDATES);
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Candidate|null>(null);
-  const [uploading, setUploading] = useState(false);
+  const fetchInitialData = async () => {
+    try {
+      const { data: cu } = await supabase.from('company_users').select('company_id').eq('user_id', user?.id).single();
+      if (!cu) return;
 
-  const filtered = candidates.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.role.toLowerCase().includes(search.toLowerCase()));
-
-  const handleBulkUpload = async () => {
-    setUploading(true);
-    await new Promise(r => setTimeout(r, 2000));
-    setUploading(false);
+      const { data: jobsData } = await supabase.from('jobs').select('id, title').eq('company_id', cu.company_id);
+      setJobs(jobsData || []);
+      
+      if (jobsData && jobsData.length > 0) {
+        setActiveJob(jobsData[0].id);
+        fetchPipeline(jobsData[0].id);
+        
+        // Setup real-time listener for this job's pipeline
+        const channel = supabase.channel(`pipeline_${jobsData[0].id}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'candidate_shortlists', filter: `job_id=eq.${jobsData[0].id}` }, () => {
+             fetchPipeline(jobsData[0].id);
+          }).subscribe();
+          
+        return () => { supabase.removeChannel(channel); }
+      } else {
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+    }
   };
 
-  const getColCandidates = (colId: string) => filtered.filter(c => c.stage === colId);
+  const fetchPipeline = async (jobId: string) => {
+    try {
+      // Fetch shortlists joined with candidate details
+      // Since candidates table has user_id, we might need a direct query. For now, fetch shortlists then fetch candidates.
+      const { data: shortlists } = await supabase.from('candidate_shortlists').select('*').eq('job_id', jobId);
+      if (!shortlists) return setCandidates([]);
+
+      // For a real app, you'd do a joined query. Here we fetch the candidates separately if needed.
+      const candIds = shortlists.map(s => s.candidate_id);
+      const { data: cands } = await supabase.from('candidates').select('*').in('id', candIds);
+      
+      const enriched = shortlists.map(s => ({
+        ...s,
+        candidate: cands?.find(c => c.id === s.candidate_id) || { headline: 'Unknown Candidate', skills: [] }
+      }));
+      
+      setCandidates(enriched);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStage = async (shortlistId: string, newStage: PipelineStage) => {
+    try {
+      setCandidates(prev => prev.map(c => c.id === shortlistId ? { ...c, status: newStage } : c));
+      await supabase.from('candidate_shortlists').update({ status: newStage }).eq('id', shortlistId);
+      toast("success", "Pipeline Updated", `Candidate moved to ${newStage}`);
+    } catch (e: any) {
+      toast("error", "Update Failed", e.message);
+      if (activeJob) fetchPipeline(activeJob); // Revert
+    }
+  };
+
+  if (loading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex flex-col">
-      <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
-        <div className="flex items-center gap-3">
-          <button onClick={()=>window.location.href="/company/dashboard"} className="p-2 rounded-xl hover:bg-zinc-100">
-            <ArrowLeft className="w-5 h-5 text-zinc-600"/>
-          </button>
-          <div>
-            <h1 className="text-lg font-black text-zinc-900">Candidate Pipeline</h1>
-            <p className="text-xs text-zinc-500">Senior React Developer · {candidates.length} candidates</p>
-          </div>
+    <div className="max-w-[1400px] mx-auto p-4 sm:p-8 space-y-8 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Candidate Pipeline</h1>
+          <p className="text-gray-500 mt-1">Manage sourcing, interviews, and offers.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex bg-zinc-100 p-1 rounded-xl gap-1">
-            {(["kanban","list"] as const).map(v => (
-              <button key={v} onClick={()=>setView(v)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${view===v?"bg-white text-zinc-900 shadow-sm":"text-zinc-500"}`}>
-                {v}
-              </button>
-            ))}
-          </div>
-          <label className="flex items-center gap-1.5 btn-outline-brand text-xs py-2.5 px-4 rounded-xl cursor-pointer">
-            <input type="file" accept=".csv,.zip" className="hidden" onChange={handleBulkUpload}/>
-            {uploading?<RefreshCw className="w-3.5 h-3.5 animate-spin"/>:<Upload className="w-3.5 h-3.5"/>}
-            Bulk Upload
-          </label>
-        </div>
-      </header>
-
-      <div className="flex-1 p-6 overflow-x-auto">
-        {/* Search */}
-        <div className="relative max-w-sm mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"/>
-          <input className="input-brand pl-10" placeholder="Search candidates..." value={search} onChange={e=>setSearch(e.target.value)}/>
-        </div>
-
-        {view === "kanban" ? (
-          <div className="flex gap-4 pb-4" style={{minWidth:"max-content"}}>
-            {COLUMNS.map(col => {
-              const colCandidates = getColCandidates(col.id);
-              return (
-                <div key={col.id} className="kanban-col flex-shrink-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${col.color}`}>{col.label}</span>
-                    <span className="text-xs font-black text-zinc-500">{colCandidates.length}</span>
-                  </div>
-                  <div className="space-y-2.5">
-                    {colCandidates.map((c,i) => (
-                      <motion.div key={c.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:i*0.05}}
-                        className="kanban-card" onClick={()=>setSelected(c)}>
-                        <div className="flex items-center gap-2 mb-2.5">
-                          <div className="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-black text-zinc-600">
-                            {c.name[0]}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs font-bold text-zinc-900 truncate">{c.name}</div>
-                            <div className="text-[10px] text-zinc-500 truncate">{c.role}</div>
-                          </div>
-                          {c.verified && <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0"/>}
-                        </div>
-                        <div className="flex justify-between">
-                          <div className="text-center">
-                            <div className="text-sm font-black text-zinc-900">{c.ats}%</div>
-                            <div className="text-[9px] text-zinc-400 font-bold">ATS</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-sm font-black text-blue-600">{c.trust}%</div>
-                            <div className="text-[9px] text-zinc-400 font-bold">Trust</div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="bg-white rounded-3xl border border-zinc-100 overflow-hidden">
-            <table className="data-table">
-              <thead><tr><th>Candidate</th><th>Role</th><th>ATS Score</th><th>Trust Score</th><th>Stage</th><th>Verified</th><th></th></tr></thead>
-              <tbody>
-                {filtered.map(c => (
-                  <tr key={c.id} className="cursor-pointer hover:bg-zinc-50" onClick={()=>setSelected(c)}>
-                    <td><div className="flex items-center gap-2.5"><div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-black">{c.name[0]}</div><span className="font-semibold">{c.name}</span></div></td>
-                    <td className="text-zinc-500">{c.role}</td>
-                    <td><span className="font-black text-zinc-900">{c.ats}%</span></td>
-                    <td><span className="font-black text-blue-600">{c.trust}%</span></td>
-                    <td><span className="badge-brand text-[10px] py-0.5 capitalize">{c.stage.replace("_"," ")}</span></td>
-                    <td>{c.verified?<CheckCircle className="w-4 h-4 text-emerald-500"/>:<XCircle className="w-4 h-4 text-zinc-300"/>}</td>
-                    <td><ChevronRight className="w-4 h-4 text-zinc-300"/></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        
+        {jobs.length > 0 && (
+          <select 
+            value={activeJob || ''} 
+            onChange={(e) => {
+              setActiveJob(e.target.value);
+              setLoading(true);
+              fetchPipeline(e.target.value);
+            }} 
+            className="bg-white border-gray-200 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-blue-500"
+          >
+            {jobs.map(j => <option key={j.id} value={j.id}>{j.title}</option>)}
+          </select>
         )}
       </div>
 
-      {/* Candidate detail panel */}
-      <AnimatePresence>
-        {selected && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/20 backdrop-blur-sm" onClick={()=>setSelected(null)}>
-            <motion.div initial={{opacity:0,x:80}} animate={{opacity:1,x:0}} exit={{opacity:0,x:80}}
-              transition={{duration:0.35,ease:[0.23,1,0.32,1]}}
-              className="bg-white w-full sm:w-96 h-full sm:h-screen overflow-y-auto border-l border-zinc-200 shadow-2xl"
-              onClick={e=>e.stopPropagation()}>
-              <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
-                <h3 className="font-black text-zinc-900">Candidate Profile</h3>
-                <button onClick={()=>setSelected(null)} className="p-2 rounded-xl hover:bg-zinc-100"><X className="w-4 h-4"/></button>
-              </div>
-              <div className="p-5 space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center text-xl font-black text-zinc-600">{selected.name[0]}</div>
-                  <div>
-                    <div className="font-black text-zinc-900">{selected.name}</div>
-                    <div className="text-sm text-zinc-500">{selected.role}</div>
-                    {selected.verified && <span className="badge-success text-[10px] py-0.5 mt-1 inline-block">Verified ✓</span>}
-                  </div>
+      {!activeJob ? (
+        <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+          <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Active Jobs</h3>
+          <p className="text-gray-500 max-w-md mx-auto">You need to create a job workspace first before managing candidates.</p>
+        </div>
+      ) : (
+        <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
+          {STAGES.map(stage => {
+            const stageCandidates = candidates.filter(c => c.status === stage).sort((a, b) => (b.ai_match_score || 0) - (a.ai_match_score || 0));
+            
+            return (
+              <div key={stage} className="flex-none w-[350px] snap-center bg-slate-50/50 border border-slate-100 rounded-3xl p-4 flex flex-col h-[calc(100vh-250px)]">
+                <div className="flex justify-between items-center mb-4 px-2">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    {stage} 
+                    <span className="bg-white border border-slate-200 text-xs px-2 py-0.5 rounded-full text-slate-500">{stageCandidates.length}</span>
+                  </h3>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[{ label:"ATS Score", val:`${selected.ats}%`, color:"text-zinc-900" },{ label:"Trust Score", val:`${selected.trust}%`, color:"text-blue-600" }].map((m,i)=>(
-                    <div key={i} className="bg-zinc-50 rounded-2xl p-4 text-center border border-zinc-100">
-                      <div className={`text-2xl font-black ${m.color}`}>{m.val}</div>
-                      <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1">{m.label}</div>
+                
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
+                  <AnimatePresence>
+                    {stageCandidates.map(cand => (
+                      <motion.div 
+                        key={cand.id} 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
+                            <User size={20} className="text-blue-600"/>
+                          </div>
+                          {cand.ai_match_score && (
+                            <div className="bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                              <Zap size={14} className="text-indigo-600 fill-indigo-600" />
+                              <span className="text-xs font-bold text-indigo-700">{Math.round(cand.ai_match_score)}% Match</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <h4 className="font-bold text-gray-900 truncate">{cand.candidate.headline || 'Candidate'}</h4>
+                        
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(cand.candidate.skills || []).slice(0, 3).map((skill: string) => (
+                            <span key={skill} className="px-2 py-1 bg-slate-50 text-slate-600 text-xs font-semibold rounded-md border border-slate-100">{skill}</span>
+                          ))}
+                        </div>
+                        
+                        <div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-between">
+                          <button className="text-gray-400 hover:text-blue-600 transition-colors p-1" title="View Passport">
+                            <ExternalLink size={18}/>
+                          </button>
+                          
+                          {stage !== 'Joined' && (
+                            <button 
+                              onClick={() => updateStage(cand.id, STAGES[STAGES.indexOf(stage) + 1])}
+                              className="text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                            >
+                              Move <ArrowRight size={14}/>
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  
+                  {stageCandidates.length === 0 && (
+                    <div className="text-center py-10">
+                      <p className="text-sm text-gray-400 font-medium">No candidates in {stage}</p>
                     </div>
-                  ))}
-                </div>
-                <div>
-                  <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Skills</div>
-                  <div className="flex flex-wrap gap-2">{selected.skills.map((s,i)=><span key={i} className="badge-brand">{s}</span>)}</div>
-                </div>
-                <div className="space-y-2.5">
-                  <button className="w-full btn-brand py-3 rounded-2xl text-sm">Schedule Interview</button>
-                  <button className="w-full btn-outline-brand py-3 rounded-2xl text-sm">Send Offer</button>
-                  <button className="w-full py-3 rounded-2xl text-sm border border-zinc-200 font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors">View Full Passport</button>
+                  )}
                 </div>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
