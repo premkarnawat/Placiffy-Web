@@ -176,6 +176,7 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
           {children}
         </div>
       </main>
+      <AIAssistant />
     </div>
   );
 }
