@@ -737,6 +737,7 @@ async def parse_resume_sync(request: Request, file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Internal server error parsing resume: {str(e)}")
 
 
+
 # ==========================================
 # CUSTOM AUTHENTICATION ROUTES (MIGRATION)
 # ==========================================
@@ -753,11 +754,18 @@ async def login(request: Request, body: AuthLoginSchema):
         from app.auth import verify_password, create_access_token
         
         # Look up user by email AND role
-        res = supabase_client.table('users').select('*').eq('email', body.email).eq('role', body.role).execute()
-        if not res.data or len(res.data) == 0:
+        res = httpx.get(
+            f"{supabase_url('users')}?email=eq.{body.email}&role=eq.{body.role}&select=*",
+            headers=supabase_headers()
+        )
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Database error: {res.text}")
+            
+        data = res.json()
+        if not data or len(data) == 0:
             raise HTTPException(status_code=401, detail="Invalid credentials or role mismatch")
             
-        user = res.data[0]
+        user = data[0]
         
         if not verify_password(body.password, user.get('password_hash', '')):
             raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -797,24 +805,27 @@ async def company_register_custom(request: Request, body: CompanyRegisterSchema)
         import uuid
         
         # 1. Check if email+role already exists
-        check = supabase_client.table('users').select('id').eq('email', body.email).eq('role', 'company').execute()
-        if check.data and len(check.data) > 0:
+        check = httpx.get(
+            f"{supabase_url('users')}?email=eq.{body.email}&role=eq.company&select=id",
+            headers=supabase_headers()
+        )
+        if check.json() and len(check.json()) > 0:
             raise HTTPException(status_code=400, detail="An account with this email and the Company role already exists.")
             
         user_id = str(uuid.uuid4())
         hashed_pw = hash_password(body.password)
         
         # 2. Create User
-        user_res = supabase_client.table('users').insert({
+        httpx.post(supabase_url('users'), headers=supabase_headers(), json={
             "id": user_id,
             "email": body.email,
             "role": "company",
             "password_hash": hashed_pw
-        }).execute()
+        }).raise_for_status()
         
         # 3. Create Company
         comp_id = str(uuid.uuid4())
-        supabase_client.table('companies').insert({
+        httpx.post(supabase_url('companies'), headers=supabase_headers(), json={
             "id": comp_id,
             "name": body.name,
             "logo_url": body.logo_url,
@@ -824,15 +835,15 @@ async def company_register_custom(request: Request, body: CompanyRegisterSchema)
             "hq_location": body.hq_location,
             "linkedin_url": body.linkedin_url,
             "gst": body.gst
-        }).execute()
+        }).raise_for_status()
         
         # 4. Link Company User
-        supabase_client.table('company_users').insert({
+        httpx.post(supabase_url('company_users'), headers=supabase_headers(), json={
             "id": str(uuid.uuid4()),
             "company_id": comp_id,
             "user_id": user_id,
             "role": "admin"
-        }).execute()
+        }).raise_for_status()
         
         # Issue JWT
         token = create_access_token({"sub": user_id, "role": "company", "email": body.email})
@@ -866,23 +877,26 @@ async def candidate_register_custom(request: Request, body: CandidateRegisterSch
         import uuid
         
         # 1. Check if email+role already exists
-        check = supabase_client.table('users').select('id').eq('email', body.email).eq('role', 'candidate').execute()
-        if check.data and len(check.data) > 0:
+        check = httpx.get(
+            f"{supabase_url('users')}?email=eq.{body.email}&role=eq.candidate&select=id",
+            headers=supabase_headers()
+        )
+        if check.json() and len(check.json()) > 0:
             raise HTTPException(status_code=400, detail="An account with this email and the Candidate role already exists.")
             
         user_id = str(uuid.uuid4())
         hashed_pw = hash_password(body.password)
         
         # 2. Create User
-        supabase_client.table('users').insert({
+        httpx.post(supabase_url('users'), headers=supabase_headers(), json={
             "id": user_id,
             "email": body.email,
             "role": "candidate",
             "password_hash": hashed_pw
-        }).execute()
+        }).raise_for_status()
         
         # 3. Create Candidate Profile
-        supabase_client.table('candidates').insert({
+        httpx.post(supabase_url('candidates'), headers=supabase_headers(), json={
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "headline": body.headline,
@@ -895,7 +909,7 @@ async def candidate_register_custom(request: Request, body: CandidateRegisterSch
             "resume_url": body.resume_url,
             "profile_photo_url": body.profile_photo_url,
             "profile_completion_pct": 100
-        }).execute()
+        }).raise_for_status()
         
         # Issue JWT
         token = create_access_token({"sub": user_id, "role": "candidate", "email": body.email})
