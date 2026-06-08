@@ -19,3 +19,4 @@ PyMuPDF
 python-docx
 pdfplumber
 supabase
+cachetools>=5.3.0
