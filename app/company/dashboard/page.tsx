@@ -88,7 +88,7 @@ export default function CompanyDashboard() {
               <div className="text-sm font-black text-zinc-900">PLACIFY</div>
               <div className="text-[9px] text-zinc-400 font-medium">Intelligence OS</div>
             </div>
-          </a>
+          </div>
         </div>
 
         <nav className="flex-1 px-3 space-y-0.5">
