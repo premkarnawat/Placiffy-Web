@@ -22,7 +22,7 @@ export default function DiscussionBoard() {
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/community/posts`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com'}/api/community/posts`)
       .then(res => res.json())
       .then(data => setPosts(data))
       .catch(() => {
@@ -45,7 +45,7 @@ export default function DiscussionBoard() {
       category: "Mock Interviews"
     };
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/community/posts`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com'}/api/community/posts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(postObj)

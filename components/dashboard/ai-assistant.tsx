@@ -39,7 +39,7 @@ export default function AiAssistant() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/assistant/chat?query=${encodeURIComponent(userMessage.content)}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com'}/api/assistant/chat?query=${encodeURIComponent(userMessage.content)}`, {
         method: 'POST'
       });
       const data = await res.json();
