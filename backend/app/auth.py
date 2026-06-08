@@ -10,12 +10,17 @@ settings = get_settings()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer(auto_error=False)
 
+import hashlib
+
 def hash_password(password: str) -> str:
-    # Bcrypt has a strict 72-byte limit. We safely truncate long passwords.
-    return pwd_context.hash(password[:72])
+    # Use SHA-256 pre-hashing to completely bypass bcrypt's 72-byte limit.
+    # This guarantees the input to bcrypt is always exactly 64 ASCII bytes.
+    pre_hashed = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return pwd_context.hash(pre_hashed)
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain[:72], hashed)
+    pre_hashed = hashlib.sha256(plain.encode('utf-8')).hexdigest()
+    return pwd_context.verify(pre_hashed, hashed)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
