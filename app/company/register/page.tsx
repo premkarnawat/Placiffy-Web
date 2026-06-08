@@ -105,7 +105,7 @@ export default function CompanyRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
         <h2 className="text-3xl font-bold text-slate-900">Create Company Workspace</h2>
         <p className="mt-2 text-sm text-slate-600">Start sourcing verified talent in minutes.</p>
@@ -136,7 +136,7 @@ export default function CompanyRegistration() {
                     <span className="text-xs font-semibold text-slate-500 mt-2">Upload Logo</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1"><Building2 size={14}/> Company Name</label>
                       <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full rounded-xl border-slate-200 focus:ring-indigo-500 py-2.5 px-4 bg-slate-50" placeholder="Acme Corp" />
@@ -185,7 +185,7 @@ export default function CompanyRegistration() {
                 <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
                   <h3 className="text-xl font-bold text-slate-900 mb-6 pb-2 border-b">Contact & Location</h3>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1"><MapPin size={14}/> Headquarters</label>
                       <input required type="text" name="hq_location" value={formData.hq_location} onChange={handleChange} className="w-full rounded-xl border-slate-200 focus:ring-indigo-500 py-2.5 px-4 bg-slate-50" placeholder="San Francisco, CA" />

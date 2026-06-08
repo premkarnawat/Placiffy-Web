@@ -61,7 +61,7 @@ function Header() {
   return (
     <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'bg-transparent'}`}>
-      <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[72px] flex items-center justify-between">
         <a href="#" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1A56DB] to-[#3B82F6] flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
@@ -107,7 +107,7 @@ function HeroSection() {
       <div className="absolute top-20 -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-50 to-blue-100/30 blur-3xl" />
       <div className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-50 to-purple-50/20 blur-3xl" />
 
-      <div className="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+      <div className="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-1 md:grid-cols-2 gap-12 lg:gap-8 items-center">
         <div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/60 mb-8">
@@ -181,7 +181,7 @@ function HeroSection() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
                   <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3.5 border border-green-100">
                     <p className="text-[10px] font-bold text-green-600 tracking-wider uppercase mb-1">ATS Score</p>
                     <p className="text-2xl font-extrabold text-green-700">98.4<span className="text-sm font-bold">%</span></p>
@@ -258,7 +258,7 @@ function EvolutionSection() {
       <div className="max-w-7xl mx-auto px-6" ref={ref}>
         <SectionHeading badge="Why Placify" title="The Evolution of Hiring" subtitle="Traditional hiring is broken, manual, and risky. PLACIFY injects intelligence into every step of the funnel." />
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-1 md:grid-cols-2 gap-8">
           <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideLeft} transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <div className="px-6 py-5 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
@@ -334,7 +334,7 @@ function CapabilitiesSection() {
       <div className="max-w-7xl mx-auto px-6" ref={ref}>
         <SectionHeading badge="Capabilities" title="Platform Capabilities" subtitle="Production-grade tools for every stage of talent acquisition." />
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {caps.map((c, i) => (
             <motion.div key={i} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
               transition={{ duration: 0.5, delay: 0.15 * i }}
@@ -384,7 +384,7 @@ function CapabilitiesSection() {
             <p className="text-[#6B7280] text-sm leading-relaxed mb-6">
               Our proprietary algorithm aggregates 12+ data signals including employment history, education verification, skill assessments, and behavioral analysis into a single, actionable reliability index.
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 { label: 'Data Signals', val: '12+' },
                 { label: 'Accuracy', val: '99.2%' },
@@ -424,7 +424,7 @@ function SectorsSection() {
       <div className="relative max-w-7xl mx-auto px-6" ref={ref}>
         <SectionHeading light title="Hiring Intelligence for Every Sector" subtitle="From AI startups to enterprise cloud, PLACIFY adapts to your industry's unique talent requirements." />
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {sectors.map((s, i) => (
             <motion.div key={i} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
               transition={{ duration: 0.5, delay: 0.1 * i }}
@@ -439,7 +439,7 @@ function SectorsSection() {
         </div>
 
         <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6, delay: 0.5 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-white/10">
+          className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-white/10">
           {[
             { label: 'Candidates Verified', val: '150K+' },
             { label: 'Enterprise Clients', val: '500+' },
@@ -504,7 +504,7 @@ function PricingSection() {
           </div>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {plans.map((p, i) => (
             <motion.div key={p.name} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
               transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
@@ -568,7 +568,7 @@ function CTASection() {
       <div className="absolute inset-0 bg-grid opacity-40" />
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-50/50 to-transparent rounded-full blur-3xl" />
       <div className="relative max-w-7xl mx-auto px-6" ref={ref}>
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 items-center">
           <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideLeft} transition={{ duration: 0.6 }}>
             <span className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 bg-blue-50 text-[#1A56DB] border border-blue-100">Get Started</span>
             <h2 className="font-serif text-4xl md:text-5xl text-[#111827] mb-5">Upgrade Your Hiring Intelligence Today.</h2>
@@ -591,7 +591,7 @@ function CTASection() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { val: '500+', label: 'Companies' },
                 { val: '150K+', label: 'Hires Made' },
@@ -660,7 +660,7 @@ function Footer() {
   return (
     <footer className="bg-[#F8FAFC] border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
+        <div className="grid md:grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1A56DB] to-[#3B82F6] flex items-center justify-center">
@@ -717,7 +717,7 @@ function Footer() {
 /* ============ PAGE ============ */
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white font-sans">
+    <main className="min-min-h-screen bg-white font-sans">
       <Header />
       <HeroSection />
       <EvolutionSection />

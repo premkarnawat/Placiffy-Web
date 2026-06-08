@@ -72,7 +72,7 @@ export default function CandidateDashboard() {
       </div>
 
       {/* Top Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Completion Widget */}
         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm relative overflow-hidden flex flex-col items-center justify-center">
@@ -115,7 +115,7 @@ export default function CandidateDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-blue-50 rounded-3xl p-5 border border-blue-100 flex flex-col justify-center cursor-pointer hover:shadow-md transition-shadow" onClick={()=>router.push('/candidate/applications')}>
             <Briefcase size={24} className="text-blue-600 mb-2" />
             <span className="text-3xl font-extrabold text-gray-900">{data.appCount}</span>
@@ -141,7 +141,7 @@ export default function CandidateDashboard() {
       </div>
 
       {/* AI Insights & Verification CTA */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-3xl p-8 text-white relative overflow-hidden">
           <ShieldCheck size={120} className="absolute -right-10 -bottom-10 text-white opacity-10" />
           <h2 className="text-2xl font-bold mb-3 flex items-center gap-3"><Lock className="text-blue-400" /> Unlock Premium Status</h2>

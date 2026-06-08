@@ -67,9 +67,9 @@ export default function CompanyDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-min-h-screen bg-white flex">
       {/* Sidebar */}
-      <aside className="w-52 bg-[#F8F9FB] border-r border-zinc-200/60 flex flex-col min-h-screen sticky top-0">
+      <aside className="w-52 bg-[#F8F9FB] border-r border-zinc-200/60 flex flex-col min-min-h-screen sticky top-0">
         <div className="p-5 pb-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#0052CC] rounded-xl flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function CompanyDashboard() {
             ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid lg:grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Hiring Funnel */}
             <div className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-5">
@@ -255,7 +255,7 @@ export default function CompanyDashboard() {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[
                     { stage: "Sourcing", count: stats.applicants, candidates: [] },
                     { stage: "Interviews", count: stats.interviews, candidates: [] },
