@@ -54,6 +54,9 @@ export default function ResumeForm({ userId }: { userId?: string }) {
       const parsedData = await res.json();
       const atsScore = Math.floor(Math.random() * 20) + 70; // temporary until we use pgvector dynamically
 
+      // Delete previous resume to maintain accuracy in pgvector similarity search
+      await supabase.from("candidate_resumes").delete().eq("candidate_id", userId);
+
       const { data: newResume, error: dbError } = await supabase.from("candidate_resumes").insert({
         candidate_id: userId,
         file_name: file.name,
