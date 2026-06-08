@@ -1,5 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
+
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Briefcase, Users, MessageSquare, BarChart2,
@@ -23,13 +26,7 @@ const STATS = [
   { label: "Offers", value: "12", change: "+8%", icon: "file", color: "text-amber-600", bg: "bg-amber-50" },
 ];
 
-const FUNNEL = [
-  { label: "Awareness / Views", value: "12,400", pct: 100 },
-  { label: "Applied", value: "1,482 (12%)", pct: 45 },
-  { label: "Screened / AI Verified", value: "428 (28.8%)", pct: 32 },
-  { label: "Interviewed", value: "56 (13%)", pct: 18 },
-  { label: "Hired", value: "12 (21%)", pct: 5 },
-];
+// FUNNEL dynamically rendered based on stats
 
 const PIPELINE = [
   { stage: "Sourcing", count: 12, candidates: [{ name: "Sarah Jenkins", role: "Senior Product Designer", skills: ["Figma", "SwiftUI"], badge: "AI Match", badgeColor: "bg-amber-100 text-amber-700", time: "", salary: "" }] },
@@ -48,6 +45,38 @@ const SOURCES = [
 export default function CompanyDashboard() {
   const [activeNav, setActiveNav] = useState("dashboard");
   const [pipelineView, setPipelineView] = useState("Board");
+  const { user } = useAuth();
+  const [stats, setStats] = useState({ activeJobs: 0, applicants: 0, verified: 0, interviews: 0, offers: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) fetchStats();
+  }, [user]);
+
+  const fetchStats = async () => {
+    try {
+      const { data: company } = await supabase.from('companies').select('id').eq('user_id', user?.id).single();
+      if (!company) return;
+      
+      const { count: jobsCount } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('status', 'active');
+      const { count: appCount } = await supabase.from('pipeline_candidates').select('*', { count: 'exact', head: true }).eq('company_id', company.id);
+      const { count: interviewCount } = await supabase.from('pipeline_candidates').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('pipeline_status', 'interview');
+      const { count: offerCount } = await supabase.from('pipeline_candidates').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('pipeline_status', 'offer');
+      
+      setStats({
+        activeJobs: jobsCount || 0,
+        applicants: appCount || 0,
+        verified: 0,
+        interviews: interviewCount || 0,
+        offers: offerCount || 0
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -133,7 +162,13 @@ export default function CompanyDashboard() {
 
           {/* KPI Cards */}
           <div className="grid grid-cols-5 gap-4 mb-6">
-            {STATS.map((stat, i) => (
+            {[
+    { label: "Active Jobs", value: stats.activeJobs, change: "+0%", icon: Briefcase, color: "text-[#0052CC]", bg: "bg-blue-50" },
+    { label: "Applicants", value: stats.applicants, change: "+0%", icon: Users, color: "text-[#0052CC]", bg: "bg-blue-50" },
+    { label: "Verified", value: stats.verified, change: "+0%", icon: "shield", color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Interviews", value: stats.interviews, change: "+0%", icon: Calendar, color: "text-violet-600", bg: "bg-violet-50", negative: true },
+    { label: "Offers", value: stats.offers, change: "+0%", icon: "file", color: "text-amber-600", bg: "bg-amber-50" }
+  ].map((stat, i) => (
               <motion.div key={i} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:i*0.06}}
                 className="bg-white border border-zinc-100 rounded-2xl p-4 hover:shadow-sm transition-all">
                 <div className="flex items-center justify-between mb-3">

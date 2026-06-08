@@ -10,6 +10,7 @@ export default function CandidateDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [insights, setInsights] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -32,6 +33,17 @@ export default function CandidateDashboard() {
       const { count: interviewCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('stage', ['Interview Scheduled', 'Interview Completed']);
       const { count: offerCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('stage', ['Offer Released', 'Offer Accepted', 'Joined']);
       
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
+      try {
+        const res = await fetch(`${API_URL}/api/candidates/insights`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) {
+          const aiData = await res.json();
+          setInsights(aiData);
+        }
+      } catch (e) {}
+
       setData({ 
         cand, 
         appCount: appCount || 0,
@@ -88,13 +100,13 @@ export default function CandidateDashboard() {
             
             <div className="space-y-6">
               <div>
-                <div className="flex justify-between text-sm mb-2"><span className="text-gray-500 font-medium flex items-center gap-2"><Zap size={16} className="text-amber-500"/> Avg ATS Match</span><span className="font-bold">85%</span></div>
-                <div className="w-full bg-gray-100 rounded-full h-2.5"><div className="bg-amber-500 h-2.5 rounded-full" style={{width: '85%'}}></div></div>
+                <div className="flex justify-between text-sm mb-2"><span className="text-gray-500 font-medium flex items-center gap-2"><Zap size={16} className="text-amber-500"/> Avg ATS Match</span><span className="font-bold">{data.passport?.ats_score || 0}%</span></div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5"><div className="bg-amber-500 h-2.5 rounded-full" style={{width: `${data.passport?.ats_score || 0}%`}}></div></div>
               </div>
               
               <div>
-                <div className="flex justify-between text-sm mb-2"><span className="text-gray-500 font-medium flex items-center gap-2"><ShieldCheck size={16} className="text-green-500"/> Trust Score</span><span className="font-bold">{isVerified ? '100 / RA+' : '45 / Pending'}</span></div>
-                <div className="w-full bg-gray-100 rounded-full h-2.5"><div className={`h-2.5 rounded-full ${isVerified ? 'bg-green-500' : 'bg-gray-300'}`} style={{width: isVerified ? '100%' : '45%'}}></div></div>
+                <div className="flex justify-between text-sm mb-2"><span className="text-gray-500 font-medium flex items-center gap-2"><ShieldCheck size={16} className="text-green-500"/> Trust Score</span><span className="font-bold">{data.passport?.trust_score || 0} / {data.passport?.recommendation || 'Pending'}</span></div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5"><div className="h-2.5 rounded-full bg-green-500" style={{width: `${data.passport?.trust_score || 0}%`}}></div></div>
               </div>
             </div>
           </div>
@@ -141,20 +153,19 @@ export default function CandidateDashboard() {
         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
           <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Activity size={20} className="text-amber-500"/> AI Actionable Insights</h2>
           <div className="space-y-4">
-            <div className="flex gap-4 p-4 rounded-2xl bg-amber-50/50 border border-amber-100">
-              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 font-bold">1</div>
-              <div>
-                <h4 className="font-bold text-gray-900 text-sm">Missing &quot;AWS&quot; Skill</h4>
-                <p className="text-xs text-gray-600 mt-1">Adding AWS to your skills would increase your match rate for 14 active jobs.</p>
-              </div>
-            </div>
-            <div className="flex gap-4 p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 font-bold">2</div>
-              <div>
-                <h4 className="font-bold text-gray-900 text-sm">Portfolio Links Missing</h4>
-                <p className="text-xs text-gray-600 mt-1">Candidates with active GitHub links get 3x more company messages.</p>
-              </div>
-            </div>
+            {insights.length === 0 ? (
+              <div className="p-4 rounded-2xl bg-gray-50 text-gray-500 text-center text-sm border border-gray-100">Generating personalized insights...</div>
+            ) : (
+              insights.map((insight, idx) => (
+                <div key={idx} className={`flex gap-4 p-4 rounded-2xl border bg-${insight.color || 'blue'}-50/50 border-${insight.color || 'blue'}-100`}>
+                  <div className={`w-10 h-10 rounded-full bg-${insight.color || 'blue'}-100 text-${insight.color || 'blue'}-600 flex items-center justify-center shrink-0 font-bold`}>{idx + 1}</div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm">{insight.title}</h4>
+                    <p className="text-xs text-gray-600 mt-1">{insight.description}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

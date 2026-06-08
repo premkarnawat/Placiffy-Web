@@ -21,11 +21,12 @@ export default function PersonalForm({ data, onChange, userId }: { data: any, on
       if (uploadError) throw uploadError;
       
       const { data: { publicUrl } } = supabase.storage.from('profile_photos').getPublicUrl(filePath);
+      const bustedUrl = `${publicUrl}?t=${Date.now()}`;
       
-      onChange({...data, profile_photo_url: publicUrl});
+      onChange({...data, profile_photo_url: bustedUrl});
       
       // Persist immediately to candidates table so it reflects
-      await supabase.from('candidates').update({ profile_photo_url: publicUrl }).eq('user_id', userId);
+      await supabase.from('candidates').update({ profile_photo_url: bustedUrl }).eq('user_id', userId);
       
       toast('success', 'Photo Uploaded', 'Your profile photo has been updated.');
     } catch (err: any) {

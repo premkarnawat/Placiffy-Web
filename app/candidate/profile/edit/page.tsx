@@ -10,10 +10,12 @@ import { useToast } from '@/components/ui/toast';
 import PersonalForm from '@/components/candidate/profile/PersonalForm';
 import ArrayForm from '@/components/candidate/profile/ArrayForm';
 import PreferencesForm from '@/components/candidate/profile/PreferencesForm';
+import ResumeForm from '@/components/candidate/profile/ResumeForm';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
 
 const SECTIONS = [
+  { id: 'resume', label: 'Resume & ATS', icon: <FileText size={18} /> },
   { id: 'personal', label: 'Personal Info', icon: <User size={18} /> },
   { id: 'education', label: 'Education', icon: <GraduationCap size={18} /> },
   { id: 'experience', label: 'Experience', icon: <Briefcase size={18} /> },

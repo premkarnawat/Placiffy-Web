@@ -27,6 +27,13 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
       supabase.from('candidates').select('profile_photo_url').eq('user_id', user.id).single().then(({data}) => {
         if (data?.profile_photo_url) setProfilePhoto(data.profile_photo_url);
       });
+      
+      const channel = supabase.channel(`layout_${user.id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'candidates', filter: `user_id=eq.${user.id}` }, (payload) => {
+          if (payload.new.profile_photo_url) setProfilePhoto(payload.new.profile_photo_url);
+        }).subscribe();
+        
+      return () => { supabase.removeChannel(channel); };
     }
   }, [user, isLoading, router]);
 

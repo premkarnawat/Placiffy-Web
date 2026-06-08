@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timezone
 import io
-import PyPDF2
+
 
 from groq import Groq
 import json
@@ -24,7 +24,7 @@ def get_embedder():
 
 from app.config import get_settings
 from app.auth import hash_password, verify_password, create_access_token, get_current_user, require_candidate
-from app.services import ai, ats_engine, trust_score, fraud, vector, resume_parser
+from app.services import ai, ats_engine, trust_score, fraud, vector, resume_parser, ai_insights
 
 settings = get_settings()
 
@@ -186,71 +186,46 @@ async def get_me(user: dict = Depends(get_current_user)):
         return resp.json()[0]
 
 # --- CANDIDATE ENDPOINTS ---
+@app.post("/api/resume/parse", tags=["Candidate"])
 @app.post("/api/resume/parse-public", tags=["Candidate"])
-async def parse_resume_public(file: UploadFile = File(...)):
+async def parse_resume_endpoint(file: UploadFile = File(...)):
+    """
+    Parses a resume using the advanced AI pipeline and generates a vector embedding for pgvector matching.
+    """
     try:
         content = await file.read()
-        filename = file.filename.lower()
+        filename = file.filename
         
-        text = ""
-
-        try:
-            pdf = PyPDF2.PdfReader(io.BytesIO(content))
-            for page in pdf.pages:
-                text += page.extract_text() + "\n"
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Could not read PDF file: {e}")
+        # 1. High-accuracy AI Parsing
+        parsed_data = resume_parser.parse_resume(content, filename)
+        
+        if "error" in parsed_data and len(parsed_data.get("skills", [])) == 0:
+            raise HTTPException(status_code=400, detail=parsed_data["error"])
             
-        if not text.strip():
-            raise HTTPException(status_code=400, detail="PDF contains no readable text. Please ensure it is a text-based PDF, not an image.")
+        # 2. Generate Semantic Embedding for ATS pgvector
+        # We build a descriptive string of their skills and experience
+        embed_text = f"Skills: {', '.join(parsed_data.get('skills', []))}. "
+        for exp in parsed_data.get('experience', []):
+            embed_text += f"{exp.get('title', '')} at {exp.get('company', '')}. "
             
-        # Use Groq to extract details
-        if not settings.groq_api_key:
-            return {
-                "status": "success",
-                "extracted_data": {
-                    "fullName": "Alex Montgomery",
-                    "email": "alex.m@example.design",
-                    "headline": "Senior Product Designer",
-                    "skills": "React, TypeScript, Figma, UI/UX",
-                    "location": "San Francisco, CA"
-                }
-            }
-            
-        client = Groq(api_key=settings.groq_api_key)
+        embedder = get_embedder()
+        # Ensure it returns a standard Python list of floats
+        vector_embedding = embedder.encode(embed_text).tolist()
         
-        prompt = f'''
-        Extract the following information from the resume text below and return ONLY a valid JSON object. Do not include any markdown formatting like ```json. 
-        Required keys:
-        - fullName (string)
-        - email (string)
-        - headline (string, a short professional summary or current title)
-        - skills (string, a comma-separated list of top skills)
-        - location (string, City, State or Country)
-        
-        Resume Text:
-        {text[:8000]}
-        '''
-        
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-            response_format={"type": "json_object"}
-        )
-        
-        response_text = completion.choices[0].message.content
-        extracted_data = json.loads(response_text)
-        
+        # Return everything to the client so it can save to Supabase
+        # We map it slightly to fit the frontend's auto-fill expectations as well
         return {
             "status": "success",
-            "extracted_data": extracted_data
+            "extracted_data": parsed_data,
+            "vector_embedding": vector_embedding,
+            "ats_score": 85 # Baseline, will be dynamically calculated against jobs later
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        print(f"Error parsing resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error parsing resume: {str(e)}")
 
 @app.get("/api/candidates/profile", tags=["Candidate"])
 async def get_candidate_profile(user: dict = Depends(require_candidate)):
@@ -373,6 +348,95 @@ async def get_jobs():
         )
         return resp.json()
 
+
+@app.post("/api/trust-score/recalculate", tags=["Trust Score"])
+async def recalculate_trust_score(user: dict = Depends(require_candidate)):
+    """
+    Recalculates the Trust Score based on the candidate's latest data in the passports table.
+    Updates the passport and creates a historical event in trust_score_history.
+    """
+    async with httpx.AsyncClient() as client:
+        # Fetch current passport components
+        passport_resp = await client.get(
+            f"{supabase_url('passports')}?candidate_id=eq.{user['id']}&select=*",
+            headers=supabase_headers()
+        )
+        passports = passport_resp.json()
+        if not passports:
+            # If no passport exists, return default
+            return {"trust_score": 0, "message": "No passport found"}
+            
+        passport = passports[0]
+        
+        # Calculate new score
+        result = trust_score.compute_trust_score(
+            ats_score=passport.get("ats_score", 0),
+            portfolio_score=passport.get("portfolio_score", 0),
+            work_sample_score=passport.get("work_sample_score", 0),
+            expert_score=passport.get("expert_score", 0),
+            communication_score=passport.get("communication_score", 0),
+            reliability_score=passport.get("reliability_score", 100)
+        )
+        
+        new_score = result["trust_score"]
+        
+        # Update passport
+        await client.patch(
+            f"{supabase_url('passports')}?candidate_id=eq.{user['id']}",
+            json={"trust_score": new_score, "recommendation": result["recommendation"], "updated_at": datetime.now(timezone.utc).isoformat()},
+            headers=supabase_headers()
+        )
+        
+        # Insert into trust_score_history
+        await client.post(
+            f"{supabase_url('trust_score_history')}",
+            json={
+                "candidate_id": user['id'],
+                "overall_score": new_score,
+                "ats_component": result["breakdown"]["ats"]["score"],
+                "portfolio_component": result["breakdown"]["portfolio"]["score"],
+                "work_sample_component": result["breakdown"]["work_sample"]["score"],
+                "expert_component": result["breakdown"]["expert"]["score"],
+                "communication_component": result["breakdown"]["communication"]["score"],
+                "reliability_component": result["breakdown"]["reliability"]["score"],
+                "score_breakdown": result["breakdown"],
+                "trigger_event": "manual_recalculation"
+            },
+            headers=supabase_headers()
+        )
+        
+        return result
+
+
+@app.get("/api/candidates/insights", tags=["Candidate"])
+async def candidate_insights(user: dict = Depends(require_candidate)):
+    """Generates dynamic AI Insights for the candidate dashboard."""
+    async with httpx.AsyncClient() as client:
+        # Fetch resume data
+        resume_resp = await client.get(
+            f"{supabase_url('candidate_resumes')}?candidate_id=eq.{user['id']}&order=created_at.desc&limit=1",
+            headers=supabase_headers()
+        )
+        resumes = resume_resp.json()
+        
+        # Fetch passport data
+        passport_resp = await client.get(
+            f"{supabase_url('passports')}?candidate_id=eq.{user['id']}",
+            headers=supabase_headers()
+        )
+        passports = passport_resp.json()
+        
+        candidate_data = {
+            "parsed_skills": resumes[0].get("parsed_data", {}).get("skills", []) if resumes else [],
+            "trust_score": passports[0].get("trust_score", 0) if passports else 0,
+            "ats_score": passports[0].get("ats_score", 0) if passports else 0,
+        }
+        
+        insights = ai_insights.generate_candidate_insights(candidate_data)
+        return insights
+
 @app.get("/health", tags=["System"])
+
+
 def health_check():
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
