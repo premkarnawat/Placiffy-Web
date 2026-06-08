@@ -11,7 +11,16 @@ export default function ResumeForm({ userId }: { userId?: string }) {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (userId) fetchResume();
+    if (userId) {
+      fetchResume();
+      const channel = supabase.channel(`resume_${userId}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'candidate_resumes', filter: `candidate_id=eq.${userId}` }, () => {
+           toast("success", "Parsing Complete", "Your new resume has been successfully parsed and stored.");
+           setUploading(false);
+           fetchResume();
+        }).subscribe();
+      return () => { supabase.removeChannel(channel); }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 

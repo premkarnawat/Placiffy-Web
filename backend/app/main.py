@@ -1,7 +1,20 @@
 import uuid
 import httpx
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, BackgroundTasks, Request, Form
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from cachetools import TTLCache
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+# In-Memory Cache (Stores 100 items, expires in 60 seconds)
+# Used to offload dashboard database reads
+dashboard_cache = TTLCache(maxsize=100, ttl=60)
+
+limiter = Limiter(key_func=get_remote_address)
+
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timezone
@@ -24,7 +37,7 @@ def get_embedder():
 
 from app.config import get_settings
 from app.auth import hash_password, verify_password, create_access_token, get_current_user, require_candidate
-from app.services import ai, ats_engine, trust_score, fraud, vector, resume_parser, ai_insights
+from app.services import ai, ats_engine, trust_score, fraud, vector, resume_parser, ai_insights, async_parser
 
 settings = get_settings()
 
@@ -33,6 +46,10 @@ app = FastAPI(
     description="Backend for Placify Hiring Platform",
     version="1.0.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -187,6 +204,42 @@ async def get_me(user: dict = Depends(get_current_user)):
 
 # --- CANDIDATE ENDPOINTS ---
 @app.post("/api/resume/parse", tags=["Candidate"])
+@limiter.limit("20/minute")
+async def parse_resume_endpoint(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    candidate_id: str = Form(...),
+    file_url: str = Form(...)
+):
+    """
+    Accepts resume PDF, queues it for AI parsing in the background, and returns instantly.
+    This architecture supports high concurrency (1000+ simultaneous uploads) without blocking the API.
+    """
+    try:
+        content = await file.read()
+        filename = file.filename
+        
+        # Offload all heavy AI processing to background queue
+        background_tasks.add_task(
+            async_parser.process_resume_background,
+            candidate_id,
+            file_url,
+            filename,
+            content
+        )
+        
+        return {
+            "status": "queued",
+            "message": "Resume uploaded successfully and queued for AI parsing."
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error queuing resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error queuing resume: {str(e)}")
+
 @app.post("/api/resume/parse-public", tags=["Candidate"])
 async def parse_resume_endpoint(file: UploadFile = File(...)):
     """
@@ -409,8 +462,13 @@ async def recalculate_trust_score(user: dict = Depends(require_candidate)):
 
 
 @app.get("/api/candidates/insights", tags=["Candidate"])
-async def candidate_insights(user: dict = Depends(require_candidate)):
+@limiter.limit("60/minute")
+async def candidate_insights(request: Request, user: dict = Depends(require_candidate)):
     """Generates dynamic AI Insights for the candidate dashboard."""
+    cache_key = f"insights_{user['id']}"
+    if cache_key in dashboard_cache:
+        return dashboard_cache[cache_key]
+
     async with httpx.AsyncClient() as client:
         # Fetch resume data
         resume_resp = await client.get(
@@ -432,7 +490,10 @@ async def candidate_insights(user: dict = Depends(require_candidate)):
             "ats_score": passports[0].get("ats_score", 0) if passports else 0,
         }
         
-        insights = ai_insights.generate_candidate_insights(candidate_data)
+        # Run AI task in async thread to unblock event loop
+        insights = await asyncio.to_thread(ai_insights.generate_candidate_insights, candidate_data)
+        
+        dashboard_cache[cache_key] = insights
         return insights
 
 @app.get("/health", tags=["System"])
