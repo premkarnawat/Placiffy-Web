@@ -66,7 +66,7 @@ export default function AIAssistant() {
         })
       });
 
-      if (!res.ok) throw new Error('API Error');
+      if (!res.ok) { const errData = await res.json().catch(()=>({})); throw new Error(errData.error || 'API Error'); }
 
       const returnedConvId = res.headers.get('X-Conversation-Id');
       if (returnedConvId && !conversationId) {
@@ -96,7 +96,7 @@ export default function AIAssistant() {
       console.error('Stream error:', error);
       setMessages(prev => {
         const newMsgs = [...prev];
-        newMsgs[newMsgs.length - 1].content = "I'm having trouble connecting to my servers right now. Please [Create a Support Ticket](/candidate/support) if this persists.";
+        newMsgs[newMsgs.length - 1].content = `I'm having trouble connecting to my servers right now. Please [Create a Support Ticket](/candidate/support) if this persists. \n\nTechnical Error: ${error instanceof Error ? error.message : String(error)}`;
         return newMsgs;
       });
     } finally {
