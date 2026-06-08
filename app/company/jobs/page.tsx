@@ -89,7 +89,7 @@ export default function JobWorkspaces() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {jobs.map((job) => (
+          {jobs.map((job: any) => (
             <motion.div key={job.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden hover:border-blue-100 hover:shadow-md transition-all group">
               <div className="p-6 border-b border-gray-50">
                 <div className="flex justify-between items-start mb-4">

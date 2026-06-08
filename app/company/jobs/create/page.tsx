@@ -16,7 +16,7 @@ export default function CreateJobWorkspace() {
 
   const addCustomField = () => {
     if (!newFieldLabel.trim()) return;
-    setCustomFields(prev => [...prev, { type: newFieldType, label: newFieldLabel.trim() }]);
+    setCustomFields((prev: any) => [...prev, { type: newFieldType, label: newFieldLabel.trim() }]);
     setNewFieldLabel("");
   };
 
@@ -44,7 +44,7 @@ const [loading, setLoading] = useState(false);
         const json = await res.json();
         const data = json.data;
         
-        setFormData(prev => ({
+        setFormData((prev: any) => ({
             ...prev,
             title: data.Title || prev.title,
             required_skills: Array.isArray(data.Skills) ? data.Skills.join(", ") : (data.Skills || prev.required_skills),
@@ -81,7 +81,7 @@ const [loading, setLoading] = useState(false);
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev: any) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,8 +95,8 @@ const [loading, setLoading] = useState(false);
 
       const payload = {
         ...formData,
-        required_skills: formData.required_skills.split(',').map(s => s.trim()).filter(Boolean),
-        preferred_skills: formData.preferred_skills.split(',').map(s => s.trim()).filter(Boolean),
+        required_skills: formData.required_skills.split(',').map((s: string) => s.trim()).filter(Boolean),
+        preferred_skills: formData.preferred_skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         open_positions: parseInt(formData.open_positions as any) || 1,
       custom_fields: customFields
       };

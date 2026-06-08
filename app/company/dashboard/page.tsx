@@ -92,7 +92,7 @@ export default function CompanyDashboard() {
         </div>
 
         <nav className="flex-1 px-3 space-y-0.5">
-          {NAV.map(item => {
+          {NAV.map((item: any) => {
             const Icon = item.icon;
             const isActive = activeNav === item.id;
             return (
@@ -107,7 +107,7 @@ export default function CompanyDashboard() {
         </nav>
 
         <div className="p-3 space-y-0.5 border-t border-zinc-200/60 mt-auto">
-          {BOTTOM_NAV.map(item => {
+          {BOTTOM_NAV.map((item: any) => {
             const Icon = item.icon;
             return (
               <button key={item.id} onClick={() => window.location.href = item.href} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-all">
@@ -257,7 +257,7 @@ export default function CompanyDashboard() {
                 <p className="text-xs text-zinc-500">Real-time status of top-tier talent</p>
               </div>
               <div className="flex bg-zinc-100 rounded-xl p-0.5">
-                {["Board","List","Timeline"].map(v => (
+                {["Board","List","Timeline"].map((v: string) => (
                   <button key={v} onClick={() => setPipelineView(v)}
                     className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${pipelineView===v?"bg-white text-zinc-900 shadow-sm":"text-zinc-500"}`}>{v}</button>
                 ))}
@@ -274,7 +274,7 @@ export default function CompanyDashboard() {
                   {stage.candidates.map((c, ci) => (
                     <div key={ci} className="bg-[#F8F9FB] border border-zinc-100 rounded-2xl p-3.5 hover:border-blue-200 transition-all cursor-pointer">
                       <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-9 h-9 rounded-full bg-zinc-300 flex items-center justify-center text-xs font-bold text-white">{c.name.split(" ").map(n=>n[0]).join("")}</div>
+                        <div className="w-9 h-9 rounded-full bg-zinc-300 flex items-center justify-center text-xs font-bold text-white">{c.name.split(" ").map((n: string) =>n[0]).join("")}</div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-bold text-zinc-900 truncate">{c.name}</div>
                           <div className="text-[10px] text-zinc-500">{c.role}</div>

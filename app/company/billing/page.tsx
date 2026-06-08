@@ -92,7 +92,7 @@ export default function CompanyBilling() {
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-medium">
-                      {invoices.map(inv => (
+                      {invoices.map((inv: any) => (
                           <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
                               <td className="p-4 pl-6 text-gray-900">{inv.description || "Subscription Charge"}</td>
                               <td className="p-4">₹{inv.amount}</td>

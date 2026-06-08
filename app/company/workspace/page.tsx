@@ -59,12 +59,12 @@ export default function CandidatePipeline() {
       if (!shortlists) return setCandidates([]);
 
       // For a real app, you'd do a joined query. Here we fetch the candidates separately if needed.
-      const candIds = shortlists.map(s => s.candidate_id);
+      const candIds = shortlists.map((s: any) => s.candidate_id);
       const { data: cands } = await supabase.from('candidates').select('*').in('id', candIds);
       
-      const enriched = shortlists.map(s => ({
+      const enriched = shortlists.map((s: any) => ({
         ...s,
-        candidate: cands?.find(c => c.id === s.candidate_id) || { headline: 'Unknown Candidate', skills: [] }
+        candidate: cands?.find((c: any) => c.id === s.candidate_id) || { headline: 'Unknown Candidate', skills: [] }
       }));
       
       setCandidates(enriched);
@@ -77,7 +77,7 @@ export default function CandidatePipeline() {
 
   const updateStage = async (shortlistId: string, newStage: PipelineStage) => {
     try {
-      setCandidates(prev => prev.map(c => c.id === shortlistId ? { ...c, status: newStage } : c));
+      setCandidates((prev: any) => prev.map((c: any) => c.id === shortlistId ? { ...c, status: newStage } : c));
       await supabase.from('candidate_shortlists').update({ status: newStage }).eq('id', shortlistId);
       toast("success", "Pipeline Updated", `Candidate moved to ${newStage}`);
     } catch (e: any) {
@@ -106,7 +106,7 @@ export default function CandidatePipeline() {
             }} 
             className="bg-white border-gray-200 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-blue-500"
           >
-            {jobs.map(j => <option key={j.id} value={j.id}>{j.title}</option>)}
+            {jobs.map((j: any) => <option key={j.id} value={j.id}>{j.title}</option>)}
           </select>
         )}
       </div>
@@ -119,8 +119,8 @@ export default function CandidatePipeline() {
         </div>
       ) : (
         <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
-          {STAGES.map(stage => {
-            const stageCandidates = candidates.filter(c => c.status === stage).sort((a, b) => (b.ai_match_score || 0) - (a.ai_match_score || 0));
+          {STAGES.map((stage: string) => {
+            const stageCandidates = candidates.filter((c: any) => c.status === stage).sort((a, b) => (b.ai_match_score || 0) - (a.ai_match_score || 0));
             
             return (
               <div key={stage} className="flex-none w-[350px] snap-center bg-slate-50/50 border border-slate-100 rounded-3xl p-4 flex flex-col h-[calc(100vh-250px)]">
@@ -133,7 +133,7 @@ export default function CandidatePipeline() {
                 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
                   <AnimatePresence>
-                    {stageCandidates.map(cand => (
+                    {stageCandidates.map((cand: any) => (
                       <motion.div 
                         key={cand.id} 
                         initial={{ opacity: 0, scale: 0.95 }}

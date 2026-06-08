@@ -29,7 +29,7 @@ export default function CompanyMessages() {
       
       const { data: shorts } = await supabase.from('candidate_shortlists').select('candidate_id, status').eq('company_id', cu.id);
       if (shorts) {
-          const cIds = shorts.map(s => s.candidate_id);
+          const cIds = shorts.map((s: any) => s.candidate_id);
           const { data: cands } = await supabase.from('candidates').select('id, user_id, headline').in('id', cIds);
           setConversations(cands || []);
       }
@@ -52,8 +52,8 @@ export default function CompanyMessages() {
           
           // Subscribe to real-time messages
           const channel = supabase.channel(`chat_${contact.user_id}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user?.id}` }, payload => {
-                setMessages(prev => [...prev, payload.new]);
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user?.id}` }, (payload: any) => {
+                setMessages((prev: any) => [...prev, payload.new]);
             }).subscribe();
             
       } catch (e) {
@@ -70,7 +70,7 @@ export default function CompanyMessages() {
       
       // Optimistic update
       const tempMsg = { id: Date.now(), sender_id: user?.id, content: msg, created_at: new Date().toISOString() };
-      setMessages(prev => [...prev, tempMsg]);
+      setMessages((prev: any) => [...prev, tempMsg]);
       
       try {
           await supabase.from('messages').insert({
@@ -103,7 +103,7 @@ export default function CompanyMessages() {
                   ) : conversations.length === 0 ? (
                       <div className="p-8 text-center text-gray-500 text-sm">No active conversations. Shortlist a candidate to begin chatting.</div>
                   ) : (
-                      conversations.map(c => (
+                      conversations.map((c: any) => (
                           <div key={c.id} onClick={() => loadMessages(c)} className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${activeChat?.id === c.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-white'}`}>
                               <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0">
@@ -168,7 +168,7 @@ export default function CompanyMessages() {
                           <button type="button" className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                               <Paperclip size={20}/>
                           </button>
-                          <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} placeholder="Type your message..." className="flex-1 bg-gray-100 border-0 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500" />
+                          <input type="text" value={inputText} onChange={(e: any) => setInputText(e.target.value)} placeholder="Type your message..." className="flex-1 bg-gray-100 border-0 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500" />
                           <button type="submit" disabled={!inputText.trim()} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors">
                               <Send size={20}/>
                           </button>

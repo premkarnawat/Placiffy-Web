@@ -15,7 +15,7 @@ export default function AIAssistant() {
       
       const userMsg = inputText.trim();
       setInputText("");
-      setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+      setMessages((prev: any) => [...prev, { role: 'user', content: userMsg }]);
       setLoading(true);
       
       try {
@@ -29,9 +29,9 @@ export default function AIAssistant() {
           if (!res.ok) throw new Error("Failed to connect to AI Engine");
           const json = await res.json();
           
-          setMessages(prev => [...prev, { role: 'assistant', content: json.reply }]);
+          setMessages((prev: any) => [...prev, { role: 'assistant', content: json.reply }]);
       } catch (err: any) {
-          setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I am currently experiencing technical difficulties connecting to the Groq inference engine." }]);
+          setMessages((prev: any) => [...prev, { role: 'assistant', content: "Sorry, I am currently experiencing technical difficulties connecting to the Groq inference engine." }]);
       } finally {
           setLoading(false);
       }
@@ -75,7 +75,7 @@ export default function AIAssistant() {
           {/* Input Block */}
           <form onSubmit={sendMessage} className="p-4 bg-white border-t border-gray-100">
               <div className="flex items-center gap-2 relative">
-                  <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} disabled={loading} placeholder="Ask about ATS scoring, billing, or job creation..." className="flex-1 rounded-xl border-gray-200 py-3.5 px-4 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50" />
+                  <input type="text" value={inputText} onChange={(e: any) => setInputText(e.target.value)} disabled={loading} placeholder="Ask about ATS scoring, billing, or job creation..." className="flex-1 rounded-xl border-gray-200 py-3.5 px-4 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50" />
                   <button type="submit" disabled={!inputText.trim() || loading} className="absolute right-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
                       <Send size={18}/>
                   </button>

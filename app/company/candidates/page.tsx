@@ -56,10 +56,10 @@ export default function CandidatePool() {
       
       let filteredData = data || [];
       if (filters.skills) {
-          const requiredSkills = filters.skills.toLowerCase().split(',').map(s => s.trim());
-          filteredData = filteredData.filter(c => {
+          const requiredSkills = filters.skills.toLowerCase().split(',').map((s: string) => s.trim());
+          filteredData = filteredData.filter((c: any) => {
               const candSkills = (c.skills || []).map((s: string) => s.toLowerCase());
-              return requiredSkills.every(rs => candSkills.some((cs: string) => cs.includes(rs)));
+              return requiredSkills.every((rs: string) => candSkills.some((cs: string) => cs.includes(rs)));
           });
       }
 
@@ -100,7 +100,7 @@ export default function CandidatePool() {
               const { data: matchedCands } = await supabase.from('candidates').select('id, user_id, headline, location, skills, experience_years, trust_score, is_verified, passports(id)').in('id', matchedIds);
               
               if (matchedCands) {
-                  const scoredCands = matchedCands.map(c => {
+                  const scoredCands = matchedCands.map((c: any) => {
                       const matchInfo = json.data.find((m: any) => m.candidate_id === c.id);
                       return { ...c, ats_score: Math.round(matchInfo.similarity * 100) };
                   });
@@ -136,7 +136,7 @@ export default function CandidatePool() {
                     onChange={(e) => runAtsMatch(e.target.value)}
                 >
                     <option value="">Standard Search</option>
-                    {jobs.map(j => (
+                    {jobs.map((j: any) => (
                         <option key={j.id} value={j.id}>Auto-Match: {j.title}</option>
                     ))}
                 </select>
@@ -147,19 +147,19 @@ export default function CandidatePool() {
       <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-4 items-end">
           <div className="flex-1 w-full">
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Keywords / Headline</label>
-            <input type="text" value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})} placeholder="React Developer..." className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
+            <input type="text" value={filters.search} onChange={(e: any) => setFilters({...filters, search: e.target.value})} placeholder="React Developer..." className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
           </div>
           <div className="flex-1 w-full">
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Skills (comma separated)</label>
-            <input type="text" value={filters.skills} onChange={e => setFilters({...filters, skills: e.target.value})} placeholder="Python, AWS..." className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
+            <input type="text" value={filters.skills} onChange={(e: any) => setFilters({...filters, skills: e.target.value})} placeholder="Python, AWS..." className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
           </div>
           <div className="w-full lg:w-48">
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Location</label>
-            <input type="text" value={filters.location} onChange={e => setFilters({...filters, location: e.target.value})} placeholder="Bangalore" className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
+            <input type="text" value={filters.location} onChange={(e: any) => setFilters({...filters, location: e.target.value})} placeholder="Bangalore" className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
           </div>
           <div className="w-full lg:w-32">
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Min Exp (Yrs)</label>
-            <input type="number" value={filters.minExperience} onChange={e => setFilters({...filters, minExperience: e.target.value})} placeholder="3" className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
+            <input type="number" value={filters.minExperience} onChange={(e: any) => setFilters({...filters, minExperience: e.target.value})} placeholder="3" className="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" />
           </div>
           <button onClick={fetchCandidates} className="w-full lg:w-auto px-6 py-2.5 bg-zinc-900 text-white font-bold rounded-xl flex items-center justify-center gap-2">
             <Filter size={16}/> Filter
@@ -180,7 +180,7 @@ export default function CandidatePool() {
                       <p className="text-sm">Try adjusting your filters or running a semantic ATS match.</p>
                   </div>
               ) : (
-                  candidates.map((c) => (
+                  candidates.map((c: any) => (
                       <div key={c.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
                           {c.ats_score && (
                               <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-black px-3 py-1 rounded-bl-xl flex items-center gap-1">

@@ -106,23 +106,23 @@ export default function CompanySettings() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name</label>
-                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full rounded-xl border-gray-200" />
+                <input type="text" value={formData.name} onChange={(e: any) => setFormData({...formData, name: e.target.value})} className="w-full rounded-xl border-gray-200" />
             </div>
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Website URL</label>
-                <input type="text" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full rounded-xl border-gray-200" />
+                <input type="text" value={formData.website} onChange={(e: any) => setFormData({...formData, website: e.target.value})} className="w-full rounded-xl border-gray-200" />
             </div>
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Industry</label>
-                <input type="text" value={formData.industry} onChange={e => setFormData({...formData, industry: e.target.value})} className="w-full rounded-xl border-gray-200" />
+                <input type="text" value={formData.industry} onChange={(e: any) => setFormData({...formData, industry: e.target.value})} className="w-full rounded-xl border-gray-200" />
             </div>
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Employee Count</label>
-                <input type="text" value={formData.employee_count} onChange={e => setFormData({...formData, employee_count: e.target.value})} className="w-full rounded-xl border-gray-200" />
+                <input type="text" value={formData.employee_count} onChange={(e: any) => setFormData({...formData, employee_count: e.target.value})} className="w-full rounded-xl border-gray-200" />
             </div>
             <div className="sm:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-xl border-gray-200 h-24" />
+                <textarea value={formData.description} onChange={(e: any) => setFormData({...formData, description: e.target.value})} className="w-full rounded-xl border-gray-200 h-24" />
             </div>
         </div>
         <div className="flex justify-end pt-4">

@@ -83,11 +83,11 @@ export default function SupportCenter() {
               <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                       <label className="block text-sm font-semibold mb-1">Subject</label>
-                      <input type="text" value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="w-full rounded-xl border-gray-200" placeholder="e.g. ATS Matching not returning candidates" />
+                      <input type="text" value={formData.subject} onChange={(e: any) => setFormData({...formData, subject: e.target.value})} className="w-full rounded-xl border-gray-200" placeholder="e.g. ATS Matching not returning candidates" />
                   </div>
                   <div className="col-span-2">
                       <label className="block text-sm font-semibold mb-1">Category</label>
-                      <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full rounded-xl border-gray-200">
+                      <select value={formData.category} onChange={(e: any) => setFormData({...formData, category: e.target.value})} className="w-full rounded-xl border-gray-200">
                           <option>Technical</option>
                           <option>Billing</option>
                           <option>ATS</option>
@@ -98,7 +98,7 @@ export default function SupportCenter() {
                   </div>
                   <div className="col-span-2">
                       <label className="block text-sm font-semibold mb-1">Description</label>
-                      <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-xl border-gray-200 h-32" placeholder="Describe your issue in detail..." />
+                      <textarea value={formData.description} onChange={(e: any) => setFormData({...formData, description: e.target.value})} className="w-full rounded-xl border-gray-200 h-32" placeholder="Describe your issue in detail..." />
                   </div>
               </div>
               <div className="flex justify-end gap-3 pt-2">
@@ -119,7 +119,7 @@ export default function SupportCenter() {
                       <p className="text-gray-500 text-sm">You haven&apos;t opened any support requests yet.</p>
                   </div>
               ) : (
-                  tickets.map(t => (
+                  tickets.map((t: any) => (
                       <div key={t.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md cursor-pointer transition-all">
                           <div>
                               <div className="flex items-center gap-3 mb-1">
