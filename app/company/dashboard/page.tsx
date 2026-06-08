@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Briefcase, Users, MessageSquare, BarChart2,
-  Bell, HelpCircle, Settings, Search, Plus, Calendar, ChevronRight,
+  Bell, HelpCircle, Settings, Search, Plus, Calendar, 
   Sparkles, Building2
 } from "lucide-react";
 
@@ -18,13 +18,7 @@ const NAV = [
   { id: "analytics", label: "Analytics", icon: BarChart2 },
 ];
 
-const STATS = [
-  { label: "Active Jobs", value: "24", change: "+4%", icon: Briefcase, color: "text-[#0052CC]", bg: "bg-blue-50" },
-  { label: "Applicants", value: "1,482", change: "+12%", icon: Users, color: "text-[#0052CC]", bg: "bg-blue-50" },
-  { label: "Verified", value: "428", change: "+18%", icon: "shield", color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "Interviews", value: "56", change: "-2%", icon: Calendar, color: "text-violet-600", bg: "bg-violet-50", negative: true },
-  { label: "Offers", value: "12", change: "+8%", icon: "file", color: "text-amber-600", bg: "bg-amber-50" },
-];
+
 
 // FUNNEL dynamically rendered based on stats
 
