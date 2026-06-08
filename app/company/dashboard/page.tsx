@@ -80,7 +80,7 @@ export default function CompanyDashboard() {
       {/* Sidebar */}
       <aside className="w-52 bg-[#F8F9FB] border-r border-zinc-200/60 flex flex-col min-min-h-screen sticky top-0">
         <div className="p-5 pb-6">
-          <a href="/company/dashboard" className="flex items-center gap-2 cursor-pointer">
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#0052CC] rounded-xl flex items-center justify-center">
               <Building2 className="w-4 h-4 text-white"/>
             </div>
@@ -144,9 +144,9 @@ export default function CompanyDashboard() {
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-black text-zinc-900">Welcome Back, Alex.</h1>
-              <p className="text-sm text-zinc-500 mt-1">Here&apos;s what's happening with your hiring funnel today.</p>
+              <p className="text-sm text-zinc-500 mt-1">Here&apos;s what&apos;s happening with your hiring funnel today.</p>
             </div>
-            <a href="/company/dashboard" className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center gap-2">
               <button className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">
                 <Calendar className="w-3.5 h-3.5"/>Last 30 Days
               </button>
