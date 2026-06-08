@@ -24,31 +24,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def decode_token(token: str) -> dict:
     try:
-        
-
-
-    try:
-        # Supabase uses HS256 algorithm.
         import os
-        secret = os.environ.get("SUPABASE_JWT_SECRET", settings.supabase_jwt_secret)
+        secret = os.environ.get("SUPABASE_JWT_SECRET", getattr(settings, 'supabase_jwt_secret', settings.jwt_secret_key))
         if not secret:
-            secret = settings.jwt_secret_key # Fallback
+            secret = settings.jwt_secret_key
             
         return jwt.decode(
             token, 
             secret, 
-            algorithms=["HS256"], 
+            algorithms=["HS256", "RS256", settings.jwt_algorithm], 
             options={"verify_aud": False}
         )
     except Exception as e:
-        print(f"Secure JWT Decode Error: {e}")
-        # If the secret is wrong, we throw an error instead of bypassing security.
+        print(f"JWT Decode Error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
 
 async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)) -> dict:
     if not credentials:
