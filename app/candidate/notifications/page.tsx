@@ -14,7 +14,7 @@ export default function NotificationsPage() {
   const [filtered, setFiltered] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typesetTypeFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All');
 
   const fetchNotifications = async () => {
     try {
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
       result = result.filter(n => n.type === typeFilter.toLowerCase());
     }
     setFiltered(result);
-  }, [searchQuery, typenotifications]);
+  }, [searchQuery, typeFilter, notifications]);
 
   const markAsRead = async (id: string) => {
     try {

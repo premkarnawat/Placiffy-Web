@@ -14,7 +14,7 @@ export default function ApplicationsPage() {
   const [filtered, setFiltered] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statussetStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const STAGES = ['Applied', 'Under Review', 'Verification', 'Interview Scheduled', 'Interview Completed', 'Offer Released', 'Offer Accepted', 'Joined', 'Rejected'];
 
@@ -49,7 +49,7 @@ export default function ApplicationsPage() {
       result = result.filter(a => a.status === statusFilter.toLowerCase());
     }
     setFiltered(result);
-  }, [searchQuery, statusapplications]);
+  }, [searchQuery, statusFilter, applications]);
 
   const getStatusColor = (status: string) => {
     switch(status?.toLowerCase()) {
