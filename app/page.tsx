@@ -134,7 +134,7 @@ function HeroSection() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
             <a href="#contact" className="inline-flex items-center gap-2 px-7 py-3.5 text-[#1A56DB] font-bold text-sm rounded-xl border-2 border-[#1A56DB]/20 hover:border-[#1A56DB]/50 hover:bg-blue-50/50 transition-all duration-300">
-              Book a Demo
+              Get Started
             </a>
           </motion.div>
 

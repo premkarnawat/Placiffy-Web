@@ -708,3 +708,30 @@ async def ats_match_candidates(request: Request, payload: dict, user: dict = Dep
             )
             
         return {"status": "success", "sourced_count": len(inserts), "matches": matches}
+
+
+@app.post("/api/resume/parse-sync", tags=["Candidate"])
+@limiter.limit("10/minute")
+async def parse_resume_sync(request: Request, file: UploadFile = File(...)):
+    """
+    Synchronous parse endpoint. Blocks until Groq parsing is complete.
+    Used exclusively for Candidate Onboarding to auto-fill registration fields.
+    Does NOT generate embeddings or save to DB. Just returns JSON.
+    """
+    try:
+        content = await file.read()
+        filename = file.filename
+        
+        import asyncio
+        parsed_data = await asyncio.to_thread(resume_parser.parse_resume, content, filename)
+        
+        if "error" in parsed_data and len(parsed_data.get("skills", [])) == 0:
+            raise HTTPException(status_code=400, detail=parsed_data['error'])
+            
+        return {"status": "success", "parsed_data": parsed_data}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error parsing resume synchronously: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error parsing resume: {str(e)}")

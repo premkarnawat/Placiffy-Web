@@ -92,7 +92,7 @@ export function Navbar({ onLogin, onDemo }: NavbarProps) {
             </div>
 
             <button onClick={onDemo} className="btn-primary text-xs py-2.5 px-5">
-              <span>Book a Demo</span>
+              <span>Get Started</span>
             </button>
           </div>
 
@@ -135,7 +135,7 @@ export function Navbar({ onLogin, onDemo }: NavbarProps) {
                 </button>
               ))}
               <button onClick={onDemo} className="w-full btn-primary text-xs py-3">
-                <span>Book a Demo</span>
+                <span>Get Started</span>
               </button>
             </div>
           </motion.div>
