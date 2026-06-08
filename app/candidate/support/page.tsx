@@ -141,7 +141,7 @@ export default function SupportPage() {
                     <MessageSquare className="text-gray-400" size={24} />
                   </div>
                   <h3 className="font-medium text-gray-900">No support tickets</h3>
-                  <p className="text-sm text-gray-500 mt-1">You haven't submitted any support requests yet.</p>
+                  <p className="text-sm text-gray-500 mt-1">You haven&apos;t submitted any support requests yet.</p>
                 </div>
               ) : (
                 tickets.map(ticket => (

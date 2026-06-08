@@ -945,13 +945,11 @@ async def extract_job_description(request: Request, file: UploadFile = File(...)
             for page in pdf_reader.pages:
                 extracted = page.extract_text()
                 if extracted:
-                    text += extracted + "
-"
+                    text += extracted + "\n"
         elif filename.endswith(".docx"):
             doc = docx.Document(io.BytesIO(content))
             for para in doc.paragraphs:
-                text += para.text + "
-"
+                text += para.text + "\n"
         else:
             raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported.")
             

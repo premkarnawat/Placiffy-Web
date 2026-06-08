@@ -144,7 +144,7 @@ export default function CompanyDashboard() {
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-black text-zinc-900">Welcome Back, Alex.</h1>
-              <p className="text-sm text-zinc-500 mt-1">Here's what's happening with your hiring funnel today.</p>
+              <p className="text-sm text-zinc-500 mt-1">Here&apos;s what's happening with your hiring funnel today.</p>
             </div>
             <a href="/company/dashboard" className="flex items-center gap-2 cursor-pointer">
               <button className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors">

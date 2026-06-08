@@ -116,7 +116,7 @@ export default function SupportCenter() {
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
                       <MessageSquare className="w-12 h-12 mx-auto text-gray-300 mb-3"/>
                       <p className="font-bold text-gray-900">No support tickets.</p>
-                      <p className="text-gray-500 text-sm">You haven't opened any support requests yet.</p>
+                      <p className="text-gray-500 text-sm">You haven&apos;t opened any support requests yet.</p>
                   </div>
               ) : (
                   tickets.map(t => (

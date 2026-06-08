@@ -114,7 +114,7 @@ export default function ApplicationsPage() {
           <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200">
             <Briefcase size={48} className="mx-auto text-gray-300 mb-4" />
             <h3 className="text-lg font-bold text-gray-900">No applications found</h3>
-            <p className="text-gray-500 mt-1">You haven't submitted any applications matching this filter yet.</p>
+            <p className="text-gray-500 mt-1">You haven&apos;t submitted any applications matching this filter yet.</p>
           </div>
         ) : (
           filtered.map(app => {

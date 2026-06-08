@@ -137,7 +137,7 @@ export default function NotificationsPage() {
           <div className="p-12 text-center">
             <Bell size={48} className="mx-auto text-gray-300 mb-4" />
             <h3 className="text-lg font-bold text-gray-900">All caught up!</h3>
-            <p className="text-gray-500 mt-1">You don't have any notifications right now.</p>
+            <p className="text-gray-500 mt-1">You don&apos;t have any notifications right now.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
