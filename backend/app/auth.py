@@ -1,26 +1,30 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.config import get_settings
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 bearer_scheme = HTTPBearer(auto_error=False)
 
-import hashlib
+import bcrypt
 
 def hash_password(password: str) -> str:
-    # Use SHA-256 pre-hashing to completely bypass bcrypt's 72-byte limit.
-    # This guarantees the input to bcrypt is always exactly 64 ASCII bytes.
-    pre_hashed = hashlib.sha256(password.encode('utf-8')).hexdigest()
-    return pwd_context.hash(pre_hashed)
+    # Use native bcrypt to bypass broken passlib library.
+    salt = bcrypt.gensalt()
+    pwd_bytes = password.encode('utf-8')[:72]
+    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
 
 def verify_password(plain: str, hashed: str) -> bool:
-    pre_hashed = hashlib.sha256(plain.encode('utf-8')).hexdigest()
-    return pwd_context.verify(pre_hashed, hashed)
+    try:
+        plain_bytes = plain.encode('utf-8')[:72]
+        hashed_bytes = hashed.encode('utf-8')
+        return bcrypt.checkpw(plain_bytes, hashed_bytes)
+    except Exception:
+        return False
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
