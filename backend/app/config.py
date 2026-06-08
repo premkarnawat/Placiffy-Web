@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     database_url: str = ""
     groq_api_key: str = ""
     jwt_secret_key: str = "placify-dev-secret-change-in-production-32chars"
+    supabase_jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
     frontend_url: str = "https://ruby-galaxy.vercel.app"
