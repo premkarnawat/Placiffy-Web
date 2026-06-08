@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Book, HelpCircle, ShieldCheck, Zap, Briefcase, ChevronRight, FileText, Bot } from 'lucide-react';
+import { Search, HelpCircle, ShieldCheck, Zap, Briefcase, ChevronRight, FileText, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 

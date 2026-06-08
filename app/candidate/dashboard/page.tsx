@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { Activity, ShieldCheck, Zap, Briefcase, MessageSquare, TrendingUp, ChevronRight, Lock, CheckCircle2 } from 'lucide-react';
+import { Activity, ShieldCheck, Zap, Briefcase, MessageSquare, TrendingUp, ChevronRight, Lock,  } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CandidateDashboard() {

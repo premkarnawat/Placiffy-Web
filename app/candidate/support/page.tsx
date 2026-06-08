@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { LifeBuoy, Plus, MessageSquare, Clock, CheckCircle, HelpCircle, FileText, UploadCloud, ChevronRight, Search } from 'lucide-react';
+import { LifeBuoy, Plus, MessageSquare, Clock, CheckCircle, HelpCircle, FileText, ChevronRight, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 export default function SupportPage() {
@@ -14,6 +14,7 @@ export default function SupportPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newTicket, setNewTicket] = useState({ category: 'Technical Issue', subject: '', description: '' });
   const [isLoading, setIsLoading] = useState(true);
+  const [kbArticles, setKbArticles] = useState<any[]>([]);
 
   const categories = ['Technical Issue', 'Profile Issue', 'Verification Issue', 'ATS Issue', 'Interview Issue', 'Offer Issue', 'Billing Issue', 'General Inquiry'];
 
@@ -24,6 +25,8 @@ export default function SupportPage() {
   const fetchTickets = async () => {
     try {
       const { data, error } = await supabase.from('support_tickets').select('*').eq('user_id', user?.id).order('created_at', { ascending: false });
+      const { data: kbData } = await supabase.from('knowledge_base').select('title, category').limit(5);
+      setKbArticles(kbData || []);
       if (error) throw error;
       setTickets(data || []);
     } catch (e) {
