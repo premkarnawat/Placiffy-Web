@@ -735,3 +735,174 @@ async def parse_resume_sync(request: Request, file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error parsing resume synchronously: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error parsing resume: {str(e)}")
+
+
+# ==========================================
+# CUSTOM AUTHENTICATION ROUTES (MIGRATION)
+# ==========================================
+
+class AuthLoginSchema(BaseModel):
+    email: EmailStr
+    password: str
+    role: str
+
+@app.post("/api/auth/login", tags=["Auth"])
+@limiter.limit("10/minute")
+async def login(request: Request, body: AuthLoginSchema):
+    try:
+        from app.auth import verify_password, create_access_token
+        
+        # Look up user by email AND role
+        res = supabase_client.table('users').select('*').eq('email', body.email).eq('role', body.role).execute()
+        if not res.data or len(res.data) == 0:
+            raise HTTPException(status_code=401, detail="Invalid credentials or role mismatch")
+            
+        user = res.data[0]
+        
+        if not verify_password(body.password, user.get('password_hash', '')):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+            
+        # Issue JWT token
+        token = create_access_token({"sub": str(user['id']), "role": user['role'], "email": user['email']})
+        return {"access_token": token, "token_type": "bearer", "user": {"id": user['id'], "role": user['role']}}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CompanyRegisterSchema(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    official_email: str
+    website: str
+    industry: str
+    size: str
+    hq_location: str
+    linkedin_url: str
+    gst: str
+    contact_name: str
+    designation: str
+    phone: str
+    logo_url: str
+
+@app.post("/api/company/register-custom", tags=["Company"])
+@limiter.limit("10/minute")
+async def company_register_custom(request: Request, body: CompanyRegisterSchema):
+    try:
+        from app.auth import hash_password, create_access_token
+        import uuid
+        
+        # 1. Check if email+role already exists
+        check = supabase_client.table('users').select('id').eq('email', body.email).eq('role', 'company').execute()
+        if check.data and len(check.data) > 0:
+            raise HTTPException(status_code=400, detail="An account with this email and the Company role already exists.")
+            
+        user_id = str(uuid.uuid4())
+        hashed_pw = hash_password(body.password)
+        
+        # 2. Create User
+        user_res = supabase_client.table('users').insert({
+            "id": user_id,
+            "email": body.email,
+            "role": "company",
+            "password_hash": hashed_pw
+        }).execute()
+        
+        # 3. Create Company
+        comp_id = str(uuid.uuid4())
+        supabase_client.table('companies').insert({
+            "id": comp_id,
+            "name": body.name,
+            "logo_url": body.logo_url,
+            "website": body.website,
+            "industry": body.industry,
+            "size": body.size,
+            "hq_location": body.hq_location,
+            "linkedin_url": body.linkedin_url,
+            "gst": body.gst
+        }).execute()
+        
+        # 4. Link Company User
+        supabase_client.table('company_users').insert({
+            "id": str(uuid.uuid4()),
+            "company_id": comp_id,
+            "user_id": user_id,
+            "role": "admin"
+        }).execute()
+        
+        # Issue JWT
+        token = create_access_token({"sub": user_id, "role": "company", "email": body.email})
+        return {"access_token": token, "token_type": "bearer", "user": {"id": user_id, "role": "company"}}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Company Registration Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CandidateRegisterSchema(BaseModel):
+    email: EmailStr
+    password: str
+    headline: str
+    summary: str
+    location: str
+    current_company: str
+    current_role: str
+    skills: List[str]
+    experience_years: int
+    resume_url: str
+    profile_photo_url: str
+
+@app.post("/api/candidate/register-custom", tags=["Candidate"])
+@limiter.limit("10/minute")
+async def candidate_register_custom(request: Request, body: CandidateRegisterSchema):
+    try:
+        from app.auth import hash_password, create_access_token
+        import uuid
+        
+        # 1. Check if email+role already exists
+        check = supabase_client.table('users').select('id').eq('email', body.email).eq('role', 'candidate').execute()
+        if check.data and len(check.data) > 0:
+            raise HTTPException(status_code=400, detail="An account with this email and the Candidate role already exists.")
+            
+        user_id = str(uuid.uuid4())
+        hashed_pw = hash_password(body.password)
+        
+        # 2. Create User
+        supabase_client.table('users').insert({
+            "id": user_id,
+            "email": body.email,
+            "role": "candidate",
+            "password_hash": hashed_pw
+        }).execute()
+        
+        # 3. Create Candidate Profile
+        supabase_client.table('candidates').insert({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "headline": body.headline,
+            "summary": body.summary,
+            "location": body.location,
+            "current_company": body.current_company,
+            "current_role": body.current_role,
+            "skills": body.skills,
+            "experience_years": body.experience_years,
+            "resume_url": body.resume_url,
+            "profile_photo_url": body.profile_photo_url,
+            "profile_completion_pct": 100
+        }).execute()
+        
+        # Issue JWT
+        token = create_access_token({"sub": user_id, "role": "candidate", "email": body.email})
+        return {"access_token": token, "token_type": "bearer", "user": {"id": user_id, "role": "candidate"}}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Candidate Registration Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

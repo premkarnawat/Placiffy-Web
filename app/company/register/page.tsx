@@ -64,52 +64,30 @@ export default function CompanyRegistration() {
     
     setLoading(true);
     try {
-      // 1. Authenticate with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.official_email,
-        password: formData.password,
-        options: {
-          data: {
-            user_type: 'company'
-          }
-        }
-      });
-      
-      if (authError) {
-        if (authError.message.includes("already registered")) {
-           throw new Error("This email is already registered. Please login.");
-        }
-        throw authError;
-      }
-      
-      // Wait for session to be established
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || authData?.session?.access_token;
-      
-      if (!token) throw new Error("Authentication failed. No token received.");
-      
-      // Save token locally just in case
-      localStorage.setItem("token", token);
-
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
       
       // Format phone number
       const fullPhone = `${formData.country_code} ${formData.phone}`;
       
       const payload = { 
-        ...formData, 
+        ...formData,
+        email: formData.official_email,
         phone: fullPhone,
         logo_url: logoUrl 
       };
 
-      const res = await fetch(`${API_URL}/api/company/onboard`, {
+      const res = await fetch(`${API_URL}/api/company/register-custom`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to onboard company");
+      
+      // Save custom JWT token
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("userRole", "company");
 
       if (!res.ok) {
         const err = await res.json();

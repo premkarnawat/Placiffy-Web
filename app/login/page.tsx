@@ -1,143 +1,103 @@
 "use client";
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { Building2, UserCircle, Shield, Loader2, Lock, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
-import { supabase } from '@/lib/supabase';
-import { Linkedin, Github, Mail, Lock } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  
+  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<'candidate' | 'company' | 'admin'>('candidate');
+  const [formData, setFormData] = useState({ email: '', password: '' });
 
-  const handleSocialLogin = (provider: string) => {
-    toast('info', `${provider} Integration`, `${provider} OAuth is currently being configured in the Supabase Dashboard. Please use Email/Password for now.`);
-  };
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     
     try {
-              const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-  
-        if (authError) {
-          throw new Error(authError.message);
-        }
-        
-        // Fetch user role from public.users table to know where to route
-        const { data: userData } = await supabase.from('users').select('*').eq('id', authData.user.id).single();
-        const role = userData?.role || 'candidate';
-        const name = userData?.name || 'User';
-
-        login(authData.session.access_token, {
-          id: authData.user.id,
-          email: authData.user.email || '',
-          role: role,
-          name: name
-        });
-        
-        toast('success' , 'Welcome back!', 'Login successful');
-        const user = { role }; // Local mock for router push
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
+      const payload = { ...formData, role };
       
-      if (user.role === 'admin') router.push('/admin');
-      else if (user.role === 'company') router.push('/company/dashboard');
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Login failed");
+      
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("userRole", role);
+      
+      toast("success", "Login Successful", "Welcome back!");
+      
+      if (role === 'admin') router.push('/admin');
+      else if (role === 'company') router.push('/company/dashboard');
       else router.push('/candidate/dashboard');
       
-    } catch (error: any) {
-      toast('error' , 'Login Failed', error.message);
+    } catch (err: any) {
+      toast("error", "Login Failed", err.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
-      <header className="flex items-center px-8 py-6 bg-transparent absolute top-0 w-full z-50">
-        <a href="/" className="text-2xl font-bold tracking-tight text-blue-700">PLACIFY</a>
-      </header>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Decorative */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 blur-[120px] pointer-events-none"></div>
 
-      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white/20 z-0" />
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-blue-900/5 p-8 relative z-10 border border-gray-100"
-        >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2 font-serif">Welcome Back</h1>
-            <p className="text-gray-500 text-sm">Enter your credentials to access your workspace</p>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center z-10">
+        <Link href="/" className="inline-flex items-center justify-center gap-2 mb-6">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+            <Building2 className="text-white" size={24} />
+          </div>
+          <span className="text-3xl font-extrabold text-slate-900 tracking-tight">PLACIFY</span>
+        </Link>
+        <h2 className="text-3xl font-bold text-slate-900">Sign in to your account</h2>
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-8 z-10">
+        <div className="bg-white/80 backdrop-blur-xl py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-3xl sm:px-10 border border-white/40">
+          
+          <div className="flex bg-slate-100 p-1 rounded-xl mb-8">
+            <button type="button" onClick={() => setRole('candidate')} className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'candidate' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <UserCircle size={18} /> Candidate
+            </button>
+            <button type="button" onClick={() => setRole('company')} className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'company' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <Building2 size={18} /> Company
+            </button>
+            <button type="button" onClick={() => setRole('admin')} className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'admin' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <Shield size={18} /> Admin
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <Mail size={18} />
-                </div>
-                <input 
-                  type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm" 
-                  placeholder="name@example.com"
-                />
-              </div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1"><Mail size={14}/> Email Address</label>
+              <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 py-3 px-4 bg-slate-50" placeholder="you@example.com" />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1"><Lock size={14}/> Password</label>
+              <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="block w-full rounded-xl border-slate-200 focus:ring-blue-500 py-3 px-4 bg-slate-50" placeholder="••••••••" />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">Password</label>
-                <a href="#" className="text-xs text-blue-600 hover:underline">Forgot password?</a>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <Lock size={18} />
-                </div>
-                <input 
-                  type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm" 
-                  placeholder="********"
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit" disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-[#1A56DB] hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-70"
-            >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+            <button type="submit" disabled={loading} className={`w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl font-bold text-white transition-colors shadow-md ${role === 'company' ? 'bg-indigo-600 hover:bg-indigo-700' : role === 'admin' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+              {loading ? <Loader2 className="animate-spin" size={20} /> : `Sign in as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
             </button>
           </form>
 
-          <div className="relative py-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
-            <div className="relative flex justify-center text-xs uppercase tracking-wider"><span className="bg-white px-4 text-gray-400">Or continue with</span></div>
+          <div className="mt-8 text-center text-sm font-medium text-slate-500">
+            Don't have an account? <Link href="/register" className="text-blue-600 font-bold hover:underline">Get Started</Link>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => handleSocialLogin('LinkedIn')} className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors">
-              <Linkedin size={18} className="text-blue-700" /> LinkedIn
-            </button>
-            <button type="button" onClick={() => handleSocialLogin('GitHub')} className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors">
-              <Github size={18} /> GitHub
-            </button>
-          </div>
-
-          <p className="mt-8 text-center text-sm text-gray-600">
-            Don't have an account? <a href="/register" className="text-blue-600 font-medium hover:underline">Register</a>
-          </p>
-        </motion.div>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }

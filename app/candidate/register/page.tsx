@@ -30,14 +30,7 @@ export default function CandidateRegistration() {
     experience_years: 0
   });
 
-  const handleOAuth = async (provider: 'google' | 'github' | 'linkedin_oidc') => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/candidate/dashboard` }});
-      if (error) throw error;
-    } catch (e: any) {
-      toast("error", "OAuth Failed", e.message);
-    }
-  };
+
 
   
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -45,38 +38,8 @@ export default function CandidateRegistration() {
     if (authData.password !== authData.confirm_password) {
       return toast("error", "Passwords do not match", "Please ensure both passwords are the same.");
     }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: authData.email,
-        password: authData.password,
-        options: { data: { user_type: 'candidate' } }
-      });
-      if (error) throw error;
-      
-      if (data.user) {
-        setFormData(prev => ({ ...prev, user_id: data.user.id }));
-        setStep(2);
-      }
-    } catch (e: any) {
-      if (e.message.includes("already registered")) {
-        // Try login
-        const { data, error } = await supabase.auth.signInWithPassword({ email: authData.email, password: authData.password });
-        if (error) {
-           toast("error", "Auth Failed", error.message);
-        } else if (data.user) {
-           setFormData(prev => ({ ...prev, user_id: data.user.id }));
-           setStep(2);
-        }
-      } else {
-        toast("error", "Signup Failed", e.message);
-      }
-    } finally {
-      setLoading(false);
-    }
+    setStep(2);
   };
-
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -123,7 +86,7 @@ export default function CandidateRegistration() {
       // 1. Upload Resume to Storage if exists
       let resume_url = "";
       if (resumeFile) {
-        const fileName = `${formData.user_id}_${resumeFile.name}`;
+        const fileName = `resume_${Date.now()}_${resumeFile.name}`;
         const { error: uploadError } = await supabase.storage.from("resumes").upload(fileName, resumeFile);
         if (!uploadError) {
           const { data } = supabase.storage.from("resumes").getPublicUrl(fileName);
@@ -131,9 +94,11 @@ export default function CandidateRegistration() {
         }
       }
 
-      // 2. Insert into Candidates table
-      const { error } = await supabase.from('candidates').upsert({
-        user_id: formData.user_id,
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
+      
+      const payload = {
+        email: authData.email,
+        password: authData.password,
         headline: formData.headline,
         summary: formData.summary,
         location: formData.location,
@@ -142,11 +107,20 @@ export default function CandidateRegistration() {
         skills: formData.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         experience_years: Number(formData.experience_years),
         resume_url,
-        profile_photo_url: formData.profile_photo_url,
-        profile_completion_pct: 100
+        profile_photo_url: formData.profile_photo_url
+      };
+
+      const res = await fetch(`${API_URL}/api/candidate/register-custom`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
       
-      if (error) throw error;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Registration failed");
+      
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("userRole", "candidate");
       
       toast("success", "Profile Created", "Welcome to Placify!");
       router.push("/candidate/dashboard");
@@ -210,17 +184,7 @@ export default function CandidateRegistration() {
                   </button>
                 </form>
 
-                <div className="mt-8">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-                    <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-slate-500 font-medium">Or continue with</span></div>
-                  </div>
-                  <div className="mt-6 grid grid-cols-3 gap-3">
-                    <button onClick={() => handleOAuth('google')} className="w-full flex justify-center items-center py-3 border border-slate-200 rounded-xl hover:bg-slate-50"><img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google"/></button>
-                    <button onClick={() => handleOAuth('github')} className="w-full flex justify-center items-center py-3 border border-slate-200 rounded-xl hover:bg-slate-50"><Github className="w-5 h-5 text-slate-900"/></button>
-                    <button onClick={() => handleOAuth('linkedin_oidc')} className="w-full flex justify-center items-center py-3 border border-slate-200 rounded-xl hover:bg-slate-50"><Linkedin className="w-5 h-5 text-blue-700"/></button>
-                  </div>
-                </div>
+
               </motion.div>
             )}
 
