@@ -11,6 +11,7 @@ export default function ResumeForm({ userId }: { userId?: string }) {
 
   useEffect(() => {
     if (userId) fetchResume();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchResume = async () => {

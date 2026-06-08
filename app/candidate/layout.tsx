@@ -35,6 +35,7 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
         
       return () => { supabase.removeChannel(channel); };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoading, router]);
 
 

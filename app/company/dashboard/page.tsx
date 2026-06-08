@@ -44,6 +44,7 @@ export default function CompanyDashboard() {
   
   useEffect(() => {
     if (user) fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchStats = async () => {
