@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, User, Sparkles, Loader2, Minimize2, Languages } from 'lucide-react';
+import { Bot, Send, Sparkles, Minimize2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 

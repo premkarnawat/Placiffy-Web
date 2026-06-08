@@ -126,7 +126,7 @@ export default function HelpCenterPage() {
             </div>
             <h3 className="font-bold text-gray-900 text-xl mb-2">Placify AI Assistant</h3>
             <p className="text-gray-600 text-sm mb-6">Get instant, personalized answers to your specific profile questions.</p>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md">
+            <button onClick={() => (document.querySelector('.fixed.bottom-6.right-6') as HTMLButtonElement)?.click()} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md">
               Chat with AI
             </button>
           </div>

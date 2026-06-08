@@ -175,7 +175,7 @@ export default function SupportPage() {
             <div className="relative z-10">
               <h3 className="text-lg font-bold mb-2">Placify AI Assistant</h3>
               <p className="text-blue-100 text-sm mb-4">Get instant answers to common questions about ATS matching and profile verification.</p>
-              <button className="w-full bg-white text-blue-700 font-medium py-2.5 rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => (document.querySelector('.fixed.bottom-6.right-6') as HTMLButtonElement)?.click()} className="w-full bg-white text-blue-700 font-medium py-2.5 rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
                 <MessageSquare size={18} /> Chat with AI
               </button>
             </div>
