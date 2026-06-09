@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { Building2, UserCircle, Shield, Loader2, Lock, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { motion } from 'framer-motion';
@@ -9,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
@@ -38,17 +40,28 @@ export default function LoginPage() {
           actualRole = 'admin';
       }
 
+
       if (actualRole !== role) {
           toast("info", "Role Redirect", `You logged in with a ${actualRole} account. Redirecting to your dashboard...`);
       } else {
           toast("success", "Login Successful", "Welcome back!");
       }
 
-      localStorage.setItem("userRole", actualRole);
+      // Synchronously update React Context BEFORE routing to prevent Layout Guard rejection
+      login(data.session.access_token, {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.full_name || (actualRole === 'company' ? 'Company User' : 'Candidate'),
+          role: actualRole as any
+      });
 
-      if (actualRole === 'admin') router.push('/admin/dashboard');
+      // Wait a tiny bit to ensure context propagates
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (actualRole === 'admin') router.push('/admin');
       else if (actualRole === 'company') router.push('/company/dashboard');
       else router.push('/candidate/dashboard');
+
 
     } catch (err: any) {
       toast("error", "Login Failed", err.message || "Invalid credentials");

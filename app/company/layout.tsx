@@ -63,6 +63,16 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
 
   const initials = user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").substring(0,2).toUpperCase() : "HR";
 
+
+  // Clean layout for Registration pages
+  if (pathname.endsWith('/register')) {
+    return (
+      <div className="min-h-screen bg-white font-sans">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex">
       {/* Sidebar */}

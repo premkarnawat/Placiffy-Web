@@ -67,6 +67,16 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
     { name: 'Help Center', href: '/candidate/help', icon: HelpCircle },
   ];
 
+
+  // Clean layout for Registration pages
+  if (pathname.endsWith('/register')) {
+    return (
+      <div className="min-h-screen bg-white font-sans">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans">
       {/* Mobile Menu Button */}
