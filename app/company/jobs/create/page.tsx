@@ -89,23 +89,25 @@ const [loading, setLoading] = useState(false);
     setLoading(true);
     
     try {
+      // Always get the fresh, native Supabase session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication required");
+      
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Authentication required");
 
       const payload = {
         ...formData,
         required_skills: formData.required_skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         preferred_skills: formData.preferred_skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         open_positions: parseInt(formData.open_positions as any) || 1,
-      custom_fields: customFields
+        custom_fields: customFields
       };
 
       const res = await fetch(`${API_URL}/api/company/jobs/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${session.access_token}`
         },
         body: JSON.stringify(payload)
       });
@@ -119,7 +121,7 @@ const [loading, setLoading] = useState(false);
       router.push("/company/jobs");
       
     } catch (err: any) {
-      toast("error", "Failed to Create Job", err.message);
+      toast("error", "Failed to Create Job", err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }

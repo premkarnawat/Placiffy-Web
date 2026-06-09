@@ -84,7 +84,8 @@ export default function CandidatePool() {
       
       try {
           const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
-          const token = localStorage.getItem("token");
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || localStorage.getItem("token");
           
           const res = await fetch(`${API_URL}/api/ats/match`, {
               method: "POST",
