@@ -40,37 +40,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Check Supabase Auth (OAuth flow)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setToken(session.access_token);
+        
+        let role = localStorage.getItem('userRole') || 'candidate';
+        const { data: company } = await supabase.from('companies').select('id').eq('user_id', session.user.id).maybeSingle();
+        if (company) role = 'company';
+        
         const sbUser = {
           id: session.user.id,
           email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || 'Candidate',
-          role: 'candidate'
+          name: session.user.user_metadata?.full_name || (role === 'company' ? 'Company User' : 'Candidate'),
+          role: role
         };
         setUser(sbUser);
         localStorage.setItem('token', session.access_token);
         localStorage.setItem('user', JSON.stringify(sbUser));
+        localStorage.setItem('userRole', role);
       }
       setIsLoading(false);
     });
 
     // Listen to Supabase auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         setToken(session.access_token);
+        
+        let role = localStorage.getItem('userRole') || 'candidate';
+        const { data: company } = await supabase.from('companies').select('id').eq('user_id', session.user.id).maybeSingle();
+        if (company) role = 'company';
+
         const sbUser = {
           id: session.user.id,
           email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || 'Candidate',
-          role: 'candidate'
+          name: session.user.user_metadata?.full_name || (role === 'company' ? 'Company User' : 'Candidate'),
+          role: role
         };
         setUser(sbUser);
         localStorage.setItem('token', session.access_token);
         localStorage.setItem('user', JSON.stringify(sbUser));
+        localStorage.setItem('userRole', role);
       }
     });
+
 
     return () => subscription.unsubscribe();
   }, []);
