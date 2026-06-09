@@ -22,7 +22,9 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
 
 
 
+
   useEffect(() => {
+    if (pathname.endsWith('/register')) return; // Allow public access to registration
     if (!isLoading) {
       if (!user) {
         router.replace('/login');
@@ -30,6 +32,7 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
         router.replace(`/${user.role}/dashboard`);
       }
     }
+
 
     if (user) {
       supabase.from('candidates').select('profile_photo_url').eq('user_id', user.id).single().then(({data}) => {
