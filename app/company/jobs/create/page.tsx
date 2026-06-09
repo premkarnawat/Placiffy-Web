@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getBackendToken } from '@/lib/backend-auth';
 import { Briefcase, MapPin, Calendar, Clock, AlertCircle, Building2, Users, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { motion } from 'framer-motion';
@@ -92,7 +93,7 @@ const [loading, setLoading] = useState(false);
       // Always get the fresh, native Supabase session token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Authentication required");
-      
+      const token = await getBackendToken({ id: session.user.id, email: session.user.email || '', role: 'company' });
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
 
       const payload = {
@@ -107,7 +108,7 @@ const [loading, setLoading] = useState(false);
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });

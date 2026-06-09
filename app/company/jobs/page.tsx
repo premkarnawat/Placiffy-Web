@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
+import { getBackendToken } from '@/lib/backend-auth';
 import { motion } from "framer-motion";
 import { Plus, MapPin, Briefcase, Zap, Loader2, ChevronRight } from "lucide-react";
 import { useRouter } from 'next/navigation';
@@ -40,7 +41,8 @@ export default function JobWorkspaces() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || localStorage.getItem("token");
+      if (!session) throw new Error("Authentication required");
+      const token = await getBackendToken({ id: session.user.id, email: session.user.email || '', role: 'company' });
       
       const res = await fetch(`${API_URL}/api/ats/match`, {
         method: "POST",

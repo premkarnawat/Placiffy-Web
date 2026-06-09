@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
+import { getBackendToken } from '@/lib/backend-auth';
 import { User, MapPin, Zap, Star, Search, Filter, Loader2, ArrowRight, ShieldCheck, Users } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { motion } from "framer-motion";
@@ -85,7 +86,8 @@ export default function CandidatePool() {
       try {
           const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || localStorage.getItem("token");
+      if (!session) throw new Error("Authentication required");
+      const token = await getBackendToken({ id: session.user.id, email: session.user.email || '', role: 'company' });
           
           const res = await fetch(`${API_URL}/api/ats/match`, {
               method: "POST",

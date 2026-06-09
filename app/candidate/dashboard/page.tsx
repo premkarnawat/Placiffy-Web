@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
+import { getBackendToken } from '@/lib/backend-auth';
 import { Activity, ShieldCheck, Zap, Briefcase, MessageSquare, TrendingUp, ChevronRight, Lock,  } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

@@ -2,11 +2,10 @@
 with open(r"app\company\dashboard\page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
-import re
-a_tags = len(re.findall(r'<a\b', content))
-close_a_tags = len(re.findall(r'</a>', content))
-div_tags = len(re.findall(r'<div\b', content))
-close_div_tags = len(re.findall(r'</div>', content))
+div_open = content.count("<div")
+div_close = content.count("</div")
+print(f"<div>: {div_open}, </div>: {div_close}")
 
-print(f"<a>: {a_tags}, </a>: {close_a_tags}")
-print(f"<div>: {div_tags}, </div>: {close_div_tags}")
+a_open = content.count("<a ") + content.count("<a>")
+a_close = content.count("</a")
+print(f"<a>: {a_open}, </a>: {a_close}")
