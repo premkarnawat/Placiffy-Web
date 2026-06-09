@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+﻿# -*- coding: utf-8 -*-
+resume_form_code = """import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/toast';
@@ -148,3 +149,9 @@ export default function ResumeForm() {
     </div>
   );
 }
+"""
+
+with open(r"components\candidate\profile\ResumeForm.tsx", "w", encoding="utf-8") as f:
+    f.write(resume_form_code)
+
+print("Created Master Resume Vault in components/candidate/profile/ResumeForm.tsx")
