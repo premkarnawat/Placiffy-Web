@@ -65,6 +65,7 @@ export default function CompanyRegistration() {
     try {
       // 1. Native Supabase Auth SignUp
       const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.official_email,
           password: formData.password,
           options: {
               data: {

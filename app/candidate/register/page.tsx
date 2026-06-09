@@ -96,6 +96,7 @@ export default function CandidateRegistration() {
 
       // 2. Native Supabase Auth SignUp
       const { data: sessionData, error: authError } = await supabase.auth.signUp({
+          email: authData.email,
           password: authData.password,
           options: {
               data: {
