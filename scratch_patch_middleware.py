@@ -1,4 +1,5 @@
-// middleware.ts
+﻿# -*- coding: utf-8 -*-
+middleware_code = """// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -30,3 +31,9 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: ['/candidate/:path*', '/company/:path*', '/admin/:path*'],
 };
+"""
+
+with open("middleware.ts", "w", encoding="utf-8") as f:
+    f.write(middleware_code)
+
+print("Edge Middleware rewritten for strict unauthenticated redirection!")

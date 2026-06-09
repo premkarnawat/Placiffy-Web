@@ -21,10 +21,16 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
 
 
 
+
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
+    if (!isLoading) {
+      if (!user) {
+        router.replace('/login');
+      } else if (user.role !== 'candidate') {
+        router.replace(`/${user.role}/dashboard`);
+      }
     }
+
     if (user) {
       supabase.from('candidates').select('profile_photo_url').eq('user_id', user.id).single().then(({data}) => {
         if (data?.profile_photo_url) setProfilePhoto(data.profile_photo_url);

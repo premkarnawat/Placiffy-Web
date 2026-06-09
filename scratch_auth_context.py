@@ -1,4 +1,7 @@
-"use client";
+﻿# -*- coding: utf-8 -*-
+import os
+
+auth_context = """"use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from './supabase';
@@ -122,3 +125,9 @@ export function useAuth() {
   }
   return context;
 }
+"""
+
+with open(r"lib\auth-context.tsx", "w", encoding="utf-8") as f:
+    f.write(auth_context)
+
+print("Rewrote lib/auth-context.tsx with strict DB role verification and deep logout!")
