@@ -5,6 +5,7 @@ import { Building2, UserCircle, Shield, Loader2, Lock, Mail } from 'lucide-react
 import { useToast } from '@/components/ui/toast';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,31 +18,39 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
-      const payload = { ...formData, role };
-      
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password
       });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Login failed");
-      
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("userRole", role);
-      
-      toast("success", "Login Successful", "Welcome back!");
-      
-      if (role === 'admin') router.push('/admin');
-      else if (role === 'company') router.push('/company/dashboard');
+
+      if (error) throw error;
+      if (!data.user) throw new Error("No user returned from Supabase");
+
+      // Verify role
+      let actualRole = 'candidate';
+      const { data: company } = await supabase.from('companies').select('id').eq('user_id', data.user.id).maybeSingle();
+      if (company) actualRole = 'company';
+      else {
+          const { data: admin } = await supabase.from('admins').select('id').eq('user_id', data.user.id).maybeSingle();
+          if (admin) actualRole = 'admin';
+      }
+
+      if (actualRole !== role) {
+          toast("info", "Role Redirect", `You logged in with a ${actualRole} account. Redirecting to your dashboard...`);
+      } else {
+          toast("success", "Login Successful", "Welcome back!");
+      }
+
+      localStorage.setItem("userRole", actualRole);
+
+      if (actualRole === 'admin') router.push('/admin/dashboard');
+      else if (actualRole === 'company') router.push('/company/dashboard');
       else router.push('/candidate/dashboard');
-      
+
     } catch (err: any) {
-      toast("error", "Login Failed", err.message);
+      toast("error", "Login Failed", err.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
