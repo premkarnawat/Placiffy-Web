@@ -101,15 +101,7 @@ export default function CompanyDashboard() {
 
   return (
     
-      {/* Sidebar */}
-      
-
-      {/* Main */}
-      
-        {/* Top Bar */}
-        
-
-        <div className="p-6">
+      <div className="p-6">
           {/* Welcome + Actions */}
           <div className="flex items-start justify-between mb-6">
             <div>
