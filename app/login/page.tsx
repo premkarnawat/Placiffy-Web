@@ -28,13 +28,14 @@ export default function LoginPage() {
       if (error) throw error;
       if (!data.user) throw new Error("No user returned from Supabase");
 
-      // Verify role
+      // Verify role natively
       let actualRole = 'candidate';
+      
       const { data: company } = await supabase.from('companies').select('id').eq('user_id', data.user.id).maybeSingle();
-      if (company) actualRole = 'company';
-      else {
-          const { data: admin } = await supabase.from('admins').select('id').eq('user_id', data.user.id).maybeSingle();
-          if (admin) actualRole = 'admin';
+      if (company) {
+          actualRole = 'company';
+      } else if (data.user.email === 'admin@placify.com' || data.user.user_metadata?.role === 'admin') {
+          actualRole = 'admin';
       }
 
       if (actualRole !== role) {
