@@ -30,7 +30,11 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
   const pathname = usePathname();
 
+
+
   useEffect(() => {
+    if (pathname === '/company/register') return; // Bypass auth guard for registration
+    
     if (!isLoading) {
       if (!user) {
         router.push("/login");
@@ -40,7 +44,9 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
         router.push("/admin/dashboard");
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, pathname]);
+
+  if (pathname === '/company/register') return <>{children}</>;
 
   if (isLoading || !user || (user.role !== "company" && user.role !== "admin")) {
     return (

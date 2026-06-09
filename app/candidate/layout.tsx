@@ -19,6 +19,8 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
 
+
+
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
