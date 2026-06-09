@@ -25,7 +25,6 @@ export default function PersonalForm({ data, onChange, userId }: { data: any, on
       
       onChange({...data, profile_photo_url: bustedUrl});
       
-      // Persist immediately to candidates table so it reflects
       await supabase.from('candidates').update({ profile_photo_url: bustedUrl }).eq('user_id', userId);
       
       toast('success', 'Photo Uploaded', 'Your profile photo has been updated.');
@@ -63,10 +62,11 @@ export default function PersonalForm({ data, onChange, userId }: { data: any, on
         <h3 className="text-lg font-bold">Personal Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label className="text-sm font-medium">Full Name</label><input type="text" value={data.fullName || ''} onChange={e => onChange({...data, fullName: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
-          <div><label className="text-sm font-medium">Email</label><input type="email" value={data.email || ''} onChange={e => onChange({...data, email: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
-          <div><label className="text-sm font-medium">Phone</label><input type="text" value={data.phone || ''} onChange={e => onChange({...data, phone: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
+          <div><label className="text-sm font-medium">Email</label><input type="email" value={data.email || ''} onChange={e => onChange({...data, email: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" disabled /></div>
           <div><label className="text-sm font-medium">Location</label><input type="text" value={data.location || ''} onChange={e => onChange({...data, location: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
           <div><label className="text-sm font-medium">Professional Headline</label><input type="text" value={data.headline || ''} onChange={e => onChange({...data, headline: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
+          <div><label className="text-sm font-medium">Years of Experience</label><input type="number" min="0" value={data.experience_years || ''} onChange={e => onChange({...data, experience_years: e.target.value ? Number(e.target.value) : ''})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
+          <div className="md:col-span-2"><label className="text-sm font-medium">Professional Summary</label><textarea rows={4} value={data.summary || ''} onChange={e => onChange({...data, summary: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
         </div>
       </div>
     </div>

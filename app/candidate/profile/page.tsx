@@ -3,87 +3,78 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { User, Briefcase, GraduationCap, Code, FolderGit2, ShieldCheck, UploadCloud, Loader2, Award, Heart, FileText } from 'lucide-react';
+import { User, Briefcase, GraduationCap, FolderGit2, ShieldCheck, UploadCloud, Loader2, Link as LinkIcon, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
 import PersonalForm from '@/components/candidate/profile/PersonalForm';
 import ArrayForm from '@/components/candidate/profile/ArrayForm';
 import PreferencesForm from '@/components/candidate/profile/PreferencesForm';
-import ResumeForm from '@/components/candidate/profile/ResumeForm';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
 
 const SECTIONS = [
-  { id: 'resume', label: 'Resume & ATS', icon: <FileText size={18} /> },
   { id: 'personal', label: 'Personal Info', icon: <User size={18} /> },
   { id: 'education', label: 'Education', icon: <GraduationCap size={18} /> },
   { id: 'experience', label: 'Experience', icon: <Briefcase size={18} /> },
-  { id: 'internships', label: 'Internships', icon: <Briefcase size={18} /> },
   { id: 'projects', label: 'Projects', icon: <FolderGit2 size={18} /> },
   { id: 'certifications', label: 'Certifications', icon: <ShieldCheck size={18} /> },
-  { id: 'courses', label: 'Courses', icon: <Award size={18} /> },
-  { id: 'skills', label: 'Skills', icon: <Code size={18} /> },
-  { id: 'preferences', label: 'Preferences', icon: <Heart size={18} /> },
+  { id: 'links', label: 'Links & Socials', icon: <LinkIcon size={18} /> },
 ];
 
 export default function ProfileEditor() {
   const { user, isLoading: authLoading } = useAuth();
-    const { toast } = useToast();
+  const { toast } = useToast();
 
   const [activeSection, setActiveSection] = useState('personal');
   const [isSaving, setIsSaving] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<any>({
-    personal: { fullName: '', email: '', phone: '', location: '', headline: '' },
-    preferences: { expectedCTC: '', noticePeriodDays: 30, workModel: '', preferredLocations: '' },
-    skills: { technical: '', soft: '' },
+    personal: { fullName: '', email: '', location: '', headline: '', summary: '', experience_years: 0, profile_photo_url: '' },
+    preferences: { expected_salary: '', notice_period: '30 Days', availability_status: 'Actively Looking' },
     education: [],
     experience: [],
-    internships: [],
     projects: [],
     certifications: [],
-    courses: []
+    links: []
   });
 
   useEffect(() => {
     if (user) fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchProfile = async () => {
     setIsFetching(true);
     try {
       const { data: cand } = await supabase.from('candidates').select('*').eq('user_id', user?.id).single();
-      const { data: usr } = await supabase.from('users').select('*').eq('id', user?.id).single();
-      const { data: prefs } = await supabase.from('candidate_preferences').select('*').eq('candidate_id', user?.id).single();
+      if (!cand) return;
+      setCandidateId(cand.id);
+
+      const { data: profile } = await supabase.from('candidate_profiles').select('*').eq('candidate_id', cand.id).single();
       
-      const { data: edu } = await supabase.from('candidate_education').select('*').eq('candidate_id', user?.id);
-      const { data: exp } = await supabase.from('candidate_experience').select('*').eq('candidate_id', user?.id);
-      const { data: proj } = await supabase.from('candidate_projects').select('*').eq('candidate_id', user?.id);
-      const { data: certs } = await supabase.from('candidate_certifications').select('*').eq('candidate_id', user?.id);
-      const { data: ints } = await supabase.from('candidate_internships').select('*').eq('candidate_id', user?.id);
-      const { data: courses } = await supabase.from('candidate_courses').select('*').eq('candidate_id', user?.id);
+      const { data: edu } = await supabase.from('candidate_education').select('*').eq('candidate_id', cand.id);
+      const { data: exp } = await supabase.from('candidate_experience').select('*').eq('candidate_id', cand.id);
+      const { data: proj } = await supabase.from('candidate_projects').select('*').eq('candidate_id', cand.id);
+      const { data: certs } = await supabase.from('candidate_certifications').select('*').eq('candidate_id', cand.id);
+      const { data: links } = await supabase.from('candidate_links').select('*').eq('candidate_id', cand.id);
 
       setFormData({
         personal: {
-          fullName: usr?.name || '', email: usr?.email || '', phone: cand?.phone || '', 
-          location: cand?.location || cand?.current_location || '', headline: cand?.headline || ''
+          fullName: user?.user_metadata?.full_name || '', email: user?.email || '', 
+          location: cand.location || '', headline: cand.headline || '', summary: cand.summary || '', experience_years: cand.experience_years || 0, profile_photo_url: cand.profile_photo_url || ''
         },
         preferences: {
-          expectedCTC: prefs?.expected_ctc || '',
-          noticePeriodDays: prefs?.notice_period_days || 30,
-          workModel: prefs?.work_model_preference || '',
-          preferredLocations: prefs?.preferred_locations?.join(', ') || ''
+          expected_salary: profile?.expected_salary || '',
+          notice_period: profile?.notice_period || '30 Days',
+          availability_status: profile?.availability_status || 'Actively Looking'
         },
-        skills: { technical: cand?.skills?.join(', ') || '', soft: '' },
         education: edu || [],
         experience: exp || [],
-        internships: ints || [],
         projects: proj || [],
         certifications: certs || [],
-        courses: courses || []
+        links: links || []
       });
     } catch (e) {
       console.error(e);
@@ -101,15 +92,11 @@ export default function ProfileEditor() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       
-      toast('info', 'Uploading & Parsing', 'Extracting details using Llama-3 AI...');
-      await supabase.storage.from('candidate_resumes').upload(fileName, file);
+      toast('info', 'Uploading & Parsing', 'Extracting details from Resume...');
+      const { data: uploadData } = await supabase.storage.from('candidate_resumes').upload(fileName, file);
       
-      // Also log resume version
-      await supabase.from('candidate_resume_versions').insert({
-        candidate_id: user?.id,
-        version_number: 1,
-        file_url: fileName
-      });
+      const { data: { publicUrl } } = supabase.storage.from('candidate_resumes').getPublicUrl(fileName);
+      await supabase.from('candidates').update({ resume_url: publicUrl }).eq('user_id', user?.id);
 
       const fd = new FormData(); fd.append('file', file);
       const res = await fetch(`${API_URL}/api/resume/parse-public`, { method: 'POST', body: fd });
@@ -120,14 +107,12 @@ export default function ProfileEditor() {
         const d = data.extracted_data;
         setFormData((prev: any) => ({
           ...prev,
-          personal: { ...prev.personal, fullName: d.personal?.fullName || prev.personal.fullName, location: d.personal?.location || prev.personal.location, headline: d.personal?.headline || prev.personal.headline },
+          personal: { ...prev.personal, location: d.personal?.location || prev.personal.location, headline: d.personal?.headline || prev.personal.headline, summary: d.personal?.summary || prev.personal.summary },
           education: d.education || prev.education,
           experience: d.experience || prev.experience,
-          internships: d.internships || prev.internships,
           projects: d.projects || prev.projects,
           certifications: d.certifications || prev.certifications,
-          courses: d.courses || prev.courses,
-          skills: { technical: d.skills?.technical?.join(', ') || prev.skills.technical }
+          links: d.links || prev.links
         }));
         toast('success', 'Auto-Fill Complete', 'Details populated from your resume.');
       }
@@ -141,39 +126,40 @@ export default function ProfileEditor() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // 1. Update candidates & users table
-      await supabase.from('users').update({ name: formData.personal.fullName }).eq('id', user?.id);
+      if (!candidateId) throw new Error("Candidate record not found");
+
       await supabase.from('candidates').update({
-        phone: formData.personal.phone, location: formData.personal.location, current_location: formData.personal.location,
-        headline: formData.personal.headline, skills: formData.skills.technical.split(',').map((s:string)=>s.trim()).filter(Boolean)
-      }).eq('user_id', user?.id);
+        location: formData.personal.location,
+        headline: formData.personal.headline,
+        summary: formData.personal.summary,
+        experience_years: formData.personal.experience_years
+      }).eq('id', candidateId);
 
-      // 2. Update Preferences
       const prefs = {
-        candidate_id: user?.id, expected_ctc: formData.preferences.expectedCTC,
-        notice_period_days: formData.preferences.noticePeriodDays,
-        work_model_preference: formData.preferences.workModel,
-        preferred_locations: formData.preferences.preferredLocations.split(',').map((s:string)=>s.trim()).filter(Boolean)
+        candidate_id: candidateId, 
+        expected_salary: formData.preferences.expected_salary,
+        notice_period: formData.preferences.notice_period,
+        availability_status: formData.preferences.availability_status
       };
-      const { data: pCheck } = await supabase.from('candidate_preferences').select('id').eq('candidate_id', user?.id);
-      if (pCheck && pCheck.length > 0) await supabase.from('candidate_preferences').update(prefs).eq('candidate_id', user?.id);
-      else await supabase.from('candidate_preferences').insert(prefs);
-
-      // Sync array tables (For simplicity in this massive UI, we delete existing and re-insert)
-      await supabase.from('candidate_education').delete().eq('candidate_id', user?.id);
-      if (formData.education.length) await supabase.from('candidate_education').insert(formData.education.map((i:any)=>({...i, candidate_id: user?.id})));
-
-      await supabase.from('candidate_experience').delete().eq('candidate_id', user?.id);
-      if (formData.experience.length) await supabase.from('candidate_experience').insert(formData.experience.map((i:any)=>({...i, candidate_id: user?.id})));
       
-      await supabase.from('candidate_internships').delete().eq('candidate_id', user?.id);
-      if (formData.internships.length) await supabase.from('candidate_internships').insert(formData.internships.map((i:any)=>({...i, candidate_id: user?.id})));
-      
-      await supabase.from('candidate_projects').delete().eq('candidate_id', user?.id);
-      if (formData.projects.length) await supabase.from('candidate_projects').insert(formData.projects.map((i:any)=>({...i, candidate_id: user?.id})));
+      const { data: pCheck } = await supabase.from('candidate_profiles').select('id').eq('candidate_id', candidateId);
+      if (pCheck && pCheck.length > 0) await supabase.from('candidate_profiles').update(prefs).eq('candidate_id', candidateId);
+      else await supabase.from('candidate_profiles').insert(prefs);
 
-      // Log activity
-      await supabase.from('candidate_activity_logs').insert({ candidate_id: user?.id, action_type: 'profile_updated', metadata: { sections: activeSection } });
+      await supabase.from('candidate_education').delete().eq('candidate_id', candidateId);
+      if (formData.education.length) await supabase.from('candidate_education').insert(formData.education.map((i:any)=>({candidate_id: candidateId, institution: i.institution, degree: i.degree, field_of_study: i.field_of_study, start_date: i.start_date, end_date: i.end_date, description: i.description})));
+
+      await supabase.from('candidate_experience').delete().eq('candidate_id', candidateId);
+      if (formData.experience.length) await supabase.from('candidate_experience').insert(formData.experience.map((i:any)=>({candidate_id: candidateId, company_name: i.company_name, title: i.title, location: i.location, start_date: i.start_date, end_date: i.end_date, is_current: i.is_current, description: i.description})));
+      
+      await supabase.from('candidate_projects').delete().eq('candidate_id', candidateId);
+      if (formData.projects.length) await supabase.from('candidate_projects').insert(formData.projects.map((i:any)=>({candidate_id: candidateId, name: i.name, description: i.description, url: i.url, start_date: i.start_date, end_date: i.end_date})));
+
+      await supabase.from('candidate_certifications').delete().eq('candidate_id', candidateId);
+      if (formData.certifications.length) await supabase.from('candidate_certifications').insert(formData.certifications.map((i:any)=>({candidate_id: candidateId, name: i.name, issuer: i.issuer, issue_date: i.issue_date, url: i.url})));
+
+      await supabase.from('candidate_links').delete().eq('candidate_id', candidateId);
+      if (formData.links.length) await supabase.from('candidate_links').insert(formData.links.map((i:any)=>({candidate_id: candidateId, platform: i.platform, url: i.url})));
 
       toast('success', 'Profile Saved', 'Your changes have been saved successfully.');
     } catch (e: any) {
@@ -212,87 +198,47 @@ export default function ProfileEditor() {
         </div>
 
         <div className="flex-1 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100">
-          {activeSection === 'personal' && <PersonalForm data={formData.personal} onChange={(d) => setFormData({...formData, personal: d})} />}
-          {activeSection === 'preferences' && <PreferencesForm data={formData.preferences} onChange={(d) => setFormData({...formData, preferences: d})} />}
+          {activeSection === 'personal' && <PersonalForm data={formData.personal} userId={user?.id} onChange={(d) => setFormData({...formData, personal: d})} />}
           
           {activeSection === 'education' && (
             <ArrayForm title="Education" items={formData.education} 
-              fields={[{name: 'degree', label: 'Degree'}, {name: 'college', label: 'College/University'}, {name: 'startYear', label: 'Start Year'}, {name: 'endYear', label: 'End Year'}]}
+              fields={[{name: 'institution', label: 'Institution', required: true}, {name: 'degree', label: 'Degree', required: true}, {name: 'field_of_study', label: 'Field of Study'}, {name: 'start_date', label: 'Start Date', type: 'date'}, {name: 'end_date', label: 'End Date', type: 'date'}, {name: 'description', label: 'Description', type: 'textarea'}]}
               onUpdate={items => setFormData({...formData, education: items})}
-              renderItem={item => (<div><div className="font-bold">{item.degree}</div><div className="text-sm text-gray-500">{item.college} ({item.startYear} - {item.endYear})</div></div>)}
+              renderItem={item => (<div><div className="font-bold">{item.degree}</div><div className="text-sm text-gray-500">{item.institution}</div></div>)}
             />
           )}
 
           {activeSection === 'experience' && (
             <ArrayForm title="Experience" items={formData.experience} 
-              fields={[{name: 'designation', label: 'Designation'}, {name: 'company', label: 'Company'}, {name: 'startDate', label: 'Start Date'}, {name: 'endDate', label: 'End Date'}, {name: 'responsibilities', label: 'Responsibilities', type: 'textarea', fullWidth: true}]}
+              fields={[{name: 'title', label: 'Title', required: true}, {name: 'company_name', label: 'Company', required: true}, {name: 'location', label: 'Location'}, {name: 'start_date', label: 'Start Date', type: 'date'}, {name: 'end_date', label: 'End Date', type: 'date'}, {name: 'is_current', label: 'Current Role?', type: 'checkbox'}, {name: 'description', label: 'Description', type: 'textarea', fullWidth: true}]}
               onUpdate={items => setFormData({...formData, experience: items})}
-              renderItem={item => (<div><div className="font-bold">{item.designation}</div><div className="text-sm text-gray-500">{item.company} | {item.startDate} - {item.endDate}</div></div>)}
-            />
-          )}
-
-          {activeSection === 'internships' && (
-            <ArrayForm title="Internships" items={formData.internships} 
-              fields={[{name: 'role', label: 'Role'}, {name: 'company', label: 'Company'}, {name: 'duration', label: 'Duration'}, {name: 'description', label: 'Description', type: 'textarea', fullWidth: true}]}
-              onUpdate={items => setFormData({...formData, internships: items})}
-              renderItem={item => (<div><div className="font-bold">{item.role}</div><div className="text-sm text-gray-500">{item.company} | {item.duration}</div></div>)}
+              renderItem={item => (<div><div className="font-bold">{item.title}</div><div className="text-sm text-gray-500">{item.company_name}</div></div>)}
             />
           )}
 
           {activeSection === 'projects' && (
             <ArrayForm title="Projects" items={formData.projects} 
-              fields={[{name: 'projectName', label: 'Project Name'}, {name: 'role', label: 'Your Role'}, {name: 'githubLink', label: 'GitHub Link'}, {name: 'description', label: 'Description', type: 'textarea', fullWidth: true}]}
+              fields={[{name: 'name', label: 'Project Name', required: true}, {name: 'url', label: 'Project URL'}, {name: 'start_date', label: 'Start Date', type: 'date'}, {name: 'end_date', label: 'End Date', type: 'date'}, {name: 'description', label: 'Description', type: 'textarea', fullWidth: true}]}
               onUpdate={items => setFormData({...formData, projects: items})}
-              renderItem={item => (<div><div className="font-bold">{item.projectName || item.project_name}</div><div className="text-sm text-gray-500">{item.role}</div></div>)}
+              renderItem={item => (<div><div className="font-bold">{item.name}</div><div className="text-sm text-gray-500">{item.url}</div></div>)}
             />
           )}
 
-          {activeSection === 'skills' && (
-             <div className="space-y-4">
-               <h3 className="text-lg font-bold">Skills</h3>
-               <div><label className="text-sm font-medium">Technical Skills (Comma separated)</label>
-               <textarea value={formData.skills.technical} onChange={e => setFormData({...formData, skills: { ...formData.skills, technical: e.target.value }})} className="w-full p-2 border rounded mt-1" rows={4} /></div>
-             </div>
+          {activeSection === 'certifications' && (
+            <ArrayForm title="Certifications" items={formData.certifications}
+              fields={[{name: 'name', label: 'Certificate Name', required: true}, {name: 'issuer', label: 'Issuer'}, {name: 'issue_date', label: 'Issue Date', type: 'date'}, {name: 'url', label: 'Credential URL'}]}
+              onUpdate={items => setFormData({...formData, certifications: items})}
+              renderItem={item => (<div><div className="font-bold">{item.name}</div><div className="text-sm text-gray-500">{item.issuer}</div></div>)}
+            />
           )}
 
-                  {activeSection === 'certifications' && (
-          <ArrayForm
-            title="Certifications & Licenses"
-            items={formData.certifications}
-            fields={[
-              { name: 'name', label: 'Certificate Title', type: 'text', required: true },
-              { name: 'issuer', label: 'Issuing Organization', type: 'text', required: true },
-              { name: 'issue_date', label: 'Issue Date', type: 'date' },
-              { name: 'expiration_date', label: 'Expiration Date', type: 'date' },
-              { name: 'credential_id', label: 'Credential ID', type: 'text' },
-              { name: 'credential_url', label: 'Credential URL', type: 'text' },
-              { name: 'description', label: 'Description', type: 'textarea' }
-            ]}
-            onUpdate={(d) => setFormData({...formData, certifications: d})}
-            renderItem={(item: any) => (
-              <div><h4 className="font-bold">{item.name || item.title}</h4><p className="text-sm text-gray-500">{item.issuer || item.organization}</p></div>
-            )}
-          />
-        )}
-
-        {activeSection === 'courses' && (
-          <ArrayForm
-            title="Courses & Training"
-            items={formData.courses}
-            fields={[
-              { name: 'course_name', label: 'Course Name', type: 'text', required: true },
-              { name: 'provider', label: 'Provider / Institution', type: 'text', required: true },
-              { name: 'completion_date', label: 'Completion Date', type: 'date' },
-              { name: 'skills_learned', label: 'Skills Learned (comma separated)', type: 'text' },
-              { name: 'certificate_url', label: 'Certificate URL', type: 'text' },
-              { name: 'description', label: 'Description', type: 'textarea' }
-            ]}
-            onUpdate={(d) => setFormData({...formData, courses: d})}
-            renderItem={(item: any) => (
-              <div><h4 className="font-bold">{item.course_name || item.title}</h4><p className="text-sm text-gray-500">{item.provider || item.institution}</p></div>
-            )}
-          />
-        )}
+          {activeSection === 'links' && (
+            <ArrayForm title="Links & Socials" items={formData.links}
+              fields={[{name: 'platform', label: 'Platform (e.g. LinkedIn, GitHub)', required: true}, {name: 'url', label: 'URL', required: true}]}
+              onUpdate={items => setFormData({...formData, links: items})}
+              renderItem={item => (<div><div className="font-bold">{item.platform}</div><div className="text-sm text-gray-500">{item.url}</div></div>)}
+            />
+          )}
         </div>
       </div>
     </div>
