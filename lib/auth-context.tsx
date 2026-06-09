@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session) {
         setToken(session.access_token);
         
-        let role = localStorage.getItem('userRole') || 'candidate';
+        let role = session.user.user_metadata?.role || localStorage.getItem('userRole') || 'candidate';
         const { data: company } = await supabase.from('companies').select('id').eq('user_id', session.user.id).maybeSingle();
         if (company) role = 'company';
         
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session) {
         setToken(session.access_token);
         
-        let role = localStorage.getItem('userRole') || 'candidate';
+        let role = session.user.user_metadata?.role || localStorage.getItem('userRole') || 'candidate';
         const { data: company } = await supabase.from('companies').select('id').eq('user_id', session.user.id).maybeSingle();
         if (company) role = 'company';
 
