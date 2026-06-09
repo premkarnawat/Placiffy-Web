@@ -71,7 +71,7 @@ export default function CompanyDashboard() {
     try {
       const { data: company } = await supabase.from('companies').select('id').eq('user_id', user?.id).single();
       if (!company) return;
-      
+
       const [
         { count: jobsCount },
         { count: appCount },
@@ -93,11 +93,8 @@ export default function CompanyDashboard() {
       });
     } catch (e) {
       console.error(e);
-    } finally {
-      // setLoading(false);
     }
   };
-
 
   return (
     
@@ -256,5 +253,6 @@ export default function CompanyDashboard() {
               ))}
             </div>
           </div>
+      </div>
   );
 }
