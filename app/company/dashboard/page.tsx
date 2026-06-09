@@ -32,12 +32,7 @@ const BOTTOM_NAV = [
 // FUNNEL dynamically rendered based on stats
 
 
-const SOURCES = [
-  { name: "LinkedIn Recruiter", pct: 45, color: "bg-[#0052CC]" },
-  { name: "Direct Referrals", pct: 30, color: "bg-violet-500" },
-  { name: "Careers Page", pct: 15, color: "bg-emerald-500" },
-  { name: "Other Portals", pct: 10, color: "bg-zinc-400" },
-];
+
 
 export default function CompanyDashboard() {
   const [activeNav, setActiveNav] = useState("dashboard");
@@ -50,15 +45,9 @@ export default function CompanyDashboard() {
     fetchStats();
 
     const channel = supabase.channel('dashboard_metrics')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => {
-        fetchStats();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pipeline_candidates' }, () => {
-        fetchStats();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => {
-        fetchStats();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => fetchStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, () => fetchStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => fetchStats())
       .subscribe();
 
     return () => {
@@ -69,7 +58,7 @@ export default function CompanyDashboard() {
 
   const fetchStats = async () => {
     try {
-      const { data: company } = await supabase.from('companies').select('id').eq('user_id', user?.id).single();
+      const { data: company } = await supabase.from('companies').select('id, name').eq('user_id', user?.id).single();
       if (!company) return;
 
       const [
@@ -79,15 +68,15 @@ export default function CompanyDashboard() {
         { count: offerCount }
       ] = await Promise.all([
         supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('status', 'active'),
-        supabase.from('pipeline_candidates').select('*', { count: 'exact', head: true }).eq('company_id', company.id),
-        supabase.from('pipeline_candidates').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('pipeline_status', 'interview'),
-        supabase.from('pipeline_candidates').select('*', { count: 'exact', head: true }).eq('company_id', company.id).eq('pipeline_status', 'offer')
+        supabase.from('applications').select('*, jobs!inner(company_id)', { count: 'exact', head: true }).eq('jobs.company_id', company.id),
+        supabase.from('applications').select('*, jobs!inner(company_id)', { count: 'exact', head: true }).eq('jobs.company_id', company.id).eq('status', 'interview'),
+        supabase.from('applications').select('*, jobs!inner(company_id)', { count: 'exact', head: true }).eq('jobs.company_id', company.id).eq('status', 'offered')
       ]);
 
       setStats({
         activeJobs: jobsCount || 0,
         applicants: appCount || 0,
-        verified: appCount ? Math.floor(appCount * 0.7) : 0,
+        verified: 0, // Real verification tracking will be built in Phase 4
         interviews: interviewCount || 0,
         offers: offerCount || 0
       });
@@ -102,7 +91,7 @@ export default function CompanyDashboard() {
           {/* Welcome + Actions */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-black text-zinc-900">Welcome Back, Alex.</h1>
+              <h1 className="text-3xl font-black text-zinc-900">Welcome Back.</h1>
               <p className="text-sm text-zinc-500 mt-1">Here&apos;s what&apos;s happening with your hiring funnel today.</p>
             </div>
             <div className="flex items-center gap-2">

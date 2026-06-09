@@ -21,9 +21,14 @@ export default function CandidatePassportPage() {
   const fetchData = async () => {
     try {
       const { data: cand } = await supabase.from('candidates').select('*').eq('user_id', user?.id).single();
-      const { data: usr } = await supabase.from('users').select('name, email').eq('id', user?.id).single();
+      const { data: passport } = await supabase.from('passports').select('*').eq('candidate_id', cand?.id).single();
       
-      setData({ ...cand, ...usr });
+      setData({ 
+        ...cand, 
+        name: user?.user_metadata?.full_name || 'Candidate', 
+        email: user?.email,
+        passport_data: passport 
+      });
     } catch (e) {
       console.error(e);
       toast('error', 'Error fetching Passport', 'Could not load your passport data.');

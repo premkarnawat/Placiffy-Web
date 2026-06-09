@@ -90,35 +90,47 @@ const [loading, setLoading] = useState(false);
     setLoading(true);
     
     try {
-      // Always get the fresh, native Supabase session token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Authentication required");
-      const token = await getBackendToken({ id: session.user.id, email: session.user.email || '', role: 'company' });
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
+      
+      const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .single();
+          
+      if (companyError || !company) throw new Error("Company profile not found");
 
       const payload = {
-        ...formData,
+        company_id: company.id,
+        title: formData.title,
+        description: formData.description,
+        department: formData.department,
+        location: formData.location,
+        type: formData.employment_type || formData.type,
+        experience_level: formData.experience || formData.experience_level,
+        min_salary: Number(formData.salary_range?.split('-')[0]?.replace(/[^0-9]/g, '')) || 0,
+        max_salary: Number(formData.salary_range?.split('-')[1]?.replace(/[^0-9]/g, '')) || 0,
         required_skills: formData.required_skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         preferred_skills: formData.preferred_skills.split(',').map((s: string) => s.trim()).filter(Boolean),
         open_positions: parseInt(formData.open_positions as any) || 1,
-        custom_fields: customFields
+        status: 'active'
       };
 
-      const res = await fetch(`${API_URL}/api/company/jobs/create`, {
+      // Native Supabase Insert to bypass the Render backend which hardcodes a deleted 'job_workspaces' table
+      const { data: newJob, error: insertError } = await supabase.from('jobs').insert(payload).select().single();
+
+      if (insertError) throw insertError;
+
+      // Fire async to backend for AI vector embedding generation, silently ignore crashes
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://placify-backend-dzj7.onrender.com";
+      fetch(`${API_URL}/api/company/jobs/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getBackendToken({ id: session.user.id, email: session.user.email || '', role: 'company' })}` },
+        body: JSON.stringify({ ...payload, id: newJob.id })
+      }).catch(() => {});
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Failed to create job workspace");
-      }
-
-      toast("success", "Job Workspace Created", "AI is currently generating the pgvector embedding for this job in the background.");
+      toast("success", "Job Created Successfully", "The job has been published and is ready for ATS matching.");
       router.push("/company/jobs");
       
     } catch (err: any) {

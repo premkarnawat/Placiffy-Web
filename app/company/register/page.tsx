@@ -87,7 +87,7 @@ export default function CompanyRegistration() {
           industry: formData.industry,
           size: formData.size,
           hq_location: formData.hq_location,
-          gst: formData.gst,
+          gst_number: formData.gst,
           logo_url: logoUrl
       });
 

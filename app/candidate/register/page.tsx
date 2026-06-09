@@ -110,18 +110,27 @@ export default function CandidateRegistration() {
       if (!sessionData.user) throw new Error("Failed to create user account");
 
       // 3. Insert into Candidates table natively
-      const { error: insertError } = await supabase.from('candidates').insert({
+      const { data: newCand, error: insertError } = await supabase.from('candidates').insert({
           user_id: sessionData.user.id,
           headline: formData.headline,
           summary: formData.summary,
           location: formData.location,
-          current_company: formData.current_company,
-          current_role: formData.current_role,
           skills: formData.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
           experience_years: Number(formData.experience_years),
           resume_url,
           profile_photo_url: formData.profile_photo_url
-      });
+      }).select().single();
+
+      if (insertError) throw insertError;
+
+      if (formData.current_company || formData.current_role) {
+         await supabase.from('candidate_experience').insert({
+            candidate_id: newCand.id,
+            company_name: formData.current_company || 'Unknown',
+            title: formData.current_role || 'Unknown',
+            is_current: true
+         });
+      };
 
       if (insertError) {
           throw insertError;
