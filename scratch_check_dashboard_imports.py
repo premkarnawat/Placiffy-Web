@@ -1,7 +1,15 @@
-﻿# -*- coding: utf-8 -*-
-with open(r"app\company\dashboard\page.tsx", "r", encoding="utf-8") as f:
-    content = f.read()
+﻿import os
 
-lines = content.split("\n")
-for i, line in enumerate(lines[:20]):
-    print(f"L{i}: {line.strip()}")
+found = False
+for root, dirs, files in os.walk("app"):
+    for file in files:
+        if file.endswith((".tsx", ".ts")):
+            path = os.path.join(root, file)
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+                if "components/dashboard" in content:
+                    print(f"Found in {path}")
+                    found = True
+
+if not found:
+    print("No references found!")
