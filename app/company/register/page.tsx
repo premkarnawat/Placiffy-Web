@@ -65,7 +65,6 @@ export default function CompanyRegistration() {
     try {
       // 1. Native Supabase Auth SignUp
       const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.official_email,
           password: formData.password,
           options: {
               data: {
@@ -79,18 +78,14 @@ export default function CompanyRegistration() {
       if (!authData.user) throw new Error("Failed to create user account");
 
       // 2. Insert into Companies table natively
-      const fullPhone = `${formData.country_code} ${formData.phone}`;
       
       const { error: insertError } = await supabase.from('companies').insert({
           user_id: authData.user.id,
           name: formData.name,
-          email: formData.official_email,
-          phone: fullPhone,
           website: formData.website,
           industry: formData.industry,
           size: formData.size,
           hq_location: formData.hq_location,
-          linkedin_url: formData.linkedin_url,
           gst: formData.gst,
           logo_url: logoUrl
       });

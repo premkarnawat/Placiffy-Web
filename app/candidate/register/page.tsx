@@ -96,7 +96,6 @@ export default function CandidateRegistration() {
 
       // 2. Native Supabase Auth SignUp
       const { data: sessionData, error: authError } = await supabase.auth.signUp({
-          email: authData.email,
           password: authData.password,
           options: {
               data: {
@@ -112,7 +111,6 @@ export default function CandidateRegistration() {
       // 3. Insert into Candidates table natively
       const { error: insertError } = await supabase.from('candidates').insert({
           user_id: sessionData.user.id,
-          email: authData.email,
           headline: formData.headline,
           summary: formData.summary,
           location: formData.location,
