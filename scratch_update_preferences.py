@@ -1,4 +1,11 @@
+﻿# -*- coding: utf-8 -*-
+with open(r"components\candidate\profile\PreferencesForm.tsx", "r", encoding="utf-8") as f:
+    content = f.read()
 
+import re
+
+# We will rewrite the PreferencesForm to include the new Naukri-style fields
+new_preferences = """
 export default function PreferencesForm({ formData, setFormData }: { formData: any, setFormData: any }) {
   return (
     <div className="space-y-6">
@@ -64,3 +71,12 @@ export default function PreferencesForm({ formData, setFormData }: { formData: a
     </div>
   );
 }
+"""
+
+content = re.sub(r'export default function PreferencesForm.*?(?=;)', new_preferences, content, flags=re.DOTALL)
+# Wait, re.sub might miss the last '}' if not careful. Let's just overwrite it completely since it's small.
+
+with open(r"components\candidate\profile\PreferencesForm.tsx", "w", encoding="utf-8") as f:
+    f.write(new_preferences)
+
+print("Updated PreferencesForm with complete Naukri Schema fields!")

@@ -92,41 +92,67 @@ export default function ProfileEditor() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       
-      toast('info', 'Uploading & Parsing', 'Extracting details from Resume...');
-      const { data: uploadData } = await supabase.storage.from('candidate_resumes').upload(fileName, file);
+      toast('info', 'Uploading & Parsing', 'Extracting details securely from your Resume...');
+      
+      // 1. Upload to Supabase to secure the master resume
+      const { data: uploadData, error: upErr } = await supabase.storage.from('candidate_resumes').upload(fileName, file);
+      if (upErr) throw upErr;
       
       const { data: { publicUrl } } = supabase.storage.from('candidate_resumes').getPublicUrl(fileName);
       await supabase.from('candidates').update({ resume_url: publicUrl }).eq('user_id', user?.id);
 
-      const fd = new FormData(); fd.append('file', file);
-      const res = await fetch(`${API_URL}/api/resume/parse-public`, { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Failed to parse resume');
+      // 2. Fast Client-Side PDF Text Extraction using PDF.js
+      const arrayBuffer = await file.arrayBuffer();
+      // Dynamically load pdf.js from CDN
+      const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs' as any);
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';
+      
+      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        fullText += textContent.items.map((s: any) => s.str).join(' ') + ' ';
+      }
+
+      // 3. Hit native Next.js gpt-4o-mini parser (Extremely Fast < 3s)
+      const res = await fetch('/api/candidate/parse-resume', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: fullText })
+      });
+      
+      if (!res.ok) throw new Error('Failed to parse resume data');
       
       const data = await res.json();
       if (data.status === 'success' && data.extracted_data) {
         const d = data.extracted_data;
         setFormData((prev: any) => ({
           ...prev,
-          personal: { ...prev.personal, location: d.personal?.location || prev.personal.location, headline: d.personal?.headline || prev.personal.headline, summary: d.personal?.summary || prev.personal.summary },
+          personal: { ...prev.personal, ...d.personal },
+          preferences: { ...prev.preferences, ...d.preferences },
           education: d.education || prev.education,
           experience: d.experience || prev.experience,
           projects: d.projects || prev.projects,
           certifications: d.certifications || prev.certifications,
           links: d.links || prev.links
         }));
-        toast('success', 'Auto-Fill Complete', 'Details populated from your resume.');
+        
+        // Auto-save parsed results to database so they persist immediately!
+        toast('success', 'Auto-Fill Complete', 'Details populated. Saving to database...');
+        setTimeout(() => handleSave(), 500); 
       }
     } catch (err: any) {
+      console.error(err);
       toast('error', 'Auto-Fill Failed', err.message);
     } finally {
       setIsParsing(false);
     }
-  };
-
-  const handleSave = async () => {
+  };  const handleSave = async () => {
     setIsSaving(true);
     try {
       if (!candidateId) throw new Error("Candidate record not found");
+
 
       const { error: candErr } = await supabase.from('candidates').update({
         location: formData.personal.location || null,
@@ -138,10 +164,26 @@ export default function ProfileEditor() {
 
       const prefs = {
         candidate_id: candidateId, 
+        gender: formData.personal.gender || null,
+        date_of_birth: formData.personal.date_of_birth || null,
+        mobile_number: formData.personal.mobile_number || null,
+        current_address: formData.personal.current_address || null,
+        city: formData.personal.city || null,
+        state: formData.personal.state || null,
+        country: formData.personal.country || null,
+        pincode: formData.personal.pincode || null,
+        nationality: formData.personal.nationality || null,
+        current_job_role: formData.preferences.current_job_role || null,
+        industry: formData.preferences.industry || null,
+        current_ctc: formData.preferences.current_ctc ? parseFloat(formData.preferences.current_ctc) : null,
         expected_salary: formData.preferences.expected_salary ? parseFloat(formData.preferences.expected_salary) : null,
         notice_period: formData.preferences.notice_period || null,
+        preferred_location: formData.preferences.preferred_location || null,
+        work_mode: formData.preferences.work_mode || null,
+        employment_type: formData.preferences.employment_type || null,
         availability_status: formData.preferences.availability_status || null
       };
+
       
       const { data: pCheck } = await supabase.from('candidate_profiles').select('id').eq('candidate_id', candidateId);
       if (pCheck && pCheck.length > 0) {
