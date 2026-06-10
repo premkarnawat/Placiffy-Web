@@ -84,18 +84,18 @@ export default function CreateJobWorkspace() {
     const file = e.target.files?.[0];
     if (!file) return;
     setExtracting(true);
-    toast("info", "AI Parsing JD", "Uploading original document and extracting core entities...");
+    toast("info", "AI Parsing JD", "Extracting core entities via Gemini...");
     
     try {
-      // 1. Upload the raw JD to Supabase storage natively
+      // 1. Fire off the Supabase upload NON-BLOCKINGLY for instant UX
       const timestamp = new Date().getTime();
       const filename = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage.from('jds').upload(filename, file);
-      
-      if (!uploadError && uploadData) {
-        const { data: publicUrlData } = supabase.storage.from('jds').getPublicUrl(filename);
-        setFormData(p => ({ ...p, original_jd_url: publicUrlData.publicUrl }));
-      }
+      supabase.storage.from('jds').upload(filename, file).then(({ data, error }) => {
+        if (!error && data) {
+          const { data: publicUrlData } = supabase.storage.from('jds').getPublicUrl(filename);
+          setFormData(p => ({ ...p, original_jd_url: publicUrlData.publicUrl }));
+        }
+      }).catch(console.error);
 
       // 2. Extract Text via PDF.js for AI Processing
       let fullText = '';
