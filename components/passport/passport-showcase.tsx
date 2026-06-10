@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, CheckCircle, Download, Link2, MapPin, Briefcase, Award } from 'lucide-react';
+import { Shield, CheckCircle, Download, Link2, MapPin, Briefcase, Award, BrainCircuit } from 'lucide-react';
 import { GlassCard } from '../glass-card';
 
 interface PassportData {
