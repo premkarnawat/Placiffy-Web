@@ -8,10 +8,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No text provided' }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Server-side key integration as requested by the user
+    const apiKey = process.env.GEMINI_API_KEY;
+    
     if (!apiKey) {
-      // Fallback for demo if no key
-      return NextResponse.json({ error: 'OpenAI API key missing' }, { status: 500 });
+      return NextResponse.json({ error: 'GEMINI_API_KEY missing from Vercel Environment Variables' }, { status: 500 });
     }
 
     const systemPrompt = `You are an expert ATS Resume Parser. Extract the candidate's details from the provided resume text into a strict JSON object. 
@@ -36,37 +37,48 @@ Required JSON Schema:
   "links": [ { "platform": "string (e.g. GitHub, LinkedIn)", "url": "string" } ]
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const promptText = `${systemPrompt}
+
+Parse this resume:
+
+${text.substring(0, 15000)}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Parse this resume:
-
-${text.substring(0, 15000)}` }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.1
+        contents: [{
+          parts: [{ text: promptText }]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.1
+        }
       })
     });
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.error?.message || "OpenAI API failed");
+      throw new Error(err.error?.message || "Gemini API failed");
     }
 
     const data = await response.json();
-    const parsedData = JSON.parse(data.choices[0].message.content);
+    
+    // Gemini returns text inside candidates[0].content.parts[0].text
+    const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!rawContent) {
+      throw new Error("No extracted data received from AI model");
+    }
+
+    const parsedData = JSON.parse(rawContent);
 
     return NextResponse.json({ status: 'success', extracted_data: parsedData });
 
   } catch (error: any) {
     console.error('Fast Parse Error:', error);
-    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Gemini Extraction Failed' }, { status: 500 });
   }
 }
