@@ -24,9 +24,32 @@ export default function TrustScorePage() {
     }
   };
 
+
+  const calculateTrustScore = (candidateData: any) => {
+    if (!candidateData) return 0;
+    let score = 20; // Base email points
+    const pct = candidateData.profile_completion_pct || 0;
+    score += Math.floor(pct * 0.4);
+    const hasMobile = !!candidateData.candidate_profiles?.[0]?.mobile_number;
+    if (hasMobile) score += 20;
+    return score;
+  };
+
+  useEffect(() => {
+    if (cand) {
+      const realScore = calculateTrustScore(cand);
+      if (cand.trust_score !== realScore) {
+        supabase.from('candidates').update({ trust_score: realScore }).eq('id', cand.id).then();
+      }
+    }
+  }, [cand]);
+
   if (loading) return <div className="flex items-center justify-center h-full"><Loader2 className="animate-spin text-blue-500" size={32} /></div>;
 
-  const score = cand?.trust_score || 0;
+  const score = calculateTrustScore(cand);
+  const profilePoints = Math.floor((cand?.profile_completion_pct || 0) * 0.4);
+  const hasMobile = !!cand?.candidate_profiles?.[0]?.mobile_number;
+
   
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
