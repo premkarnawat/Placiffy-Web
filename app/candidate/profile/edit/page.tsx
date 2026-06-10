@@ -138,7 +138,16 @@ export default function ProfileEditor() {
         body: JSON.stringify({ text: fullText })
       });
       
-      if (!res.ok) throw new Error('Failed to parse resume data');
+
+      if (!res.ok) {
+        let errStr = 'Failed to parse resume data';
+        try {
+          const errBody = await res.json();
+          if (errBody.error) errStr = errBody.error;
+        } catch(e) {}
+        throw new Error(errStr);
+      }
+
       
       const data = await res.json();
       if (data.status === 'success' && data.extracted_data) {
