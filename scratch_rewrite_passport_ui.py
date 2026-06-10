@@ -1,4 +1,6 @@
-'use client';
+﻿# -*- coding: utf-8 -*-
+
+passport_code = """'use client';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, CheckCircle, Download, Link2, MapPin, Briefcase, Award } from 'lucide-react';
@@ -174,3 +176,9 @@ export default function PassportShowcase({ data = defaultPassport }: { data?: Pa
     </motion.div>
   );
 }
+"""
+
+with open(r"components\passport\passport-showcase.tsx", "w", encoding="utf-8") as f:
+    f.write(passport_code)
+
+print("Redesigned Passport Showcase with high-contrast UI and real data bindings!")

@@ -20,21 +20,23 @@ export default function PassportPage() {
       const { data: cand } = await supabase.from('candidates').select('*, candidate_profiles(*)').eq('user_id', user.id).single();
       
       if (cand) {
+
         // Map real db data to PassportShowcase prop
+        const profile = cand.candidate_profiles?.[0] || {};
         setData({
           candidate_id: cand.id,
-          name: cand.candidate_profiles?.[0]?.fullName || user.email?.split('@')[0] || 'Candidate',
-          role: cand.candidate_profiles?.[0]?.headline || cand.candidate_profiles?.[0]?.current_job_role || 'Professional',
+          name: profile.fullName || user.email?.split('@')[0] || 'Candidate',
+          role: profile.headline || profile.current_job_role || 'Professional',
           trust_score: cand.trust_score || 0,
-          ats_score: cand.profile_completion_pct || 0, // Fallback to profile completion for now
-          portfolio_score: cand.candidate_profiles?.[0]?.portfolio_score || 80,
-          work_sample_score: 85,
-          expert_score: 90,
-          reliability_score: 95,
-          communication_score: 88,
-          fraud_risk: 'Low',
-          joining_probability: 92
+          ats_score: cand.profile_completion_pct || 0,
+          profile_photo_url: profile.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+          skills: profile.skills || ['JavaScript', 'React', 'Node.js'],
+          experience_years: profile.experience_years || 0,
+          summary: profile.summary || "Highly motivated professional ready to contribute to innovative teams.",
+          location: profile.city ? `${profile.city}, ${profile.state || ''}` : 'Remote',
+          current_job_role: profile.current_job_role || 'Seeking Opportunities'
         });
+
       }
     } catch (e) {
       console.error(e);
