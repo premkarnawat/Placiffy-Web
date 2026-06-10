@@ -21,21 +21,36 @@ export default function PassportPage() {
       
       if (cand) {
 
+
         // Map real db data to PassportShowcase prop
         const profile = cand.candidate_profiles?.[0] || {};
+        
+        // Parse skills robustly since they might be stored as a postgres array string "['Python', 'C++']"
+        let parsedSkills = [];
+        try {
+          if (typeof cand.skills === 'string') {
+            parsedSkills = JSON.parse(cand.skills.replace(/'/g, '"'));
+          } else if (Array.isArray(cand.skills)) {
+            parsedSkills = cand.skills;
+          }
+        } catch(e) {}
+        
+        if (parsedSkills.length === 0) parsedSkills = null;
+
         setData({
           candidate_id: cand.id,
-          name: profile.fullName || user.email?.split('@')[0] || 'Candidate',
-          role: profile.headline || profile.current_job_role || 'Professional',
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Candidate',
+          role: cand.headline || profile.current_job_role || 'Professional',
           trust_score: cand.trust_score || 0,
           ats_score: cand.profile_completion_pct || 0,
-          profile_photo_url: profile.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-          skills: profile.skills || ['JavaScript', 'React', 'Node.js'],
-          experience_years: profile.experience_years || 0,
-          summary: profile.summary || "Highly motivated professional ready to contribute to innovative teams.",
-          location: profile.city ? `${profile.city}, ${profile.state || ''}` : 'Remote',
+          profile_photo_url: cand.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+          skills: parsedSkills, // Will fall back to empty array in UI if null
+          experience_years: cand.experience_years || 0,
+          summary: cand.summary || "No professional summary provided.",
+          location: cand.location || profile.city || 'Remote',
           current_job_role: profile.current_job_role || 'Seeking Opportunities'
         });
+
 
       }
     } catch (e) {
