@@ -1,5 +1,4 @@
 ﻿import psycopg2
-import sys
 
 try:
     conn = psycopg2.connect(
@@ -9,28 +8,25 @@ try:
         password="@Placify$Data1716#",
         dbname="postgres"
     )
-    conn.autocommit = True
     cur = conn.cursor()
-
-    # Let's check existing RLS policies for candidate_profiles
+    
+    # Check if RLS is enabled on jobs
     cur.execute("""
-        SELECT pol.polname, pol.polcmd, pol.polqual
-        FROM pg_policy pol
-        JOIN pg_class tbl ON pol.polrelid = tbl.oid
-        WHERE tbl.relname = 'candidate_profiles';
+        SELECT relrowsecurity 
+        FROM pg_class 
+        WHERE relname = 'jobs';
     """)
-    policies = cur.fetchall()
-    print("Existing Policies for candidate_profiles:")
-    for p in policies:
-        print(p)
-
-    # We need to ensure RLS is enabled and proper policies exist for candidates to update their own profiles
-    # First, let's fix the candidate_profiles table to ensure user_id is properly linked or candidate_id is properly used.
-    # The error was "violates row-level security policy". 
-    # Usually, a policy looks like: 
-    # CREATE POLICY "Users can manage their own profile" ON candidate_profiles FOR ALL USING (candidate_id IN (SELECT id FROM candidates WHERE user_id = auth.uid()));
-
+    print("Jobs RLS Enabled:", cur.fetchone()[0])
+    
+    # Check policies on jobs
+    cur.execute("""
+        SELECT policyname, permissive, roles, cmd, qual, with_check 
+        FROM pg_policies 
+        WHERE tablename = 'jobs';
+    """)
+    print("Jobs Policies:", cur.fetchall())
+    
     cur.close()
     conn.close()
 except Exception as e:
-    print("FAILED:", e)
+    print(f"Error: {e}")
