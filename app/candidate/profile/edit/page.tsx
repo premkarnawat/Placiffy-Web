@@ -119,10 +119,11 @@ export default function ProfileEditor() {
         });
       };
 
-      const pdfjsLib = await loadPdfJs();
 
-      
-      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      const pdfjsLib = await loadPdfJs();
+      const fileUrl = URL.createObjectURL(file);
+      const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+
       let fullText = '';
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
