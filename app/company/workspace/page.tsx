@@ -31,16 +31,16 @@ export default function CandidatePipeline() {
         return;
       }
 
-      const { data: jobsData } = await supabase.from('jobs').select('id, job_title').eq('company_id', cu.company_id);
+      const { data: jobsData } = await supabase.from('jobs').select('job_id, job_title').eq('company_id', cu.company_id);
       setJobs(jobsData || []);
       
       if (jobsData && jobsData.length > 0) {
-        setActiveJob(jobsData[0].id);
-        fetchPipeline(jobsData[0].id);
+        setActiveJob(jobsData[0].job_id);
+        fetchPipeline(jobsData[0].job_id);
         
-        const channel = supabase.channel(`pipeline_${jobsData[0].id}`)
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'applications', filter: `job_id=eq.${jobsData[0].id}` }, () => {
-             fetchPipeline(jobsData[0].id);
+        const channel = supabase.channel(`pipeline_${jobsData[0].job_id}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'applications', filter: `job_id=eq.${jobsData[0].job_id}` }, () => {
+             fetchPipeline(jobsData[0].job_id);
           }).subscribe();
           
         return () => { supabase.removeChannel(channel); }
@@ -121,7 +121,7 @@ export default function CandidatePipeline() {
             }} 
             className="bg-white border-gray-200 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-blue-500"
           >
-            {jobs.map((j: any) => <option key={j.id} value={j.id}>{j.job_title}</option>)}
+            {jobs.map((j: any) => <option key={j.job_id} value={j.job_id}>{j.job_title}</option>)}
           </select>
         )}
       </div>

@@ -9,15 +9,17 @@ try:
         dbname="postgres"
     )
     cur = conn.cursor()
-    cur.execute("""
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'jobs';
-    """)
+    cur.execute("SELECT id, job_title, company_id FROM jobs;")
     rows = cur.fetchall()
-    print("Columns in 'jobs' table:")
+    print("Jobs in database:", len(rows))
     for row in rows:
-        print(f"  {row[0]} ({row[1]})")
+        print(row)
+        
+    cur.execute("SELECT id, user_id, company_id FROM company_users;")
+    cu_rows = cur.fetchall()
+    print("\nCompany Users in database:", len(cu_rows))
+    for row in cu_rows:
+        print(row)
         
     cur.close()
     conn.close()
