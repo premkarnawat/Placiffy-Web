@@ -1,4 +1,7 @@
-'use client';
+﻿# -*- coding: utf-8 -*-
+import os
+
+content = """'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -23,7 +26,7 @@ export default function CreateJobWorkspace() {
     location: '', city: '', state: '', country: '', salary_min: '', salary_max: '', salary_currency: 'USD',
     salary_negotiable: true, experience_min: '', experience_max: '', freshers_allowed: false,
     notice_period_required: '30 Days', openings: 1, bond_required: false, bond_duration: 0, bond_amount: 0,
-    education_required: "Bachelor\'s Degree", education_preferred: "Master\'s Degree",
+    education_required: "Bachelor\\'s Degree", education_preferred: "Master\\'s Degree",
     job_description: '', about_role: '', key_responsibilities: '', benefits: ''
   });
 
@@ -224,3 +227,9 @@ export default function CreateJobWorkspace() {
     </div>
   );
 }
+"""
+
+with open(r"app\company\jobs\create\page.tsx", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Created Frontend Job Form!")
