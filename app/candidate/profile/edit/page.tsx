@@ -104,7 +104,7 @@ export default function ProfileEditor() {
       // 2. Fast Client-Side PDF Text Extraction using PDF.js
       const arrayBuffer = await file.arrayBuffer();
       // Dynamically load pdf.js from CDN
-      const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs' as any);
+      const pdfjsLib = await import(/* webpackIgnore: true */ 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs');
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';
       
       const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
