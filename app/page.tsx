@@ -8,87 +8,148 @@ import {
   Users, FileSearch, Award, Lock, Cpu, BarChart3, Fingerprint,
   BadgeCheck, TrendingUp, Sparkles, Building2, Phone, Mail,
   MapPin, Twitter, Linkedin, Github, Instagram, ChevronDown,
-  Briefcase, Target, Eye, Layers
+  Briefcase, Target, Eye, Layers, FileText, CheckCircle
 } from 'lucide-react';
 
-/* --- helpers --- */
-const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
-const scaleIn = { hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 } };
-const slideLeft = { hidden: { opacity: 0, x: -40 }, visible: { opacity: 1, x: 0 } };
-const slideRight = { hidden: { opacity: 0, x: 40 }, visible: { opacity: 1, x: 0 } };
-
-function SectionHeading({ badge, title, subtitle, light = false }: { badge?: string; title: string; subtitle: string; light?: boolean }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
-  return (
-    <motion.div ref={ref} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6 }} className="text-center max-w-3xl mx-auto mb-16">
-      {badge && <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-5 ${light ? 'bg-white/15 text-white/90' : 'bg-blue-50 text-[#1A56DB] border border-blue-100'}`}>{badge}</span>}
-      <h2 className={`font-serif text-4xl md:text-5xl mb-5 ${light ? 'text-white' : 'text-[#111827]'}`}>{title}</h2>
-      <p className={`text-lg leading-relaxed ${light ? 'text-blue-100' : 'text-[#6B7280]'}`}>{subtitle}</p>
-    </motion.div>
-  );
+/* ============ TYPES ============ */
+interface NavLinkProps {
+  href: string;
+  label: string;
 }
 
-function AnimatedCounter({ target, suffix = '', duration = 2 }: { target: number; suffix?: string; duration?: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let start = 0;
-    const step = target / (duration * 60);
-    const interval = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(interval); }
-      else setCount(Math.floor(start));
-    }, 1000 / 60);
-    return () => clearInterval(interval);
-  }, [inView, target, duration]);
-  return <span ref={ref}>{count}{suffix}</span>;
-}
+/* ============ MOTION VARIANTS ============ */
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
 
-/* ============ HEADER ============ */
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+/* ============ COMPONENT: HEADER ============ */
 function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
-  const navLinks = ['How it Works', 'Services', 'AI Hiring', 'Pricing'];
+
+  const links: NavLinkProps[] = [
+    { href: '#home', label: 'Home' },
+    { href: '#about', label: 'About' },
+    { href: '#how-it-works', label: 'How It Works' },
+    { href: '#services', label: 'Services' },
+    { href: '#pricing', label: 'Pricing' },
+    { href: '#contact', label: 'Contact' }
+  ];
 
   return (
-    <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'bg-transparent'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[72px] flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1A56DB] to-[#3B82F6] flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
+    <motion.header 
+      initial={{ y: -100 }} 
+      animate={{ y: 0 }} 
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm' : 'bg-transparent'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        {/* Logo */}
+        <a href="#home" className="flex items-center gap-3 group">
+          <img 
+            src="/logo.jpg" 
+            alt="PLACIFY" 
+            className="h-10 w-10 rounded-xl object-cover shadow-premium border border-slate-200/50 group-hover:scale-105 transition-transform" 
+          />
+          <div className="flex flex-col">
+            <span className="text-xl font-bold tracking-tight text-slate-900 font-sans">PLACIFY</span>
+            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase -mt-1">Hiring OS</span>
           </div>
-          <span className="text-xl font-extrabold tracking-tight text-[#111827]">PLACIFY</span>
         </a>
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`} className="text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] transition-colors">{l}</a>
+
+        {/* Desktop Nav */}
+        <nav className="hidden lg:flex items-center gap-8">
+          {links.map((link) => (
+            <a 
+              key={link.label} 
+              href={link.href} 
+              className="text-[14px] font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              {link.label}
+            </a>
           ))}
         </nav>
-        <div className="hidden md:flex items-center gap-4">
-          <a href="/login" className="text-[13px] font-semibold text-[#6B7280] hover:text-[#111827] transition-colors">Login</a>
-          <a href="/register" className="px-5 py-2.5 bg-[#1A56DB] text-white text-[13px] font-bold rounded-xl hover:bg-[#1E40AF] transition-colors shadow-[0_2px_8px_rgba(26,86,219,0.3)]">Sign Up</a>
+
+        {/* CTA Buttons */}
+        <div className="hidden lg:flex items-center gap-4">
+          <a 
+            href="/login" 
+            className="text-[14px] font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            Login
+          </a>
+          <a 
+            href="/register" 
+            className="px-5 py-2.5 bg-[#0052CC] text-white text-[14px] font-bold rounded-xl hover:bg-[#0040A3] transition-colors shadow-premium"
+          >
+            Sign Up
+          </a>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-[#111827]">
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+
+        {/* Mobile Toggle */}
+        <button 
+          onClick={() => setMobileOpen(!mobileOpen)} 
+          className="lg:hidden p-2 text-slate-900"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
+
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="md:hidden overflow-hidden bg-white border-t border-gray-100">
-            <div className="px-6 py-6 space-y-4">
-              {navLinks.map(l => <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMobileOpen(false)} className="block text-sm font-semibold text-[#374151]">{l}</a>)}
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
-                <a href="/login" className="flex-1 text-center py-2.5 text-sm font-semibold text-[#6B7280] border border-gray-200 rounded-xl">Login</a>
-                <a href="/register" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-[#1A56DB] rounded-xl">Sign Up</a>
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }} 
+            className="lg:hidden overflow-hidden bg-white border-t border-slate-100"
+          >
+            <div className="px-6 py-8 space-y-5">
+              {links.map((link) => (
+                <a 
+                  key={link.label} 
+                  href={link.href} 
+                  onClick={() => setMobileOpen(false)} 
+                  className="block text-base font-semibold text-slate-700 hover:text-slate-900"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="flex flex-col gap-3 pt-6 border-t border-slate-100">
+                <a 
+                  href="/login" 
+                  onClick={() => setMobileOpen(false)} 
+                  className="text-center py-3 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl"
+                >
+                  Login
+                </a>
+                <a 
+                  href="/register" 
+                  onClick={() => setMobileOpen(false)} 
+                  className="text-center py-3 text-sm font-bold text-white bg-[#0052CC] rounded-xl shadow-premium"
+                >
+                  Sign Up
+                </a>
               </div>
             </div>
           </motion.div>
@@ -97,219 +158,623 @@ function Header() {
     </motion.header>
   );
 }
-/* ============ HERO ============ */
-function HeroSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+
+/* ============ SECTION: HERO ============ */
+function Hero() {
   return (
-    <section ref={ref} className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden bg-white">
-      <div className="absolute inset-0 bg-grid opacity-60" />
-      <div className="absolute top-20 -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-50 to-blue-100/30 blur-3xl" />
-      <div className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-50 to-purple-50/20 blur-3xl" />
+    <section id="home" className="relative pt-32 pb-24 md:pt-40 md:pb-32 gradient-mesh overflow-hidden noise-overlay">
+      {/* Glow Rings */}
+      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-blue-100 rounded-full blur-[120px] opacity-40 animate-glow pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-100 rounded-full blur-[120px] opacity-30 animate-glow pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-1 md:grid-cols-2 gap-12 lg:gap-8 items-center">
-        <div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/60 mb-8">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-amber-700">Best Hiring Intelligence</span>
-          </motion.div>
-
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.15 }}
-            className="font-serif text-5xl md:text-6xl lg:text-[68px] leading-[1.08] text-[#111827] mb-6">
-            Hire Better.<br/>
-            <span className="text-[#1A56DB]">Hire Faster.</span><br/>
-            Hire Verified.
-          </motion.h1>
-
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-lg text-[#6B7280] leading-relaxed max-w-lg mb-10">
-            The ultimate Hiring Intelligence Operating System for modern enterprises. Leverage AI-driven verification and data-rich talent scoring.
-          </motion.p>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.45 }}
-            className="flex flex-wrap gap-4">
-            <a href="#services" className="group inline-flex items-center gap-2 px-7 py-3.5 bg-[#1A56DB] text-white font-bold text-sm rounded-xl shadow-[0_4px_16px_rgba(26,86,219,0.35)] hover:bg-[#1E40AF] hover:shadow-[0_8px_30px_rgba(26,86,219,0.45)] transition-all duration-300">
-              Explore PLACIFY
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
-            <a href="#contact" className="inline-flex items-center gap-2 px-7 py-3.5 text-[#1A56DB] font-bold text-sm rounded-xl border-2 border-[#1A56DB]/20 hover:border-[#1A56DB]/50 hover:bg-blue-50/50 transition-all duration-300">
-              Get Started
-            </a>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex items-center gap-6 mt-10 pt-8 border-t border-gray-100">
-            <div className="flex -space-x-2">
-              {[0, 1, 2, 3, 4].map(i => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-white" style={{ background: `linear-gradient(135deg, ${['#1A56DB','#3B82F6','#6366F1','#8B5CF6','#EC4899'][i]}, ${['#3B82F6','#60A5FA','#818CF8','#A78BFA','#F472B6'][i]})` }} />
-              ))}
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
+          {/* Hero Left */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-6 text-left"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-xs font-bold uppercase tracking-wider mb-6 shadow-sm">
+              <Sparkles size={14} className="animate-spin-slow" />
+              <span>Smarter Hiring Platform</span>
             </div>
-            <p className="text-sm text-[#6B7280]"><span className="font-bold text-[#111827]">500+</span> enterprises trust PLACIFY</p>
+            
+            <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.08] mb-6">
+              Right Talent.<br />
+              Right Place.<br />
+              <span className="text-[#0052CC] bg-gradient-to-r from-[#0052CC] to-[#4F46E5] bg-clip-text text-transparent">Smarter Hiring.</span>
+            </h1>
+            
+            <p className="text-lg text-slate-600 leading-relaxed max-w-xl mb-10">
+              Placify helps companies discover qualified talent faster through AI-powered hiring intelligence and helps candidates showcase their skills professionally.
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-4">
+              <a 
+                href="/register" 
+                className="px-8 py-4 bg-[#0052CC] text-white font-bold rounded-2xl hover:bg-[#0040A3] transition-colors shadow-premium flex items-center gap-2 group"
+              >
+                <span>Get Started</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a 
+                href="#services" 
+                className="px-8 py-4 bg-white text-slate-800 font-bold rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors shadow-sm"
+              >
+                Explore Services
+              </a>
+            </div>
+
+            <div className="flex items-center gap-6 mt-12 pt-8 border-t border-slate-100 text-slate-400">
+              <div className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-emerald-500" />
+                <span className="text-sm font-semibold">AI Talent Engine</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-emerald-500" />
+                <span className="text-sm font-semibold">Verified Passports</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Hero Right: Interactive Dashboard Widget */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            className="lg:col-span-6 relative flex justify-center"
+          >
+            {/* Main Dashboard Panel */}
+            <div className="w-full max-w-[540px] bg-white rounded-3xl shadow-premium-lg border border-slate-200/60 p-6 overflow-hidden relative">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-400 rounded-full" />
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full" />
+                  <div className="w-3 h-3 bg-green-400 rounded-full" />
+                  <span className="text-xs font-semibold text-slate-400 ml-2">Hiring Intelligence Dashboard</span>
+                </div>
+                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-wider">Active</span>
+              </div>
+
+              <div className="space-y-4">
+                {/* Score & Match */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-slate-200 transition-colors">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                      <span>ATS Matching</span>
+                      <Cpu size={14} className="text-blue-500" />
+                    </div>
+                    <div className="text-3xl font-extrabold text-slate-900">98.4%</div>
+                    <div className="text-[10px] font-semibold text-emerald-600 mt-1">Excellent Score Match</div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-slate-200 transition-colors">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                      <span>Trust index</span>
+                      <Shield size={14} className="text-indigo-500" />
+                    </div>
+                    <div className="text-3xl font-extrabold text-[#0052CC]">RA+</div>
+                    <div className="text-[10px] font-semibold text-blue-600 mt-1">Highly Reliable Profile</div>
+                  </div>
+                </div>
+
+                {/* Candidate Passport Preview Card */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm relative">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-tr from-[#0052CC] to-indigo-600 rounded-xl flex items-center justify-center text-white font-extrabold shadow-sm">
+                      AP
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">Arjun Patel</h4>
+                      <p className="text-slate-500 text-xs font-medium">Senior Full-Stack Engineer</p>
+                    </div>
+                    <div className="ml-auto flex flex-col items-end">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[9px] font-bold tracking-wider uppercase">Elite</span>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1">Score: 842/1000</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Identity Verification', icon: Fingerprint, text: 'Verified PAN & Aadhaar' },
+                      { label: 'Employment Verification', icon: Briefcase, text: 'Last 3 Companies Confirmed' },
+                      { label: 'Skills Assessment', icon: Award, text: 'A+ Grade (React, Node, Cloud)' }
+                    ].map((step, idx) => (
+                      <div key={idx} className="flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                        <step.icon size={16} className="text-[#0052CC]" />
+                        <div className="flex-1">
+                          <span className="font-semibold text-slate-800 block">{step.label}</span>
+                          <span className="text-slate-400 text-[10px]">{step.text}</span>
+                        </div>
+                        <CheckCircle2 size={16} className="text-emerald-500" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pipeline Funnel */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Hiring Pipeline Funnel</span>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Applied', count: 543, pct: 'w-full bg-[#0052CC]' },
+                      { label: 'Screened', count: 212, pct: 'w-[70%] bg-blue-600' },
+                      { label: 'Interviewed', count: 88, pct: 'w-[45%] bg-blue-500' },
+                      { label: 'Offered', count: 15, pct: 'w-[20%] bg-indigo-500' }
+                    ].map((row, idx) => (
+                      <div key={idx} className="flex items-center gap-4 text-xs font-semibold">
+                        <span className="w-20 text-slate-500">{row.label}</span>
+                        <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${row.pct}`} />
+                        </div>
+                        <span className="w-10 text-right text-slate-800">{row.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating badges */}
+            <motion.div 
+              animate={{ y: [-6, 6, -6] }} 
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -left-8 top-1/4 bg-white rounded-2xl shadow-premium p-3 border border-slate-200/60 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0052CC]">
+                <Brain size={20} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">AI Matching</p>
+                <p className="text-sm font-extrabold text-slate-800">94% Accuracy</p>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              animate={{ y: [6, -6, 6] }} 
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -right-8 bottom-1/4 bg-white rounded-2xl shadow-premium p-3 border border-slate-200/60 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Verification</p>
+                <p className="text-sm font-extrabold text-slate-800">100% Trusted</p>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <motion.div initial={{ opacity: 0, x: 50, rotateY: -8 }} animate={inView ? { opacity: 1, x: 0, rotateY: 0 } : {}} transition={{ duration: 0.8, delay: 0.3 }}
-          className="relative flex justify-center lg:justify-end">
-          <motion.div
-            animate={{ y: [-8, 8, -8] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-full max-w-[400px]"
+/* ============ SECTION: ABOUT PLACIFY ============ */
+function About() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  const problems = [
+    { title: 'Manual Hiring', desc: 'Sifting through hundreds of applicants manually takes days and invites human bias.' },
+    { title: 'Resume Overload', desc: 'Drowning in standard resume templates without verifiable proof of competencies.' },
+    { title: 'Poor Visibility', desc: 'No reliable ways to see the candidate\'s real commitments and professional trust score.' },
+    { title: 'Slow Turnarounds', desc: 'Weeks wasted scheduling interviews for non-vetted or non-matching applicants.' },
+    { title: 'Unstructured Funnels', desc: 'Recruiting steps operate in silos rather than a cohesive hiring workspace.' }
+  ];
+
+  return (
+    <section id="about" className="py-24 md:py-32 bg-white">
+      <div className="max-w-7xl mx-auto px-6" ref={ref}>
+        {/* Section Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <span className="inline-block px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+            Who We Are
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+            About Placify
+          </h2>
+          <p className="text-lg text-slate-600 leading-relaxed">
+            Placify exists to bridge the trust gap in engineering and technology recruiting. By introducing data-rich hiring intelligence, we automate validation processes and make talent acquisition objective.
+          </p>
+        </div>
+
+        {/* Problems Grid */}
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          animate={inView ? 'visible' : 'hidden'}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          {problems.map((prob, idx) => (
+            <motion.div 
+              key={idx}
+              variants={fadeIn}
+              className="bg-slate-50 border border-slate-200/50 rounded-2xl p-6 card-lift flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0052CC] mb-6">
+                  <Zap size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{prob.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{prob.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+          
+          {/* Summary / Mission Card */}
+          <motion.div 
+            variants={fadeIn}
+            className="bg-gradient-to-br from-[#0052CC] to-indigo-700 text-white rounded-2xl p-6 shadow-premium flex flex-col justify-between"
           >
-            <div className="relative bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
-              <div className="bg-gradient-to-r from-[#1A56DB] to-[#3B82F6] p-6 pb-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-white/90" />
-                    <span className="text-white font-bold text-sm tracking-wide">CANDIDATE PASSPORT</span>
-                  </div>
-                  <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full text-[10px] font-bold text-white tracking-wider">VERIFIED</span>
-                </div>
-                <p className="text-blue-100 text-xs mt-3 relative z-10">Issued by PLACIFY Intelligence Platform</p>
-              </div>
-
-              <div className="p-6 -mt-6">
-                <div className="flex items-end gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1A56DB] to-[#6366F1] flex items-center justify-center text-white text-xl font-bold shadow-lg ring-4 ring-white">
-                    AP
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#111827] text-lg">Arjun Patel</h3>
-                    <p className="text-[#6B7280] text-sm">Senior Full-Stack Engineer</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3.5 border border-green-100">
-                    <p className="text-[10px] font-bold text-green-600 tracking-wider uppercase mb-1">ATS Score</p>
-                    <p className="text-2xl font-extrabold text-green-700">98.4<span className="text-sm font-bold">%</span></p>
-                  </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3.5 border border-blue-100">
-                    <p className="text-[10px] font-bold text-[#1A56DB] tracking-wider uppercase mb-1">Trust Index</p>
-                    <p className="text-2xl font-extrabold text-[#1A56DB]">RA<span className="text-sm font-bold">+</span></p>
-                  </div>
-                </div>
-
-                <div className="space-y-2.5">
-                  {[
-                    { label: 'Identity Verified', icon: Fingerprint, color: 'text-emerald-600 bg-emerald-50' },
-                    { label: 'Employment History', icon: Briefcase, color: 'text-blue-600 bg-blue-50' },
-                    { label: 'Skills Assessment', icon: Award, color: 'text-purple-600 bg-purple-50' },
-                  ].map((b) => (
-                    <div key={b.label} className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50/80">
-                      <div className={`w-8 h-8 rounded-lg ${b.color} flex items-center justify-center`}>
-                        <b.icon className="w-4 h-4" />
-                      </div>
-                      <span className="text-sm font-semibold text-[#374151]">{b.label}</span>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-200">Our Mission</span>
+              <h3 className="text-2xl font-black tracking-tight mt-4 mb-4">
+                Redefining Professional Identity & Trust.
+              </h3>
+              <p className="text-blue-100 text-sm leading-relaxed">
+                Empowering candidates to build verifiable technical credentials, and giving enterprises a modern workspace to hire them instantly.
+              </p>
             </div>
-
-            <motion.div animate={{ y: [-5, 5, -5] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute -left-6 top-32 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2 border border-gray-100">
-              <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-green-600 uppercase">Match Rate</p>
-                <p className="text-sm font-extrabold text-[#111827]">94.2%</p>
-              </div>
-            </motion.div>
-
-            <motion.div animate={{ y: [5, -5, 5] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute -right-4 bottom-20 bg-white rounded-2xl shadow-lg p-3 flex items-center gap-2 border border-gray-100">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4 text-[#1A56DB]" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-[#1A56DB] uppercase">Verified</p>
-                <p className="text-sm font-extrabold text-[#111827]">100%</p>
-              </div>
-            </motion.div>
+            <a href="/register" className="mt-8 flex items-center gap-2 text-sm font-bold text-white hover:underline">
+              <span>Learn more</span>
+              <ArrowRight size={16} />
+            </a>
           </motion.div>
         </motion.div>
       </div>
     </section>
   );
 }
-/* ============ EVOLUTION OF HIRING ============ */
-function EvolutionSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
 
-  const traditional = [
-    { title: 'Manual Resume Sifting', desc: 'Recruiters spend 6-8 seconds per resume' },
-    { title: 'Gut-Feel Decisions', desc: 'No data, no validation' },
-    { title: 'Ghost Post-Credentials', desc: 'Interviewing unreliable talent, ghost candidates in interviews' },
-  ];
-  const placify = [
-    { title: 'AI Match Precision', desc: '94%+ accuracy in candidate-role matching' },
-    { title: 'Verifiable Verification', desc: 'Background, skill, and trust scoring for every candidate' },
-    { title: 'Joinable Candidates', desc: 'Candidates with real commitment scores, verified identity' },
+/* ============ SECTION: HOW PLACIFY WORKS ============ */
+function HowItWorks() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  const steps = [
+    { title: 'Create Job', desc: 'Company publishes a job description with requirements' },
+    { title: 'AI Analysis', desc: 'ATS extracts core skills and computes optimal candidate profiles' },
+    { title: 'Matching', desc: 'Search engine ranks verified profiles using semantic matching' },
+    { title: 'Intelligence', desc: 'Deep resume parsing and verified experience score extraction' },
+    { title: 'Verification', desc: 'Instant identity, educational, and employment checks' },
+    { title: 'Interview', desc: 'Schedule and orchestrate Technical/Culture interviews' },
+    { title: 'Hiring', desc: 'Onboard candidates with confidence and zero credentials risk' }
   ];
 
   return (
-    <section id="how-it-works" className="py-24 md:py-32 bg-[#F8FAFC]">
+    <section id="how-it-works" className="py-24 md:py-32 bg-slate-50 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6" ref={ref}>
-        <SectionHeading badge="Why Placify" title="The Evolution of Hiring" subtitle="Traditional hiring is broken, manual, and risky. PLACIFY injects intelligence into every step of the funnel." />
+        {/* Section Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <span className="inline-block px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+            Workflow Funnel
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+            How Placify Works
+          </h2>
+          <p className="text-lg text-slate-600 leading-relaxed">
+            Placify standardizes the entire talent discovery and acquisition funnel, ensuring speed, security, and credentials precision.
+          </p>
+        </div>
 
-        <div className="grid md:grid-cols-1 md:grid-cols-2 gap-8">
-          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideLeft} transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            <div className="px-6 py-5 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-                <X className="w-5 h-5 text-red-500" />
+        {/* Workflow Line Grid */}
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          animate={inView ? 'visible' : 'hidden'}
+          className="relative grid md:grid-cols-4 lg:grid-cols-7 gap-6 z-10"
+        >
+          {steps.map((step, idx) => (
+            <motion.div 
+              key={idx}
+              variants={fadeIn}
+              className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 transition-colors text-center flex flex-col items-center justify-between"
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0052CC] font-bold text-sm flex items-center justify-center mb-4 border border-blue-100">
+                  {idx + 1}
+                </div>
+                <h3 className="font-bold text-slate-900 text-sm mb-2">{step.title}</h3>
+                <p className="text-slate-500 text-xs leading-relaxed">{step.desc}</p>
               </div>
-              <div>
-                <h3 className="font-bold text-[#111827]">Traditional Hiring</h3>
-                <p className="text-xs text-[#6B7280]">Outdated, risky, slow</p>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              {traditional.map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-red-50/50 border border-red-100/50">
-                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="w-4 h-4 text-red-500" />
+              
+              {/* Connector Arrow for Desktop */}
+              {idx < steps.length - 1 && (
+                <div className="hidden lg:block absolute top-[50%] right-[-14px] translate-y-[-50%] text-slate-300 pointer-events-none">
+                  <ChevronRight size={18} />
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ SECTION: CANDIDATE PORTAL ============ */
+function CandidatePromo() {
+  return (
+    <section className="py-24 bg-white border-b border-slate-100">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
+          {/* Left Column: Dashboard Preview */}
+          <div className="lg:col-span-6 relative flex justify-center order-2 lg:order-1">
+            <div className="w-full max-w-[480px] bg-slate-50 rounded-2xl p-5 border border-slate-200/70 shadow-premium relative">
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase">Candidate Passport Preview</span>
+                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[9px] font-bold uppercase">Ready</span>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 text-white font-extrabold flex items-center justify-center">
+                    JD
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#111827] text-sm mb-1">{item.title}</h4>
-                    <p className="text-[#6B7280] text-sm leading-relaxed">{item.desc}</p>
+                    <h4 className="font-bold text-slate-900 text-sm">Jayesh Deshmukh</h4>
+                    <p className="text-slate-500 text-[11px]">Backend & Cloud Engineer</p>
                   </div>
-                </motion.div>
+                </div>
+                <div className="border-t border-slate-100 pt-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Skills Score:</span>
+                    <span className="font-bold text-slate-900">A (92/100)</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Identity check:</span>
+                    <span className="font-bold text-emerald-600">Verified</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>LinkedIn Sync:</span>
+                    <span className="font-bold text-blue-600">Connected</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Overlay element */}
+            <div className="absolute -top-4 -right-4 bg-white shadow-premium rounded-xl p-3 border border-slate-200 text-xs font-semibold flex items-center gap-2 animate-float-slow">
+              <Star className="text-yellow-400" size={16} />
+              <span>Elite Talent Verified</span>
+            </div>
+          </div>
+
+          {/* Right Column: Copy and Info */}
+          <div className="lg:col-span-6 text-left order-1 lg:order-2">
+            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+              For Candidates
+            </span>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+              Build More Than A Resume.<br />
+              <span className="text-[#0052CC]">Build Your Professional Identity.</span>
+            </h2>
+            
+            <ul className="space-y-4 mb-8">
+              {[
+                { title: 'AI Resume Intelligence', desc: 'Let our model extract and format your technical history accurately.' },
+                { title: 'Job Matching', desc: 'Get matched with companies looking precisely for your verified skill set.' },
+                { title: 'Professional Candidate Passport', desc: 'Export a secure, verified passport that proves your identity and skill claims.' },
+                { title: 'Better Visibility', desc: 'Stand out with pre-verified profiles that jump past initial screening steps.' },
+                { title: 'Faster Hiring Opportunities', desc: 'Shorten your interview funnel since companies trust your pre-evaluated passport.' },
+                { title: 'Direct Communication', desc: 'Connect directly with hiring managers inside dedicated job workspaces.' }
+              ].map((benefit, idx) => (
+                <li key={idx} className="flex items-start gap-3 text-sm">
+                  <div className="w-5 h-5 rounded-full bg-blue-50 border border-blue-100 text-[#0052CC] flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">{benefit.title}</span>
+                    <p className="text-slate-500 text-xs mt-0.5">{benefit.desc}</p>
+                  </div>
+                </li>
               ))}
+            </ul>
+
+            <a 
+              href="/candidate/register" 
+              className="px-6 py-3 bg-[#0052CC] text-white font-bold rounded-xl hover:bg-[#0040A3] transition-colors shadow-premium inline-flex items-center gap-2"
+            >
+              <span>Join Placify</span>
+              <ArrowRight size={16} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ SECTION: COMPANY PORTAL ============ */
+function CompanyPromo() {
+  return (
+    <section className="py-24 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
+          {/* Left Column: Copy and Info */}
+          <div className="lg:col-span-6 text-left">
+            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+              For Companies
+            </span>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+              Hire Smarter.<br />
+              <span className="text-[#0052CC]">Hire Faster.</span>
+            </h2>
+            
+            <ul className="space-y-4 mb-8">
+              {[
+                { title: 'ATS Matching', desc: 'Instantly source candidates using our high-accuracy vector match engine.' },
+                { title: 'Resume Intelligence', desc: 'Scan and score high volumes of applicant CVs against core job requirements.' },
+                { title: 'Candidate Discovery', desc: 'Query our public pre-verified pool for vetted tech talent.' },
+                { title: 'Hiring Workspaces', desc: 'Manage applicant stages using modern workflow pipelines and kanban boards.' },
+                { title: 'Candidate Passport Inspection', desc: 'Inspect candidate verification badges (identity, background, test score).' },
+                { title: 'Advanced Filtering', desc: 'Filter by Notice Period, Expected Salary, and Specific Skills Matrix.' }
+              ].map((benefit, idx) => (
+                <li key={idx} className="flex items-start gap-3 text-sm">
+                  <div className="w-5 h-5 rounded-full bg-blue-50 border border-blue-100 text-[#0052CC] flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">{benefit.title}</span>
+                    <p className="text-slate-500 text-xs mt-0.5">{benefit.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <a 
+              href="/company/register" 
+              className="px-6 py-3 bg-[#0052CC] text-white font-bold rounded-xl hover:bg-[#0040A3] transition-colors shadow-premium inline-flex items-center gap-2"
+            >
+              <span>Create Company Workspace</span>
+              <ArrowRight size={16} />
+            </a>
+          </div>
+
+          {/* Right Column: Workspace Preview Mockup */}
+          <div className="lg:col-span-6 relative flex justify-center">
+            <div className="w-full max-w-[480px] bg-white rounded-2xl p-5 border border-slate-200 shadow-premium relative overflow-hidden">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <Building2 size={16} className="text-slate-500" />
+                  <span className="text-xs font-bold text-slate-900">Enterprise Workspace</span>
+                </div>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              </div>
+              <div className="space-y-3">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="font-bold text-slate-800">Job Title: Tech Lead</span>
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase">Active</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500">Applications: 120 Vetted Matches</p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="flex justify-between items-center text-xs mb-1">
+                    <span className="font-bold text-slate-800">Job Title: Frontend Dev</span>
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase">Active</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500">Applications: 94 Vetted Matches</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="absolute -bottom-4 -left-4 bg-white shadow-premium rounded-xl p-3 border border-slate-200 text-xs font-semibold flex items-center gap-2 animate-float-slower">
+              <BarChart3 className="text-blue-500" size={16} />
+              <span>ATS Funnel Open</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ SECTION: TRADITIONAL VS SMART HIRING ============ */
+function Comparison() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  const traditional = [
+    { title: 'Manual Screening', desc: 'Recruiters wasting hours scanning files.' },
+    { title: 'Resume Overload', desc: 'No reliable credentials verify or trust ranking.' },
+    { title: 'Slow Hiring', desc: 'Taking weeks to run interviews and finalize hires.' },
+    { title: 'Scattered Communication', desc: 'Managing processes on emails, spreadsheets, and chats.' }
+  ];
+
+  const placify = [
+    { title: 'AI Matching', desc: 'Instant vector candidate scoring against Job criteria.' },
+    { title: 'Resume Intelligence', desc: 'Verifiable proof of educational and technical claims.' },
+    { title: 'Structured Hiring', desc: 'Centralized workspace funnels for candidate sourcing.' },
+    { title: 'Faster Decisions', desc: 'Reduce screening pipeline times by up to 80%.' }
+  ];
+
+  return (
+    <section className="py-24 md:py-32 bg-white">
+      <div className="max-w-7xl mx-auto px-6" ref={ref}>
+        {/* Section Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <span className="inline-block px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+            Comparison
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+            Traditional vs Smart Hiring
+          </h2>
+          <p className="text-lg text-slate-600 leading-relaxed">
+            See how Placify transforms classical recruiting workflows into an optimized intelligence operating system.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Traditional Card */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            className="bg-slate-50 border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
+                  <X size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-950">Traditional Hiring</h4>
+                  <p className="text-[11px] text-slate-400 font-semibold uppercase">Legacy Recruiting</p>
+                </div>
+              </div>
+              
+              <ul className="space-y-4">
+                {traditional.map((item, idx) => (
+                  <li key={idx} className="flex gap-3 text-sm">
+                    <X size={16} className="text-red-500 mt-1 flex-shrink-0" />
+                    <div>
+                      <span className="font-bold text-slate-700">{item.title}</span>
+                      <p className="text-slate-500 text-xs mt-0.5">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-8 text-center text-xs text-slate-400 font-semibold uppercase">
+              Risky & Inefficient
             </div>
           </motion.div>
 
-          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideRight} transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-white rounded-2xl border border-blue-200/60 overflow-hidden shadow-sm ring-1 ring-blue-100/50">
-            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#1A56DB] flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-white" />
+          {/* Placify Smart Card */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            className="bg-white border-2 border-[#0052CC]/40 rounded-3xl p-8 shadow-premium flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0052CC] flex items-center justify-center">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-950">Placify Hiring</h4>
+                  <p className="text-[11px] text-[#0052CC] font-bold uppercase">Modern SaaS</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-[#111827]">Placify Intelligence</h3>
-                <p className="text-xs text-[#1A56DB]">AI-powered, verified, fast</p>
-              </div>
+              
+              <ul className="space-y-4">
+                {placify.map((item, idx) => (
+                  <li key={idx} className="flex gap-3 text-sm">
+                    <Check size={16} className="text-[#0052CC] mt-1 flex-shrink-0" />
+                    <div>
+                      <span className="font-bold text-slate-800">{item.title}</span>
+                      <p className="text-slate-500 text-xs mt-0.5">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="p-6 space-y-4">
-              {placify.map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100/50">
-                  <div className="w-8 h-8 rounded-lg bg-[#1A56DB] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-[#111827] text-sm mb-1">{item.title}</h4>
-                    <p className="text-[#6B7280] text-sm leading-relaxed">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
+            <div className="mt-8 text-center text-xs text-[#0052CC] font-bold uppercase">
+              AI-Powered & Verified
             </div>
           </motion.div>
         </div>
@@ -317,415 +782,597 @@ function EvolutionSection() {
     </section>
   );
 }
-/* ============ CAPABILITIES ============ */
-function CapabilitiesSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
 
-  const caps = [
-    { icon: FileSearch, title: 'ATS Screening', desc: 'AI-powered 94% accuracy matching. Real-time skill detection, experience validation, and salary benchmarking.', color: '#1A56DB', bg: 'bg-blue-50' },
-    { icon: ShieldCheck, title: 'Background Verification', desc: 'Automated checks for education, past employment, professional certifications & identity.', color: '#059669', bg: 'bg-emerald-50' },
-    { icon: Layers, title: 'Work Samples', desc: 'Real-time hands-on challenges designed by industry experts to evaluate practical execution.', color: '#7C3AED', bg: 'bg-purple-50' },
-    { icon: Shield, title: 'AI Trust Score', desc: 'Proprietary algorithm aggregating 12+ data signals into a single reliability index.', color: '#D97706', bg: 'bg-amber-50' },
+/* ============ SECTION: INDUSTRIES / SLIDER ============ */
+function Industries() {
+  const domains = [
+    'Software Engineering', 'Frontend Development', 'Backend Development',
+    'Full Stack Development', 'UI/UX Design', 'Cloud Engineering',
+    'Cyber Security', 'DevOps', 'AI Engineering', 'Data Science',
+    'Machine Learning', 'QA Testing', 'Product Management',
+    'Business Analysis', 'Digital Marketing', 'HR', 'Finance'
+  ];
+
+  return (
+    <section className="py-16 bg-slate-50 border-t border-b border-slate-100 overflow-hidden relative">
+      <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Global Industry Verticals We Support</span>
+      </div>
+      
+      {/* Infinite slider container */}
+      <div className="relative flex overflow-x-hidden">
+        <div className="flex gap-6 animate-infinite-scroll whitespace-nowrap py-2">
+          {/* Double list to loop seamlessly */}
+          {[...domains, ...domains].map((domain, idx) => (
+            <div 
+              key={idx} 
+              className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 rounded-full shadow-sm text-sm font-semibold text-slate-800"
+            >
+              <Zap size={14} className="text-[#0052CC]" />
+              <span>{domain}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ SECTION: SERVICES ============ */
+function ServicesSection() {
+  const services = [
+    {
+      title: 'Placify Hiring Service',
+      desc: 'Complete hiring solution where Placify assists companies in finding, screening and hiring candidates.',
+      url: '/services/hiring',
+      steps: ['Job Creation', 'AI Matching', 'Shortlisting', 'Interview', 'Hiring']
+    },
+    {
+      title: 'Self Hiring Solution',
+      desc: 'Companies use Placify ATS and candidate discovery tools independently to source technical talent.',
+      url: '/services/self-hiring',
+      steps: ['Create Job', 'AI Analysis', 'Candidate Search', 'Shortlisting']
+    },
+    {
+      title: 'Bulk Resume ATS Shortlisting',
+      desc: 'Upload hundreds of resumes and receive ATS-ranked candidate shortlists instantly.',
+      url: '/services/bulk-resume',
+      steps: ['Upload Resumes', 'Resume Parsing', 'Skill Extraction', 'ATS Ranking', 'Shortlisting']
+    },
+    {
+      title: 'Academic Software Projects',
+      desc: 'Custom software projects and final-year academic builds designed for college students.',
+      url: '/services/academic-projects',
+      steps: ['Domains: AI/ML, Web, Cloud, Cyber, IoT, Data Science']
+    }
   ];
 
   return (
     <section id="services" className="py-24 md:py-32 bg-white">
-      <div className="max-w-7xl mx-auto px-6" ref={ref}>
-        <SectionHeading badge="Capabilities" title="Platform Capabilities" subtitle="Production-grade tools for every stage of talent acquisition." />
-
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-          {caps.map((c, i) => (
-            <motion.div key={i} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
-              transition={{ duration: 0.5, delay: 0.15 * i }}
-              whileHover={{ y: -6, boxShadow: '0 20px 50px rgba(0,0,0,0.08)' }}
-              className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:border-blue-100 transition-all duration-300 cursor-default">
-              <div className={`w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center mb-5`}>
-                <c.icon className="w-6 h-6" style={{ color: c.color }} />
-              </div>
-              <h3 className="font-bold text-[#111827] text-lg mb-2">{c.title}</h3>
-              <p className="text-[#6B7280] text-sm leading-relaxed">{c.desc}</p>
-            </motion.div>
-          ))}
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Section Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <span className="inline-block px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+            Services
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+            Placify Service Verticals
+          </h2>
+          <p className="text-lg text-slate-600 leading-relaxed">
+            Choose the recruiting model that fits your workspace needs. From fully managed assisted searches to autonomous ATS workflows.
+          </p>
         </div>
 
-        <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6, delay: 0.5 }}
-          className="grid lg:grid-cols-5 gap-6 rounded-3xl overflow-hidden">
-          <div className="lg:col-span-3 bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-3xl p-8 md:p-10 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(26,86,219,0.15),transparent_60%)]" />
-            <div className="relative z-10">
-              <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold text-blue-300 tracking-wider uppercase mb-4">One Unified Interface</span>
-              <h3 className="text-white font-bold text-2xl md:text-3xl mb-3">One Unified Interface for All Hiring</h3>
-              <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md">
-                Manage end-to-end hiring from a single dashboard. Track candidates, run verification, and score talent — all in one place.
-              </p>
-              <div className="space-y-3">
-                {[85, 70, 95, 60].map((w, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400" />
+        {/* Services Cards */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {services.map((serv, idx) => (
+            <div 
+              key={idx} 
+              className="bg-slate-50 border border-slate-200 rounded-3xl p-8 shadow-sm card-lift flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-xl font-bold text-slate-950 mb-3">{serv.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed mb-6">{serv.desc}</p>
+                
+                {/* Steps workflow visual */}
+                <div className="flex flex-wrap items-center gap-2 mb-8">
+                  {serv.steps.map((step, sidx) => (
+                    <div key={sidx} className="flex items-center gap-2">
+                      <span className="text-xs px-3 py-1 bg-white border border-slate-200 rounded-full font-semibold text-slate-700">
+                        {step}
+                      </span>
+                      {sidx < serv.steps.length - 1 && (
+                        <ChevronRight size={14} className="text-slate-400" />
+                      )}
                     </div>
-                    <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={inView ? { width: `${w}%` } : {}} transition={{ duration: 1.2, delay: 0.8 + i * 0.15 }}
-                        className="h-full rounded-full bg-gradient-to-r from-[#1A56DB] to-[#3B82F6]" />
-                    </div>
-                    <span className="text-[11px] text-gray-500 font-mono w-8">{w}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-2 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 md:p-10 border border-blue-100/50 flex flex-col justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 border border-blue-100">
-              <Shield className="w-7 h-7 text-[#1A56DB]" />
-            </div>
-            <h3 className="font-bold text-[#111827] text-xl mb-3">AI Trust Score</h3>
-            <p className="text-[#6B7280] text-sm leading-relaxed mb-6">
-              Our proprietary algorithm aggregates 12+ data signals including employment history, education verification, skill assessments, and behavioral analysis into a single, actionable reliability index.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { label: 'Data Signals', val: '12+' },
-                { label: 'Accuracy', val: '99.2%' },
-                { label: 'Processing', val: '<2s' },
-                { label: 'Coverage', val: 'Global' },
-              ].map((s) => (
-                <div key={s.label} className="bg-white rounded-xl p-3 border border-blue-100/50">
-                  <p className="text-[10px] font-bold text-[#1A56DB] uppercase tracking-wider">{s.label}</p>
-                  <p className="text-lg font-extrabold text-[#111827]">{s.val}</p>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-/* ============ INDUSTRY SECTORS ============ */
-function SectorsSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
-
-  const sectors = [
-    { icon: Brain, label: 'AI & Machine Learning' },
-    { icon: Cloud, label: 'DevOps & Cloud' },
-    { icon: Palette, label: 'UI/UX Design' },
-    { icon: Globe, label: 'Media & Crypto' },
-  ];
-
-  return (
-    <section id="ai-hiring" className="py-24 md:py-32 bg-gradient-to-br from-[#1A56DB] to-[#1E40AF] relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl" />
-      </div>
-      <div className="relative max-w-7xl mx-auto px-6" ref={ref}>
-        <SectionHeading light title="Hiring Intelligence for Every Sector" subtitle="From AI startups to enterprise cloud, PLACIFY adapts to your industry's unique talent requirements." />
-
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {sectors.map((s, i) => (
-            <motion.div key={i} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
-              transition={{ duration: 0.5, delay: 0.1 * i }}
-              whileHover={{ y: -6, scale: 1.03 }}
-              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center border border-white/15 hover:bg-white/20 transition-all duration-300 cursor-default group">
-              <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-5 group-hover:bg-white/25 transition-colors">
-                <s.icon className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">{s.label}</h3>
-            </motion.div>
+
+              <a 
+                href={serv.url} 
+                className="px-5 py-3 bg-white border border-slate-200 hover:border-slate-300 text-slate-800 text-sm font-bold rounded-xl shadow-sm text-center transition-colors block"
+              >
+                Learn More
+              </a>
+            </div>
           ))}
         </div>
-
-        <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.6, delay: 0.5 }}
-          className="grid grid-cols-2 md:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-white/10">
-          {[
-            { label: 'Candidates Verified', val: '150K+' },
-            { label: 'Enterprise Clients', val: '500+' },
-            { label: 'Avg Hire Time', val: '14 days' },
-            { label: 'Accuracy Rate', val: '94%' },
-          ].map((s, i) => (
-            <div key={i} className="text-center">
-              <p className="text-3xl md:text-4xl font-extrabold text-white mb-1">{s.val}</p>
-              <p className="text-blue-200 text-sm font-medium">{s.label}</p>
-            </div>
-          ))}
-        </motion.div>
       </div>
     </section>
   );
 }
-/* ============ PRICING ============ */
-function PricingSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
-  const [annual, setAnnual] = useState(false);
 
-  const plans = [
+/* ============ SECTION: PRICING ============ */
+function Pricing() {
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+
+  const plansHiring = [
     {
-      name: 'Startup',
-      price: annual ? 399 : 499,
-      desc: 'Perfect for small teams getting started with intelligent hiring.',
-      features: ['10 Active Job Postings', '50 Verified Candidates/mo', 'AI Screening', 'Email Support', 'Basic Analytics'],
-      cta: 'Start 14-Day Trial',
-      popular: false,
+      name: 'Starter',
+      priceMonthly: 39999,
+      priceYearly: 31999,
+      desc: 'Ideal for early-stage startups and small projects.',
+      features: ['5 Active Jobs postings', '50 Resume parsing matches', 'Base ATS evaluation Engine', 'Email Support'],
+      recommended: false
     },
     {
       name: 'Growth',
-      price: annual ? 1039 : 1299,
-      desc: 'Scale your hiring with advanced tools and priority support.',
-      features: ['50 Active Job Postings', 'Bulk Screening Unlocked', 'Priority Support & Analytics Toolkit', 'Custom Workflows', 'Team Collaboration'],
-      cta: 'Get Started Now',
-      popular: true,
+      priceMonthly: 99999,
+      priceYearly: 79999,
+      desc: 'Perfect for fast-growing companies and teams.',
+      features: ['20 Active Jobs postings', '250 Resume parsing matches', 'Advanced AI match algorithms', 'Priority Chat Support', 'Candidate Trust badges Sync'],
+      recommended: true
     },
     {
       name: 'Enterprise',
-      price: null,
-      desc: 'Tailored solutions for large organizations with complex needs.',
-      features: ['Unlimited Job Postings', 'API Access', 'Custom Integrations', '24/7 STS Inspection', 'Dedicated Account Manager'],
-      cta: 'Talk to Sales',
-      popular: false,
+      priceMonthly: null, // Custom
+      priceYearly: null,
+      desc: 'For larger enterprises with volume hiring workloads.',
+      features: ['Unlimited Active Jobs', 'Unlimited Resume shortlists', 'Custom API & database integration', '24/7 dedicated account support', 'Full RLS Candidate passport verification'],
+      recommended: false
+    }
+  ];
+
+  const plansShortlisting = [
+    {
+      name: 'Basic',
+      priceMonthly: 14999,
+      priceYearly: 11999,
+      desc: 'For simple resume sifting projects.',
+      features: ['100 Resumes parsed/mo', 'Skill Extraction analysis', 'Basic ATS rank shortlist'],
+      recommended: false
     },
+    {
+      name: 'Professional',
+      priceMonthly: 39999,
+      priceYearly: 31999,
+      desc: 'Optimized for recurring recruitment sifting.',
+      features: ['500 Resumes parsed/mo', 'Skill Extraction analysis', 'Advanced ATS vector rank shortlist', 'Direct CSV exports'],
+      recommended: true
+    },
+    {
+      name: 'Enterprise',
+      priceMonthly: null,
+      priceYearly: null,
+      desc: 'High-volume candidate matching pipelines.',
+      features: ['Unlimited resume uploads', 'Custom skill weighting models', 'Direct candidate API connections'],
+      recommended: false
+    }
   ];
 
-  return (
-    <section id="pricing" className="py-24 md:py-32 bg-[#F8FAFC]">
-      <div className="max-w-7xl mx-auto px-6" ref={ref}>
-        <SectionHeading badge="Pricing" title="Transparent Intelligence Pricing" subtitle="Choose the plan that matches your hiring needs. All plans include core AI features." />
+  const formatPrice = (p: number | null) => {
+    if (p === null) return 'Custom';
+    return `₹${p.toLocaleString('en-IN')}`;
+  };
 
-        <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={fadeUp} transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex justify-center mb-14">
-          <div className="inline-flex items-center bg-white rounded-xl p-1.5 border border-gray-200 shadow-sm">
-            <button onClick={() => setAnnual(false)} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${!annual ? 'bg-[#1A56DB] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111827]'}`}>Monthly</button>
-            <button onClick={() => setAnnual(true)} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${annual ? 'bg-[#1A56DB] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111827]'}`}>
-              Annually <span className={annual ? 'text-green-200' : 'text-emerald-500'}>(Save 20%)</span>
+  return (
+    <section id="pricing" className="py-24 md:py-32 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Section Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <span className="inline-block px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+            Subscription
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+            Transparent Pricing plans
+          </h2>
+          <p className="text-lg text-slate-600 leading-relaxed">
+            All prices displayed in INR. Toggle between monthly and yearly billing to save up to 20%.
+          </p>
+
+          {/* Toggle Switch */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <span className={`text-sm font-semibold ${billingPeriod === 'monthly' ? 'text-slate-900' : 'text-slate-400'}`}>Monthly</span>
+            <button 
+              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
+              className="w-12 h-6 bg-blue-100 rounded-full p-1 relative flex items-center transition-colors"
+            >
+              <div 
+                className={`w-4 h-4 bg-[#0052CC] rounded-full shadow-sm transition-transform ${
+                  billingPeriod === 'yearly' ? 'translate-x-6' : 'translate-x-0'
+                }`} 
+              />
             </button>
+            <span className={`text-sm font-semibold flex items-center gap-2.5 ${billingPeriod === 'yearly' ? 'text-slate-900' : 'text-slate-400'}`}>
+              <span>Yearly</span>
+              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full uppercase tracking-wider">Save 20%</span>
+            </span>
           </div>
-        </motion.div>
+        </div>
 
-        <div className="grid md:grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans.map((p, i) => (
-            <motion.div key={p.name} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={scaleIn}
-              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
-              whileHover={{ y: -8, rotateX: 2, rotateY: i === 0 ? 2 : i === 2 ? -2 : 0 }}
-              className={`relative rounded-3xl p-8 transition-all duration-300 ${
-                p.popular
-                  ? 'bg-gradient-to-br from-[#1A56DB] to-[#1E40AF] text-white shadow-[0_20px_60px_rgba(26,86,219,0.3)] scale-[1.03] z-10'
-                  : 'bg-white border border-gray-200 shadow-sm hover:shadow-lg'
-              }`}>
-              {p.popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full text-[10px] font-extrabold text-white uppercase tracking-widest shadow-lg">
-                  Most Popular
-                </div>
-              )}
-              <h3 className={`font-bold text-lg mb-2 ${p.popular ? 'text-white' : 'text-[#111827]'}`}>{p.name}</h3>
-              <p className={`text-sm mb-5 ${p.popular ? 'text-blue-100' : 'text-[#6B7280]'}`}>{p.desc}</p>
-
-              <div className="mb-6">
-                {p.price !== null ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className={`text-4xl font-extrabold ${p.popular ? 'text-white' : 'text-[#111827]'}`}>${p.price.toLocaleString()}</span>
-                    <span className={`text-sm ${p.popular ? 'text-blue-200' : 'text-[#6B7280]'}`}>/mo</span>
-                  </div>
-                ) : (
-                  <span className={`text-4xl font-extrabold ${p.popular ? 'text-white' : 'text-[#111827]'}`}>Custom</span>
+        {/* Pricing Category 1: Placify Hiring */}
+        <div className="mb-20">
+          <h3 className="text-2xl font-bold text-slate-900 mb-8 border-b border-slate-200 pb-3">Placify Hiring Plans</h3>
+          <div className="grid md:grid-cols-3 gap-8">
+            {plansHiring.map((plan, idx) => (
+              <div 
+                key={idx}
+                className={`bg-white rounded-3xl p-8 border shadow-sm relative flex flex-col justify-between card-lift ${
+                  plan.recommended ? 'border-2 border-[#0052CC]/50 shadow-premium' : 'border-slate-200'
+                }`}
+              >
+                {plan.recommended && (
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-[#0052CC] text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    Recommended
+                  </span>
                 )}
-              </div>
-
-              <div className="space-y-3 mb-8">
-                {p.features.map(f => (
-                  <div key={f} className="flex items-center gap-3">
-                    <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${p.popular ? 'text-blue-200' : 'text-emerald-500'}`} />
-                    <span className={`text-sm ${p.popular ? 'text-blue-50' : 'text-[#374151]'}`}>{f}</span>
+                <div>
+                  <h4 className="text-lg font-bold text-slate-900 mb-2">{plan.name}</h4>
+                  <p className="text-slate-500 text-xs mb-6">{plan.desc}</p>
+                  <div className="mb-8">
+                    <span className="text-4xl font-extrabold text-slate-900">
+                      {formatPrice(billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly)}
+                    </span>
+                    {plan.priceMonthly && (
+                      <span className="text-xs text-slate-400 font-semibold">/month</span>
+                    )}
                   </div>
-                ))}
-              </div>
-
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
-                p.popular
-                  ? 'bg-white text-[#1A56DB] hover:bg-blue-50 shadow-lg'
-                  : 'bg-[#1A56DB] text-white hover:bg-[#1E40AF] shadow-[0_4px_16px_rgba(26,86,219,0.3)]'
-              }`}>
-                {p.cta} <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-/* ============ CTA / CONTACT ============ */
-function CTASection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
-  const [formData, setFormData] = useState({ name: '', email: '', companySize: '', message: '' });
-
-  return (
-    <section id="contact" className="py-24 md:py-32 bg-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-40" />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-50/50 to-transparent rounded-full blur-3xl" />
-      <div className="relative max-w-7xl mx-auto px-6" ref={ref}>
-        <div className="grid lg:grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideLeft} transition={{ duration: 0.6 }}>
-            <span className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 bg-blue-50 text-[#1A56DB] border border-blue-100">Get Started</span>
-            <h2 className="font-serif text-4xl md:text-5xl text-[#111827] mb-5">Upgrade Your Hiring Intelligence Today.</h2>
-            <p className="text-lg text-[#6B7280] leading-relaxed mb-8">
-              Stop wasting time with ATS failures. Join 500+ top-tier companies using PLACIFY to build their dream teams.
-            </p>
-
-            <div className="space-y-4 mb-10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-emerald-600" />
+                  
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feat, fidx) => (
+                      <li key={fidx} className="flex items-center gap-2.5 text-xs text-slate-600">
+                        <Check size={14} className="text-emerald-500" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <span className="text-sm font-semibold text-[#374151]">Trusted by 500+ Enterprises Globally</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                </div>
-                <span className="text-sm font-semibold text-[#374151]">ISO 4,100 &amp; SOC2 Compliant Platform</span>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { val: '500+', label: 'Companies' },
-                { val: '150K+', label: 'Hires Made' },
-                { val: '99.2%', label: 'Uptime' },
-              ].map(s => (
-                <div key={s.label} className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-xl font-extrabold text-[#1A56DB]">{s.val}</p>
-                  <p className="text-xs font-medium text-[#6B7280] mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={slideRight} transition={{ duration: 0.6, delay: 0.2 }}>
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-[0_8px_40px_rgba(0,0,0,0.06)] p-8 md:p-10">
-              <h3 className="font-bold text-xl text-[#111827] mb-1">Book Your Intelligence Demo</h3>
-              <p className="text-sm text-[#6B7280] mb-8">Send to us or book your 1:1 demo and get started</p>
-
-              <form className="space-y-5" onSubmit={e => e.preventDefault()}>
-                <div>
-                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Full Name</label>
-                  <input type="text" placeholder="John Doe" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Work Email</label>
-                  <input type="email" placeholder="john@company.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Company Size</label>
-                  <select value={formData.companySize} onChange={e => setFormData({ ...formData, companySize: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all appearance-none">
-                    <option value="">Select company size</option>
-                    <option value="1-50">1-50 employees</option>
-                    <option value="51-200">51-200 employees</option>
-                    <option value="201-1000">201-1,000 employees</option>
-                    <option value="1000+">1,000+ employees</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2 block">Message</label>
-                  <textarea rows={4} placeholder="Tell us about your hiring needs..." value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/20 focus:border-[#1A56DB] transition-all resize-none" />
-                </div>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 bg-[#1A56DB] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(26,86,219,0.35)] hover:bg-[#1E40AF] transition-colors">
-                  Book My Intelligence Demo <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </form>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-}
-/* ============ FOOTER ============ */
-function Footer() {
-  const columns = [
-    { title: 'Product', links: ['Features', 'ATS', 'Verification', 'Passport', 'Trust Score'] },
-    { title: 'Resources', links: ['Blog', 'Case Studies', 'Documentation', 'API Reference'] },
-    { title: 'Legal', links: ['Privacy Policy', 'Terms', 'SOC2 Compliance', 'Data Processing'] },
-  ];
-
-  return (
-    <footer className="bg-[#F8FAFC] border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1A56DB] to-[#3B82F6] flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-extrabold tracking-tight text-[#111827]">PLACIFY</span>
-            </div>
-            <p className="text-sm text-[#6B7280] leading-relaxed mb-6 max-w-xs">
-              Making hiring intelligent, fair, and verified for the modern workforce.
-            </p>
-            <div className="flex items-center gap-3">
-              {[Twitter, Linkedin, Github, Instagram].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-[#6B7280] hover:text-[#1A56DB] hover:border-blue-200 transition-all">
-                  <Icon className="w-4 h-4" />
+                <a 
+                  href="/register" 
+                  className={`px-5 py-3 text-center text-xs font-bold rounded-xl transition-colors ${
+                    plan.recommended ? 'bg-[#0052CC] text-white hover:bg-[#0040A3]' : 'bg-slate-50 text-slate-800 border border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Get Started
                 </a>
-              ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pricing Category 2: Bulk Resume Shortlisting */}
+        <div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-8 border-b border-slate-200 pb-3">Bulk Resume Shortlisting Plans</h3>
+          <div className="grid md:grid-cols-3 gap-8">
+            {plansShortlisting.map((plan, idx) => (
+              <div 
+                key={idx}
+                className={`bg-white rounded-3xl p-8 border shadow-sm relative flex flex-col justify-between card-lift ${
+                  plan.recommended ? 'border-2 border-[#0052CC]/50 shadow-premium' : 'border-slate-200'
+                }`}
+              >
+                {plan.recommended && (
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-[#0052CC] text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    Recommended
+                  </span>
+                )}
+                <div>
+                  <h4 className="text-lg font-bold text-slate-900 mb-2">{plan.name}</h4>
+                  <p className="text-slate-500 text-xs mb-6">{plan.desc}</p>
+                  <div className="mb-8">
+                    <span className="text-4xl font-extrabold text-slate-900">
+                      {formatPrice(billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly)}
+                    </span>
+                    {plan.priceMonthly && (
+                      <span className="text-xs text-slate-400 font-semibold">/month</span>
+                    )}
+                  </div>
+                  
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feat, fidx) => (
+                      <li key={fidx} className="flex items-center gap-2.5 text-xs text-slate-600">
+                        <Check size={14} className="text-emerald-500" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <a 
+                  href="/register" 
+                  className={`px-5 py-3 text-center text-xs font-bold rounded-xl transition-colors ${
+                    plan.recommended ? 'bg-[#0052CC] text-white hover:bg-[#0040A3]' : 'bg-slate-50 text-slate-800 border border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Get Started
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ SECTION: CONTACT ============ */
+function Contact() {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    category: 'Placify Hiring Service',
+    message: ''
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        category: 'Placify Hiring Service',
+        message: ''
+      });
+    }, 3000);
+  };
+
+  return (
+    <section id="contact" className="py-24 md:py-32 bg-white">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-12 gap-16 items-start">
+          {/* Left Column: Form Card */}
+          <div className="lg:col-span-7 bg-slate-50 border border-slate-200 rounded-3xl p-8 shadow-sm">
+            <h3 className="text-2xl font-bold text-slate-900 mb-6">Contact Us / Request Demo</h3>
+            
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="name" className="text-xs font-bold text-slate-600 uppercase block mb-2">Full Name</label>
+                <input 
+                  type="text" 
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Enter your full name" 
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
+                />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label htmlFor="phone" className="text-xs font-bold text-slate-600 uppercase block mb-2">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    id="phone"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    placeholder="Enter your phone" 
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="text-xs font-bold text-slate-600 uppercase block mb-2">Email Address</label>
+                  <input 
+                    type="email" 
+                    id="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="name@company.com" 
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="category" className="text-xs font-bold text-slate-600 uppercase block mb-2">Inquiry For</label>
+                <select 
+                  id="category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
+                >
+                  <option>Placify Hiring Service</option>
+                  <option>Self Hiring Solution</option>
+                  <option>Bulk Resume ATS Shortlisting</option>
+                  <option>Academic Software Projects</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="message" className="text-xs font-bold text-slate-600 uppercase block mb-2">Message</label>
+                <textarea 
+                  id="message"
+                  required
+                  rows={4}
+                  value={formData.message}
+                  onChange={(e) => setFormData({...formData, message: e.target.value})}
+                  placeholder="How can we help your team?" 
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors resize-none"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full px-6 py-4 bg-[#0052CC] text-white font-bold rounded-xl hover:bg-[#0040A3] transition-colors shadow-premium flex items-center justify-center gap-2"
+              >
+                <span>{submitted ? 'Inquiry Sent ✓' : 'Submit Inquiry'}</span>
+              </button>
+            </form>
+          </div>
+
+          {/* Right Column: Contact Details */}
+          <div className="lg:col-span-5 space-y-8 lg:pt-10">
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Contact Details</span>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">Get In Touch With Placify</h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Have questions about our vector match engine, ATS workflows, or student academic software plans? Our team in Pune is ready to assist.
+              </p>
+            </div>
+
+            <div className="space-y-5 text-sm font-semibold text-slate-800">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0052CC] flex items-center justify-center border border-blue-100 flex-shrink-0">
+                  <Phone size={18} />
+                </div>
+                <span>7796420465</span>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0052CC] flex items-center justify-center border border-blue-100 flex-shrink-0">
+                  <Mail size={18} />
+                </div>
+                <a href="mailto:placiffy.contact@gmail.com" className="hover:underline">placiffy.contact@gmail.com</a>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0052CC] flex items-center justify-center border border-blue-100 flex-shrink-0">
+                  <MapPin size={18} />
+                </div>
+                <span>Pune, Maharashtra, India</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ COMPONENT: FOOTER ============ */
+function Footer() {
+  return (
+    <footer className="bg-slate-50 border-t border-slate-200/60 pt-20 pb-12">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid md:grid-cols-4 gap-12 mb-16">
+          {/* Brand Col */}
+          <div className="space-y-4">
+            <a href="#home" className="flex items-center gap-3">
+              <img 
+                src="/logo.jpg" 
+                alt="PLACIFY" 
+                className="h-9 w-9 rounded-lg object-cover" 
+              />
+              <span className="text-lg font-bold tracking-tight text-slate-900 font-sans">PLACIFY</span>
+            </a>
+            <p className="text-xs text-slate-500 leading-relaxed max-w-[200px]">
+              Right Talent. Right Place. SMARTER HIRING OS.
+            </p>
+            
+            {/* Social Links */}
+            <div className="flex items-center gap-4 pt-2">
+              <a href="#" className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#0052CC] hover:border-[#0052CC] transition-all">
+                <Linkedin size={16} />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#0052CC] hover:border-[#0052CC] transition-all">
+                <Instagram size={16} />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#0052CC] hover:border-[#0052CC] transition-all">
+                <Twitter size={16} />
+              </a>
             </div>
           </div>
 
-          {columns.map(col => (
-            <div key={col.title}>
-              <h4 className="font-bold text-[#111827] text-sm mb-4">{col.title}</h4>
-              <ul className="space-y-3">
-                {col.links.map(link => (
-                  <li key={link}><a href="#" className="text-sm text-[#6B7280] hover:text-[#1A56DB] transition-colors">{link}</a></li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
+          {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-[#111827] text-sm mb-4">Contact</h4>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm text-[#6B7280]"><Mail className="w-3.5 h-3.5" />hello@placify.io</li>
-              <li className="flex items-center gap-2 text-sm text-[#6B7280]"><Phone className="w-3.5 h-3.5" />+1 (415) 555-0142</li>
-              <li className="flex items-center gap-2 text-sm text-[#6B7280]"><MapPin className="w-3.5 h-3.5" />San Francisco, CA</li>
+            <h5 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Quick Links</h5>
+            <ul className="space-y-2.5 text-xs font-semibold text-slate-600">
+              <li><a href="#home" className="hover:text-slate-900 transition-colors">Home</a></li>
+              <li><a href="#about" className="hover:text-slate-900 transition-colors">About</a></li>
+              <li><a href="#how-it-works" className="hover:text-slate-900 transition-colors">How It Works</a></li>
+              <li><a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a></li>
+              <li><a href="#contact" className="hover:text-slate-900 transition-colors">Contact</a></li>
+            </ul>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h5 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Services</h5>
+            <ul className="space-y-2.5 text-xs font-semibold text-slate-600">
+              <li><a href="/services/hiring" className="hover:text-slate-900 transition-colors">Placify Hiring Service</a></li>
+              <li><a href="/services/self-hiring" className="hover:text-slate-900 transition-colors">Self Hiring Solution</a></li>
+              <li><a href="/services/bulk-resume" className="hover:text-slate-900 transition-colors">Bulk Resume shortlists</a></li>
+              <li><a href="/services/academic-projects" className="hover:text-slate-900 transition-colors">Academic software Projects</a></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h5 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Legal</h5>
+            <ul className="space-y-2.5 text-xs font-semibold text-slate-600">
+              <li><a href="#" className="hover:text-slate-900 transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-slate-900 transition-colors">Terms & Conditions</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-[#6B7280]">&copy; 2026 Placify Hiring Intelligence. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A56DB] transition-colors">Privacy</a>
-            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A56DB] transition-colors">Terms</a>
-            <a href="#" className="text-xs text-[#6B7280] hover:text-[#1A56DB] transition-colors">Cookies</a>
-          </div>
+        {/* Bottom copyright */}
+        <div className="border-t border-slate-200/60 pt-8 flex flex-col md:flex-row justify-between items-center text-[11px] font-semibold text-slate-400">
+          <span>&copy; {new Date().getFullYear()} PLACIFY. All rights reserved.</span>
+          <span className="mt-2 md:mt-0 uppercase tracking-widest">Right Talent. Right Place.</span>
         </div>
       </div>
     </footer>
   );
 }
 
-/* ============ PAGE ============ */
-export default function LandingPage() {
+/* ============ MAIN PAGE ============ */
+export default function Page() {
+  // Initialize Lenis scroll dynamically
+  useEffect(() => {
+    import('lenis').then(({ default: Lenis }) => {
+      const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+      });
+
+      function raf(time: number) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+
+      requestAnimationFrame(raf);
+
+      return () => {
+        lenis.destroy();
+      };
+    });
+  }, []);
+
   return (
-    <main className="min-min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-white text-slate-900 font-sans">
       <Header />
-      <HeroSection />
-      <EvolutionSection />
-      <CapabilitiesSection />
-      <SectorsSection />
-      <PricingSection />
-      <CTASection />
+      <Hero />
+      <About />
+      <HowItWorks />
+      <CandidatePromo />
+      <CompanyPromo />
+      <Comparison />
+      <Industries />
+      <ServicesSection />
+      <Pricing />
+      <Contact />
       <Footer />
-    </main>
+    </div>
   );
 }
