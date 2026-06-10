@@ -63,7 +63,18 @@ export default function TrustScorePage() {
               <h3 className="font-bold text-gray-900">Resume & ATS Consistency</h3>
               <p className="text-sm text-gray-500 mt-1">Your profile completion score directly feeds your trust ranking.</p>
               <div className="mt-3 flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full w-fit">
-                +{Math.floor((cand?.profile_completion_pct || 0) * 0.4)} Points (from Profile)
+                +{profilePoints} Points (from Profile)
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-start gap-4">
+             <div className={`${hasMobile ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'} p-3 rounded-full`}><CheckCircle2 size={24} /></div>
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900">Mobile Number Verification</h3>
+              <p className="text-sm text-gray-500 mt-1">{hasMobile ? 'Your mobile number is linked and verified.' : 'Please link your mobile number in the Profile page.'}</p>
+              <div className={`mt-3 flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full w-fit ${hasMobile ? 'text-purple-600 bg-purple-50' : 'text-gray-500 bg-gray-50'}`}>
+                {hasMobile ? '+20 Points' : '0 / 20 Points'}
               </div>
             </div>
           </div>
