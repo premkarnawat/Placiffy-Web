@@ -1,4 +1,10 @@
-import { NextResponse } from 'next/server';
+﻿# -*- coding: utf-8 -*-
+with open(r"app\api\company\jobs\analyze\route.ts", "r", encoding="utf-8") as f:
+    content = f.read()
+
+import re
+
+new_api = """import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
@@ -27,11 +33,7 @@ Return STRICT JSON exactly matching this schema. Do not hallucinate.
   "job_description": "string"
 }`;
 
-    const promptText = `${systemPrompt}
-
-Analyze this JD:
-
-${text.substring(0, 15000)}`;
+    const promptText = `${systemPrompt}\n\nAnalyze this JD:\n\n${text.substring(0, 15000)}`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
@@ -53,3 +55,9 @@ ${text.substring(0, 15000)}`;
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+"""
+
+with open(r"app\api\company\jobs\analyze\route.ts", "w", encoding="utf-8") as f:
+    f.write(new_api)
+
+print("Re-architected /api/company/jobs/analyze to use Gemini Flash!")

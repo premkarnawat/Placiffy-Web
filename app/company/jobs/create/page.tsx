@@ -9,6 +9,12 @@ import {
   Plus, X, Zap
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Initialize PDF.js worker seamlessly
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+}
 
 export default function CreateJobWorkspace() {
   const router = useRouter();
@@ -64,25 +70,44 @@ export default function CreateJobWorkspace() {
     setAtsWeights(p => ({ ...p, [e.target.name]: parseInt(e.target.value) || 0 }));
   };
 
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setExtracting(true);
-    toast("info", "AI Parsing JD", "Extracting core entities and generating ATS requirements...");
-    const formDataObj = new FormData();
-    formDataObj.append("file", file);
+    toast("info", "AI Parsing JD", "Extracting core entities via Gemini Flash...");
+    
     try {
-        const res = await fetch("/api/company/jobs/analyze", { method: "POST", body: formDataObj });
-        if (!res.ok) throw new Error("Failed to extract data");
-        const json = await res.json();
-        const data = json.data;
-        setFormData(prev => ({
-            ...prev, job_title: data.job_title || prev.job_title, experience_min: data.experience_min || prev.experience_min,
-            experience_max: data.experience_max || prev.experience_max, salary_min: data.salary_min || prev.salary_min,
-            salary_max: data.salary_max || prev.salary_max, city: data.city || prev.city, job_description: data.job_description || prev.job_description
-        }));
-        if (data.mandatory_skills?.length > 0) setMandatorySkills(data.mandatory_skills);
-        toast("success", "Auto-Filled", "AI successfully populated the ATS pipeline fields!");
+      let fullText = '';
+      if (file.name.endsWith('.pdf')) {
+        const fileUrl = URL.createObjectURL(file);
+        const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          fullText += textContent.items.map((s: any) => s.str).join(' ') + ' ';
+        }
+      } else {
+        fullText = await file.text();
+      }
+
+      const res = await fetch("/api/company/jobs/analyze", { 
+        method: "POST", 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: fullText })
+      });
+      
+      if (!res.ok) throw new Error("Failed to extract data");
+      const json = await res.json();
+      const data = json.data;
+      
+      setFormData(prev => ({
+          ...prev, job_title: data.job_title || prev.job_title, experience_min: data.experience_min || prev.experience_min,
+          experience_max: data.experience_max || prev.experience_max, salary_min: data.salary_min || prev.salary_min,
+          salary_max: data.salary_max || prev.salary_max, city: data.city || prev.city, job_description: data.job_description || prev.job_description
+      }));
+      if (data.mandatory_skills?.length > 0) setMandatorySkills(data.mandatory_skills);
+      toast("success", "Auto-Filled", "Gemini successfully populated the ATS pipeline fields!");
     } catch (err: any) {
         toast("error", "Extraction Failed", err.message);
     } finally {
