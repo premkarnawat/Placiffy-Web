@@ -17,9 +17,12 @@ export default function PassportPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      
       const { data: cand } = await supabase.from('candidates').select('*, candidate_profiles(*)').eq('user_id', user.id).single();
       
       if (cand) {
+        const { data: intel } = await supabase.from('resume_intelligence_reports').select('overall_score, grade').eq('candidate_id', cand.id).single();
+
 
 
         // Map real db data to PassportShowcase prop
