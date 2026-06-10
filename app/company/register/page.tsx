@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { Building2, UploadCloud, ChevronRight, Loader2, Globe, MapPin, Briefcase, Mail, Phone, User, FileText, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
@@ -8,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CompanyRegistration() {
   const router = useRouter();
+  const { login } = useAuth();
   const { toast } = useToast();
   
   const [step, setStep] = useState(1);
@@ -106,8 +108,22 @@ export default function CompanyRegistration() {
           body: JSON.stringify({ user_id: authData.user.id })
       }).catch(e => console.error("Async backend sync failed", e));
 
+
       toast("success", "Company Registered", "Your workspace has been successfully created.");
+      
+      // Synchronously hydrate React Context to prevent the Layout Guard from rejecting the user
+      if (authData.session?.access_token) {
+        login(authData.session.access_token, {
+          id: authData.user.id,
+          email: authData.user.email || '',
+          name: formData.contact_name || 'Company User',
+          role: 'company'
+        });
+        await new Promise(resolve => setTimeout(resolve, 100)); // Ensure state propagates
+      }
+
       router.push("/company/dashboard");
+
 
     } catch (err: any) {
       toast("error", "Registration Failed", err.message || "An unexpected error occurred.");

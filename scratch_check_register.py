@@ -1,7 +1,6 @@
-﻿# -*- coding: utf-8 -*-
-with open(r"app\register\page.tsx", "r", encoding="utf-8") as f:
+﻿with open(r"app\company\register\page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
-
-lines = content.split("\n")
-for i, line in enumerate(lines[:30]):
-    print(f"L{i}: {line.rstrip()}")
+    print("=== IMPORTS ===")
+    print(content[:500])
+    print("=== SUBMIT ===")
+    print(content[content.find("const handleSubmit ="):content.find("return (")])

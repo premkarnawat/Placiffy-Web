@@ -20,12 +20,21 @@ const NAV = [
   { id: "analytics", label: "Analytics", icon: BarChart2, href: "/company/analytics" },
 ];
 
+
 const BOTTOM_NAV = [
   { id: "billing", label: "Billing", icon: LayoutDashboard, href: "/company/billing" },
   { id: "support", label: "Support", icon: HelpCircle, href: "/company/support" },
   { id: "settings", label: "Settings", icon: Settings, href: "/company/settings" },
   { id: "ai", label: "AI Assistant", icon: Sparkles, href: "/company/ai-assistant" },
 ];
+
+const SOURCES = [
+  { name: "Organic Search", pct: 45, color: "bg-[#0052CC]" },
+  { name: "Referrals", pct: 25, color: "bg-emerald-500" },
+  { name: "Direct Link", pct: 20, color: "bg-amber-500" },
+  { name: "Social Media", pct: 10, color: "bg-purple-500" },
+];
+
 
 
 

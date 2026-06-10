@@ -1,7 +1,7 @@
-﻿# -*- coding: utf-8 -*-
-with open(r"backend\app\auth.py", "r", encoding="utf-8") as f:
-    content = f.read()
+﻿with open(r"app\login\page.tsx", "r", encoding="utf-8") as f:
+    print("=== LOGIN PAGE ===")
+    print(f.read()[:2000])
 
-lines = content.split("\n")
-for i, line in enumerate(lines[:15]):
-    print(f"L{i}: {line.strip()}")
+with open(r"app\company\register\page.tsx", "r", encoding="utf-8") as f:
+    print("\n=== COMPANY REGISTER PAGE ===")
+    print(f.read()[:2000])
