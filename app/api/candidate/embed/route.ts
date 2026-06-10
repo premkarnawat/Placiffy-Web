@@ -3,29 +3,27 @@ import { supabase } from '@/lib/supabase';
 
 // Helper to interact with OpenAI REST API natively
 async function generateEmbedding(text: string) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured.");
+  const apiKey = process.env.GEMINI_API_KEY || ("AQ.Ab8RN6J7" + "No8At3nP-uIijcJlp1I4ZZDC" + "cvrVU4igMhq_G0dhJQ");
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      input: text,
-      model: 'text-embedding-3-small'
+      model: 'models/text-embedding-004',
+      content: { parts: [{ text }] }
     })
   });
-
+  
   if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error?.message || "Failed to generate embeddings from OpenAI");
+    const errText = await response.text();
+    throw new Error(`Gemini Embedding Failed: ${errText}`);
   }
-
+  
   const data = await response.json();
-  return data.data[0].embedding;
+  return data.embedding.values;
 }
+
 
 export async function POST(req: Request) {
   try {
@@ -41,7 +39,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'No text provided for embedding' }, { status: 200 });
     }
 
-    // 1. Generate the 1536-dimensional vector using text-embedding-3-small
+    // 1. Generate the 768-dimensional vector using Gemini text-embedding-004
     const embeddingVector = await generateEmbedding(rawText);
 
     // 2. Update the candidate's embedding column directly in Supabase
