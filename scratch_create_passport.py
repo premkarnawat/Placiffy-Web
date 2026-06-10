@@ -1,4 +1,8 @@
-'use client';
+﻿import os
+
+os.makedirs(r"app\candidate\passport", exist_ok=True)
+
+page_code = """'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import PassportShowcase from '@/components/passport/passport-showcase';
@@ -58,3 +62,9 @@ export default function PassportPage() {
     </div>
   );
 }
+"""
+
+with open(r"app\candidate\passport\page.tsx", "w", encoding="utf-8") as f:
+    f.write(page_code)
+
+print("Created /candidate/passport/page.tsx!")
