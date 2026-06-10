@@ -31,7 +31,7 @@ export default function CandidatePipeline() {
         return;
       }
 
-      const { data: jobsData } = await supabase.from('jobs').select('id, title').eq('company_id', cu.company_id);
+      const { data: jobsData } = await supabase.from('jobs').select('id, job_title').eq('company_id', cu.company_id);
       setJobs(jobsData || []);
       
       if (jobsData && jobsData.length > 0) {
@@ -121,7 +121,7 @@ export default function CandidatePipeline() {
             }} 
             className="bg-white border-gray-200 rounded-xl px-4 py-3 text-sm font-bold shadow-sm focus:ring-blue-500"
           >
-            {jobs.map((j: any) => <option key={j.id} value={j.id}>{j.title}</option>)}
+            {jobs.map((j: any) => <option key={j.id} value={j.id}>{j.job_title}</option>)}
           </select>
         )}
       </div>
