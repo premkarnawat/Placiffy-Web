@@ -31,7 +31,7 @@ export default function CandidatePipeline() {
         return;
       }
 
-      const { data: jobsData } = await supabase.from('jobs').select('job_id, job_title').eq('company_id', cu.company_id);
+      const { data: jobsData } = await supabase.from('jobs').select('job_id, job_title').eq('company_id', cu.id);
       setJobs(jobsData || []);
       
       if (jobsData && jobsData.length > 0) {
