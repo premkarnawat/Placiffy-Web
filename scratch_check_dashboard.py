@@ -1,7 +1,6 @@
-﻿# -*- coding: utf-8 -*-
-with open(r"app\company\dashboard\page.tsx", "r", encoding="utf-8") as f:
-    content = f.read()
+﻿import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
-lines = content.split("\n")
-for i, line in enumerate(lines[140:170]):
-    print(f"L{i+141}: {line.rstrip()}")
+with open(r"app\candidate\dashboard\page.tsx", "r", encoding="utf-8") as f:
+    lines = f.readlines()
+    print("".join(lines[:100]))

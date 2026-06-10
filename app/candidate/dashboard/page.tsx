@@ -29,36 +29,29 @@ export default function CandidateDashboard() {
 
   const fetchData = async () => {
     try {
-      const { data: cand } = await supabase.from('candidates').select('*').eq('user_id', user?.id).single();
-      const { count: appCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id);
-      const { count: msgCount } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', user?.id).eq('read', false);
-      const { count: interviewCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('stage', ['Interview Scheduled', 'Interview Completed']);
-      const { count: offerCount } = await supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('stage', ['Offer Released', 'Offer Accepted', 'Joined']);
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://placify-backend-dzj7.onrender.com';
-      try {
-        const res = await fetch(`${API_URL}/api/candidates/insights`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (res.ok) {
-          const aiData = await res.json();
-          setInsights(aiData);
-        }
-      } catch (e) {}
+      // Execute all Supabase queries simultaneously using Promise.all for < 1s load time
+      const [candRes, appCountRes, msgCountRes, interviewCountRes, offerCountRes] = await Promise.all([
+        supabase.from('candidates').select('*, candidate_profiles(*)').eq('user_id', user?.id).single(),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id),
+        supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', user?.id).eq('read', false),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('status', ['shortlisted', 'interviewing']),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('candidate_id', user?.id).in('status', ['offered', 'hired'])
+      ]);
 
       setData({ 
-        cand, 
-        appCount: appCount || 0,
-        msgCount: msgCount || 0,
-        interviewCount: interviewCount || 0,
-        offerCount: offerCount || 0
+        cand: candRes.data, 
+        appCount: appCountRes.count || 0,
+        msgCount: msgCountRes.count || 0,
+        interviewCount: interviewCountRes.count || 0,
+        offerCount: offerCountRes.count || 0
       });
+      
+      // We removed the slow Render Python API call to ensure instant loads.
+      setInsights([]);
     } catch (e) {
-      console.error(e);
+      console.error("Dashboard DB fetch error:", e);
     }
-  };
-
-  if (!data) return <div className="p-8 text-center text-gray-500">Loading Dashboard Engine...</div>;
+  };  if (!data) return <div className="p-8 text-center text-gray-500">Loading Dashboard Engine...</div>;
 
   const pct = data.cand?.profile_completion_pct || 0;
   
