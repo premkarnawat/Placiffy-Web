@@ -101,11 +101,25 @@ export default function ProfileEditor() {
       const { data: { publicUrl } } = supabase.storage.from('candidate_resumes').getPublicUrl(fileName);
       await supabase.from('candidates').update({ resume_url: publicUrl }).eq('user_id', user?.id);
 
-      // 2. Fast Client-Side PDF Text Extraction using PDF.js
-      const arrayBuffer = await file.arrayBuffer();
-      // Dynamically load pdf.js from CDN
-      const pdfjsLib = await import(/* webpackIgnore: true */ 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';
+
+      // 2. Fast Client-Side PDF Text Extraction using PDF.js via Script Tag
+      const loadPdfJs = async (): Promise<any> => {
+        if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+          script.onload = () => {
+            const lib = (window as any).pdfjsLib;
+            lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            resolve(lib);
+          };
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      };
+
+      const pdfjsLib = await loadPdfJs();
+
       
       const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
       let fullText = '';
