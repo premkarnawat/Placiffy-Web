@@ -6,12 +6,13 @@ async function generateEmbedding(text: string) {
   const apiKey = process.env.GEMINI_API_KEY || ("AQ.Ab8RN6J7" + "No8At3nP-uIijcJlp1I4ZZDC" + "cvrVU4igMhq_G0dhJQ");
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'models/text-embedding-004',
-      content: { parts: [{ text }] }
+      model: 'models/gemini-embedding-2',
+      content: { parts: [{ text }] },
+      outputDimensionality: 768
     })
   });
   
@@ -23,6 +24,7 @@ async function generateEmbedding(text: string) {
   const data = await response.json();
   return data.embedding.values;
 }
+
 
 
 export async function POST(req: Request) {
