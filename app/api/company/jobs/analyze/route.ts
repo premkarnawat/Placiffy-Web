@@ -42,13 +42,13 @@ ${text.substring(0, 15000)}`;
       })
     });
 
-    if (!response.ok) throw new Error("AI Extraction Failed");
+    if (!response.ok) { const errBody = await response.text(); throw new Error(`AI Extraction Failed: ${errBody}`); }
 
     const data = await response.json();
     let jsonResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!jsonResult) throw new Error("Empty Gemini response");
 
-    return NextResponse.json({ success: true, data: JSON.parse(jsonResult) });
+    return NextResponse.json({ success: true, data: JSON.parse(jsonResult.replace(/```json/g, "").replace(/```/g, "").trim()) });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

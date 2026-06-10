@@ -119,7 +119,7 @@ export default function CreateJobWorkspace() {
         body: JSON.stringify({ text: fullText })
       });
       
-      if (!res.ok) throw new Error("Failed to extract data");
+      if (!res.ok) { const errText = await res.text(); throw new Error(errText); }
       const json = await res.json();
       const data = json.data;
       
