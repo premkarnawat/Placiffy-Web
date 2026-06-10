@@ -25,7 +25,7 @@ export default function CandidatePipeline() {
 
   const fetchInitialData = async () => {
     try {
-      const { data: cu } = await supabase.from('company_users').select('company_id').eq('user_id', user?.id).single();
+      const { data: cu } = await supabase.from('companies').select('id').eq('user_id', user?.id).single();
       if (!cu) {
         setLoading(false);
         return;
@@ -59,6 +59,7 @@ export default function CandidatePipeline() {
       if (!apps) return setApplications([]);
 
       const candIds = apps.map((a: any) => a.candidate_id);
+      if (candIds.length === 0) { setApplications([]); return; }
       const { data: cands } = await supabase.from('candidates').select('*').in('id', candIds);
       
       const enriched = apps.map((a: any) => ({
