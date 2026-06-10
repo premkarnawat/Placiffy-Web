@@ -9,12 +9,7 @@ import {
   Plus, X, Zap
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
-import * as pdfjsLib from 'pdfjs-dist';
 
-// Initialize PDF.js worker seamlessly
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-}
 
 export default function CreateJobWorkspace() {
   const router = useRouter();
@@ -23,6 +18,22 @@ export default function CreateJobWorkspace() {
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
+
+  const loadPdfJs = async (): Promise<any> => {
+    if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload = () => {
+        const lib = (window as any).pdfjsLib;
+        lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve(lib);
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
 
   const [formData, setFormData] = useState({
     job_title: '', department: 'Engineering', employment_type: 'Full-time', work_mode: 'Remote',
@@ -81,6 +92,7 @@ export default function CreateJobWorkspace() {
       let fullText = '';
       if (file.name.endsWith('.pdf')) {
         const fileUrl = URL.createObjectURL(file);
+        const pdfjsLib = await loadPdfJs();
         const pdf = await pdfjsLib.getDocument(fileUrl).promise;
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
