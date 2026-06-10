@@ -28,6 +28,7 @@ export default function ProfileEditor() {
   const [activeSection, setActiveSection] = useState('personal');
   const [isSaving, setIsSaving] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
+  const [completionPct, setCompletionPct] = useState(0);
   const [isFetching, setIsFetching] = useState(true);
   const [candidateId, setCandidateId] = useState<string | null>(null);
 

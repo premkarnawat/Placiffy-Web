@@ -1,64 +1,11 @@
-'use client';
-import React, { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Upload, Camera, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/toast';
+﻿# -*- coding: utf-8 -*-
+with open(r"components\candidate\profile\PersonalForm.tsx", "r", encoding="utf-8") as f:
+    content = f.read()
 
-export default function PersonalForm({ data, onChange, userId }: { data: any, onChange: (d: any) => void, userId?: string }) {
-  const { toast } = useToast();
-  const [uploading, setUploading] = useState(false);
+import re
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !userId) return;
-    const file = e.target.files[0];
-    setUploading(true);
-    
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}/avatar_${Math.random()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage.from('profile_photos').upload(filePath, file);
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage.from('profile_photos').getPublicUrl(filePath);
-      const bustedUrl = `${publicUrl}?t=${Date.now()}`;
-      
-      onChange({...data, profile_photo_url: bustedUrl});
-      
-      await supabase.from('candidates').update({ profile_photo_url: bustedUrl }).eq('user_id', userId);
-      
-      toast('success', 'Photo Uploaded', 'Your profile photo has been updated.');
-    } catch (err: any) {
-      toast('error', 'Upload Failed', err.message);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-6">
-        <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 shrink-0 group">
-          {data.profile_photo_url ? (
-            <img src={data.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <Camera size={32} />
-            </div>
-          )}
-          <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-            {uploading ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
-            <span className="text-[10px] font-bold mt-1">UPLOAD</span>
-            <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-          </label>
-        </div>
-        <div>
-          <h3 className="text-lg font-bold">Profile Photo</h3>
-          <p className="text-sm text-gray-500">Upload a professional headshot. This photo will be used on your Candidate Passport.</p>
-        </div>
-      </div>
-
-      <div className="space-y-6">
+# Rewrite the Personal Information section to use `data` and include all Naukri fields
+naukri_fields = """      <div className="space-y-6">
         <h3 className="text-lg font-bold border-b pb-2">Personal Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label className="text-sm font-medium">Full Name</label><input type="text" value={data.fullName || ''} onChange={e => onChange({...data, fullName: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
@@ -93,7 +40,12 @@ export default function PersonalForm({ data, onChange, userId }: { data: any, on
           <div className="md:col-span-2"><label className="text-sm font-medium">Professional Summary</label><textarea rows={4} value={data.summary || ''} onChange={e => onChange({...data, summary: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors" /></div>
         </div>
       </div>
+"""
 
-    </div>
-  );
-}
+# Replace the original block
+content = re.sub(r'      <div className="space-y-4">\n        <h3 className="text-lg font-bold">Personal Information</h3>.*?</div>\n      </div>', naukri_fields, content, flags=re.DOTALL)
+
+with open(r"components\candidate\profile\PersonalForm.tsx", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Successfully injected all Naukri fields into PersonalForm using correct React Prop mapping!")
