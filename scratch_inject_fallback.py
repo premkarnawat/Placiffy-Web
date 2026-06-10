@@ -1,4 +1,7 @@
-import { NextResponse } from 'next/server';
+﻿# -*- coding: utf-8 -*-
+import os
+
+api_code = """import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
@@ -27,11 +30,7 @@ Return STRICT JSON exactly matching this schema. Do not hallucinate.
     // PRIMARY PIPELINE: Gemini 1.5 Flash
     try {
       const apiKey = process.env.GEMINI_API_KEY || ("AQ.Ab8RN6J7" + "No8At3nP-uIijcJlp1I4ZZDC" + "cvrVU4igMhq_G0dhJQ");
-      const promptText = `${systemPrompt}
-
-Analyze this JD:
-
-${text.substring(0, 15000)}`;
+      const promptText = `${systemPrompt}\n\nAnalyze this JD:\n\n${text.substring(0, 15000)}`;
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -65,9 +64,7 @@ ${text.substring(0, 15000)}`;
             model: 'llama-3.3-70b-versatile',
             messages: [
               { role: 'system', content: systemPrompt },
-              { role: 'user', content: `Analyze this JD:
-
-${text.substring(0, 15000)}` }
+              { role: 'user', content: `Analyze this JD:\n\n${text.substring(0, 15000)}` }
             ],
             temperature: 0.1,
             response_format: { type: "json_object" }
@@ -78,9 +75,7 @@ ${text.substring(0, 15000)}` }
         const data = await response.json();
         jsonResult = data.choices[0].message.content;
       } catch (fallbackErr: any) {
-        throw new Error(`Both AI Engines Failed.
-Gemini: ${geminiError}
-Groq: ${fallbackErr.message}`);
+        throw new Error(`Both AI Engines Failed.\nGemini: ${geminiError}\nGroq: ${fallbackErr.message}`);
       }
     }
 
@@ -92,3 +87,9 @@ Groq: ${fallbackErr.message}`);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+"""
+
+with open(r"app\api\company\jobs\analyze\route.ts", "w", encoding="utf-8") as f:
+    f.write(api_code)
+
+print("Injected High-Availability Groq Fallback into JD Analyzer!")
