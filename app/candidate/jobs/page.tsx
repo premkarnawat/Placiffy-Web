@@ -45,6 +45,8 @@ export default function CandidateJobs() {
               const matchInfo = data.matches.find((m:any) => m.job_id === dbJ.job_id);
               return {
                 ...dbJ,
+                title: dbJ.job_title || 'Untitled Job',
+                id: dbJ.job_id,
                 similarity: matchInfo ? Math.round(matchInfo.similarity * 100) : Math.floor(Math.random() * 30 + 50),
                 matched_skills: matchInfo?.matched_skills || [],
                 missing_skills: matchInfo?.missing_skills || ['Experience required']
