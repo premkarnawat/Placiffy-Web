@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Zap, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
-type PipelineStage = 'Applied' | 'Shortlisted' | 'Interview' | 'Offered' | 'Joined' | 'Rejected';
-const STAGES: PipelineStage[] = ['Applied', 'Shortlisted', 'Interview', 'Offered', 'Joined', 'Rejected'];
+type PipelineStage = 'ATS Matched' | 'Applied' | 'Shortlisted' | 'Interview' | 'Offered' | 'Joined' | 'Rejected';
+const STAGES: PipelineStage[] = ['ATS Matched', 'Applied', 'Shortlisted', 'Interview', 'Offered', 'Joined', 'Rejected'];
 
 export default function CandidatePipeline() {
   const { user } = useAuth();
@@ -56,18 +56,45 @@ export default function CandidatePipeline() {
   const fetchPipeline = async (jobId: string) => {
     try {
       const { data: apps } = await supabase.from('applications').select('*').eq('job_id', jobId);
-      if (!apps) return setApplications([]);
+      let candIds = apps ? apps.map((a: any) => a.candidate_id) : [];
 
-      const candIds = apps.map((a: any) => a.candidate_id);
+      let atsVirtualApps: any[] = [];
+      const res = await fetch(`/api/ats/match`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: jobId, limit: 15 })
+      });
+      if (res.ok) {
+          const atsData = await res.json();
+          if (atsData.status === 'success' && atsData.data) {
+              const matchedCands = atsData.data.filter((m:any) => m.similarity >= 0.6);
+              matchedCands.forEach((m:any) => {
+                  if (!candIds.includes(m.candidate_id)) candIds.push(m.candidate_id);
+                  atsVirtualApps.push({
+                      id: `virtual_${m.candidate_id}`,
+                      job_id: jobId,
+                      candidate_id: m.candidate_id,
+                      status: 'ATS Matched',
+                      ai_match_score: m.similarity * 100,
+                  });
+              });
+          }
+      }
+
       if (candIds.length === 0) { setApplications([]); return; }
       const { data: cands } = await supabase.from('candidates').select('*').in('id', candIds);
       
-      const enriched = apps.map((a: any) => ({
+      const realEnriched = (apps || []).map((a: any) => ({
         ...a,
         candidate: cands?.find((c: any) => c.id === a.candidate_id) || { headline: 'Unknown Candidate', skills: [] }
       }));
       
-      setApplications(enriched);
+      const virtualEnriched = atsVirtualApps.map((a: any) => ({
+          ...a,
+          candidate: cands?.find((c: any) => c.id === a.candidate_id) || { headline: 'Unknown Candidate', skills: [] }
+      }));
+      
+      setApplications([...virtualEnriched, ...realEnriched]);
     } catch (e) {
       console.error(e);
     } finally {
@@ -77,6 +104,20 @@ export default function CandidatePipeline() {
 
   const updateStage = async (appId: string, newStage: PipelineStage) => {
     try {
+      if (appId.startsWith('virtual_')) {
+          const candId = appId.replace('virtual_', '');
+          setApplications((prev: any) => prev.filter((a: any) => a.id !== appId));
+          const { error } = await supabase.from('applications').insert({
+              candidate_id: candId,
+              job_id: activeJob,
+              status: newStage
+          });
+          if (error) throw error;
+          toast("success", "Candidate Added", `ATS Match moved to ${newStage}`);
+          if (activeJob) fetchPipeline(activeJob);
+          return;
+      }
+
       setApplications((prev: any) => prev.map((a: any) => a.id === appId ? { ...a, status: newStage } : a));
       await supabase.from('applications').update({ status: newStage }).eq('id', appId);
       toast("success", "Pipeline Updated", `Candidate moved to ${newStage}`);

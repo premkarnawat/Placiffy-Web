@@ -42,7 +42,7 @@ export async function POST(req: Request) {
                 matched_skills: matched,
                 missing_skills: missing
             };
-        }).filter(m => m.similarity > 0);
+        }).filter(m => m.similarity >= 0.6);
 
         matches.sort((a, b) => b.similarity - a.similarity);
 

@@ -59,7 +59,7 @@ export default function CandidatePool() {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      let query = supabase.from('candidates').select('id, user_id, headline, location, skills, experience_years, trust_score, is_verified, passports(id)');
+      let query = supabase.from('candidates').select('id, user_id, headline, location, skills, experience_years, trust_score, is_verified');
       
       if (filters.search) query = query.ilike('headline', `%${filters.search}%`);
       if (filters.location) query = query.ilike('location', `%${filters.location}%`);
