@@ -28,8 +28,8 @@ export default function CandidateJobs() {
       const { data: cand } = await supabase.from('candidates').select('profile_completion_pct').eq('user_id', user?.id).single();
       setProfileScore(cand?.profile_completion_pct || 0);
 
-      // Call the REAL FastAPI ATS Match endpoint
-      const res = await fetch(`${API_URL}/api/ats/match-jobs`, {
+      // Call the Internal Next.js ATS Match endpoint
+      const res = await fetch(`/api/ats/match-jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidate_id: user?.id })
@@ -42,7 +42,7 @@ export default function CandidateJobs() {
           const { data: dbJobs } = await supabase.from('jobs').select('*');
           if (dbJobs) {
             const enrichedJobs = dbJobs.map(dbJ => {
-              const matchInfo = data.matches.find((m:any) => m.job_id === dbJ.id);
+              const matchInfo = data.matches.find((m:any) => m.job_id === dbJ.job_id);
               return {
                 ...dbJ,
                 similarity: matchInfo ? Math.round(matchInfo.similarity * 100) : Math.floor(Math.random() * 30 + 50),

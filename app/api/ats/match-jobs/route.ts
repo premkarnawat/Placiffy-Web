@@ -3,42 +3,33 @@ import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
-    const { job_id } = await req.json();
-    if (!job_id) return NextResponse.json({ error: 'job_id is required' }, { status: 400 });
+    const { candidate_id } = await req.json();
+    if (!candidate_id) return NextResponse.json({ error: 'candidate_id is required' }, { status: 400 });
 
-    // Fetch Job Requirements (Using 'job_id' primary key)
-    const { data: job, error: jobError } = await supabase.from('jobs').select('*').eq('job_id', job_id).single();
-    
-    if (jobError || !job) {
-      console.error("Job fetch error:", jobError);
-      throw new Error("Job not found");
+    const { data: cand, error: candError } = await supabase.from('candidates').select('*').eq('user_id', candidate_id).single();
+    if (candError || !cand) {
+      return NextResponse.json({ error: 'Candidate not found' }, { status: 404 });
     }
 
-    // Fetch all Candidates
-    const { data: candidates, error: candsError } = await supabase.from('candidates').select('*');
-    
-    if (candsError) {
-      console.error("Candidates fetch error:", candsError);
+    const { data: jobs, error: jobsError } = await supabase.from('jobs').select('*, companies(name, logo_url)').eq('status', 'active');
+    if (jobsError) {
+      return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
     }
 
-    const results = (candidates || []).map(cand => {
+    let parsedSkills: string[] = [];
+    if (cand.skills) {
+        if (Array.isArray(cand.skills)) parsedSkills = cand.skills;
+        else if (typeof cand.skills === 'string') {
+            try { parsedSkills = JSON.parse(cand.skills.replace(/'/g, '"')); }
+            catch(e) { parsedSkills = cand.skills.split(',').map((s: string) => s.trim()).filter((s: string) => s); }
+        }
+    }
+    const candSkillsLower = parsedSkills.map((s: string) => s.toLowerCase());
+
+    const results = (jobs || []).map(job => {
       let skillMatch = 0;
       let matchedSkills: string[] = [];
       let missingSkills: string[] = [];
-      
-      // Safe Skill Parsing
-      let parsedSkills: string[] = [];
-      if (cand.skills) {
-          if (Array.isArray(cand.skills)) {
-              parsedSkills = cand.skills;
-          } else if (typeof cand.skills === 'string') {
-              try {
-                  parsedSkills = JSON.parse(cand.skills.replace(/'/g, '"'));
-              } catch(e) {
-                  parsedSkills = cand.skills.split(',').map((s: string) => s.trim()).filter((s: string) => s);
-              }
-          }
-      }
       
       let mandatory: string[] = [];
       if (job.required_skills) {
@@ -52,7 +43,7 @@ export async function POST(req: Request) {
       if (mandatory.length > 0) {
         let matchCount = 0;
         mandatory.forEach((skill: string) => {
-          const hasSkill = parsedSkills.some((s: string) => s.toLowerCase().includes(skill.toLowerCase()));
+          const hasSkill = candSkillsLower.some((s: string) => s.includes(skill.toLowerCase()));
           if (hasSkill) { 
             matchCount++; 
             matchedSkills.push(skill); 
@@ -62,19 +53,17 @@ export async function POST(req: Request) {
         });
         skillMatch = (matchCount / mandatory.length) * 40;
       } else {
-        skillMatch = 40;
+        skillMatch = 40; 
       }
 
-      // Experience Match
       let expMatch = 0;
       const candExp = cand.experience_years || 0;
       if (candExp >= (job.experience_min || 0) && (!job.experience_max || candExp <= job.experience_max)) {
         expMatch = 20;
       } else if (candExp >= (job.experience_min || 0) - 1) {
-        expMatch = 10;
+        expMatch = 10; 
       }
 
-      // Location Match
       let locMatch = 0;
       if (job.work_mode?.toLowerCase() === 'remote') {
         locMatch = 10;
@@ -84,19 +73,23 @@ export async function POST(req: Request) {
         locMatch = 5; 
       }
 
-      const totalAtsScore = Math.round(skillMatch + expMatch + locMatch + 20); // Base 20 for education/notice padding
+      const totalAtsScore = Math.round(skillMatch + expMatch + 10 + locMatch + 10 + 5);
 
       return {
-        candidate_id: cand.id,
-        name: cand.headline || 'Candidate', 
-        similarity: (totalAtsScore / 100), 
-        score: totalAtsScore,
+        job_id: job.job_id,
+        id: job.job_id,
+        title: job.job_title,
+        company_id: job.companies?.name || job.company_id,
+        location: job.location,
+        employment_type: job.employment_type,
+        salary_range: (job.salary_min && job.salary_max) ? `$${job.salary_min} - $${job.salary_max}` : 'Competitive',
+        similarity: (totalAtsScore / 100),
         matched_skills: matchedSkills,
         missing_skills: missingSkills
       };
-    }).sort((a, b) => b.score - a.score);
+    }).sort((a, b) => b.similarity - a.similarity).slice(0, 20);
 
-    return NextResponse.json({ success: true, data: results });
+    return NextResponse.json({ success: true, matches: results });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

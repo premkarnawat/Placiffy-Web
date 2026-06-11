@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +25,16 @@ export default function CandidatePool() {
     minExperience: "",
   });
 
+  const parseSkills = (skillsData: any): string[] => {
+      if (!skillsData) return [];
+      if (Array.isArray(skillsData)) return skillsData;
+      if (typeof skillsData === 'string') {
+          try { return JSON.parse(skillsData.replace(/'/g, '"')); }
+          catch(e) { return skillsData.split(',').map(s => s.trim()).filter(s => s); }
+      }
+      return [];
+  };
+
   useEffect(() => {
     if (user) {
       fetchJobs();
@@ -37,7 +47,7 @@ export default function CandidatePool() {
       const { data: cu } = await supabase.from('companies').select('id').eq('user_id', user?.id).single();
       if (!cu) return;
       
-      const { data: jobsData } = await supabase.from('jobs').select('id, title').eq('company_id', cu.id).eq('status', 'active');
+      const { data: jobsData } = await supabase.from('jobs').select('job_id, job_title').eq('company_id', cu.id).eq('status', 'active');
       setJobs(jobsData || []);
     } catch (e) {
       console.error(e);
@@ -59,7 +69,7 @@ export default function CandidatePool() {
       if (filters.skills) {
           const requiredSkills = filters.skills.toLowerCase().split(',').map((s: string) => s.trim());
           filteredData = filteredData.filter((c: any) => {
-              const candSkills = (c.skills || []).map((s: string) => s.toLowerCase());
+              const candSkills = parseSkills(c.skills).map((s: string) => s.toLowerCase());
               return requiredSkills.every((rs: string) => candSkills.some((cs: string) => cs.includes(rs)));
           });
       }
@@ -89,7 +99,7 @@ export default function CandidatePool() {
       if (!session) throw new Error("Authentication required");
       const token = await getBackendToken({ id: session.user.id, email: session.user.email || '', role: 'company' });
           
-          const res = await fetch(`${API_URL}/api/ats/match`, {
+          const res = await fetch(`/api/ats/match`, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
               body: JSON.stringify({ job_id: jobId, threshold: 0.2, limit: 50 })
@@ -140,7 +150,7 @@ export default function CandidatePool() {
                 >
                     <option value="">Standard Search</option>
                     {jobs.map((j: any) => (
-                        <option key={j.id} value={j.id}>Auto-Match: {j.title}</option>
+                        <option key={j.job_id} value={j.job_id}>Auto-Match: {j.job_title}</option>
                     ))}
                 </select>
             </div>
@@ -206,10 +216,10 @@ export default function CandidatePool() {
                           </div>
                           
                           <div className="flex flex-wrap gap-1.5 mb-6">
-                              {(c.skills || []).slice(0, 4).map((skill: string, i: number) => (
+                              {parseSkills(c.skills).slice(0, 4).map((skill: string, i: number) => (
                                   <span key={i} className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded-md uppercase tracking-wider">{skill}</span>
                               ))}
-                              {(c.skills || []).length > 4 && <span className="text-[10px] font-bold bg-gray-50 text-gray-400 px-2 py-1 rounded-md">+{c.skills.length - 4}</span>}
+                              {parseSkills(c.skills).length > 4 && <span className="text-[10px] font-bold bg-gray-50 text-gray-400 px-2 py-1 rounded-md">+{parseSkills(c.skills).length - 4}</span>}
                           </div>
                           
                           <div className="flex items-center justify-between pt-4 border-t border-gray-50 mb-4">
