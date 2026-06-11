@@ -1,103 +1,50 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+const parseSkills = (skillsData: any): string[] => {
+    if (!skillsData) return [];
+    if (Array.isArray(skillsData)) return skillsData;
+    if (typeof skillsData === 'string') {
+        try { return JSON.parse(skillsData.replace(/'/g, '"')); }
+        catch(e) { return skillsData.split(',').map(s => s.trim()).filter(s => s); }
+    }
+    return [];
+};
+
 export async function POST(req: Request) {
-  try {
-    const { job_id } = await req.json();
-    if (!job_id) return NextResponse.json({ error: 'job_id is required' }, { status: 400 });
+    try {
+        const body = await req.json();
+        const { job_id, limit = 50 } = body;
 
-    // Fetch Job Requirements (Using 'job_id' primary key)
-    const { data: job, error: jobError } = await supabase.from('jobs').select('*').eq('job_id', job_id).single();
-    
-    if (jobError || !job) {
-      console.error("Job fetch error:", jobError);
-      throw new Error("Job not found");
+        if (!job_id) return NextResponse.json({ error: "Missing job_id" }, { status: 400 });
+
+        const { data: job } = await supabase.from('jobs').select('mandatory_skills').eq('job_id', job_id).single();
+        if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+
+        const jobSkills = parseSkills(job.mandatory_skills).map((s: string) => s.toLowerCase());
+
+        const { data: candidates } = await supabase.from('candidates').select('id, skills, is_verified');
+        if (!candidates) return NextResponse.json({ status: "success", data: [] });
+
+        const matches = candidates.map(c => {
+            const candSkills = parseSkills(c.skills).map((s: string) => s.toLowerCase());
+            
+            if (jobSkills.length === 0) return { candidate_id: c.id, similarity: 0.5 };
+
+            const matched = jobSkills.filter(s => candSkills.some(cs => cs.includes(s) || s.includes(cs)));
+            const score = matched.length / jobSkills.length;
+            
+            return {
+                candidate_id: c.id,
+                similarity: c.is_verified ? score * 1.1 : score 
+            };
+        }).filter(m => m.similarity > 0);
+
+        matches.sort((a, b) => b.similarity - a.similarity);
+
+        return NextResponse.json({ status: "success", data: matches.slice(0, limit) });
+
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
-
-    // Fetch all Candidates
-    const { data: candidates, error: candsError } = await supabase.from('candidates').select('*');
-    
-    if (candsError) {
-      console.error("Candidates fetch error:", candsError);
-    }
-
-    const results = (candidates || []).map(cand => {
-      let skillMatch = 0;
-      let matchedSkills: string[] = [];
-      let missingSkills: string[] = [];
-      
-      // Safe Skill Parsing
-      let parsedSkills: string[] = [];
-      if (cand.skills) {
-          if (Array.isArray(cand.skills)) {
-              parsedSkills = cand.skills;
-          } else if (typeof cand.skills === 'string') {
-              try {
-                  parsedSkills = JSON.parse(cand.skills.replace(/'/g, '"'));
-              } catch(e) {
-                  parsedSkills = cand.skills.split(',').map((s: string) => s.trim()).filter((s: string) => s);
-              }
-          }
-      }
-      
-      let mandatory: string[] = [];
-      if (job.required_skills) {
-          if (Array.isArray(job.required_skills)) mandatory = job.required_skills;
-          else if (typeof job.required_skills === 'string') mandatory = job.required_skills.split(',').map((s: string) => s.trim());
-      } else if (job.mandatory_skills) {
-          if (Array.isArray(job.mandatory_skills)) mandatory = job.mandatory_skills;
-          else if (typeof job.mandatory_skills === 'string') mandatory = job.mandatory_skills.split(',').map((s: string) => s.trim());
-      }
-
-      if (mandatory.length > 0) {
-        let matchCount = 0;
-        mandatory.forEach((skill: string) => {
-          const hasSkill = parsedSkills.some((s: string) => s.toLowerCase().includes(skill.toLowerCase()));
-          if (hasSkill) { 
-            matchCount++; 
-            matchedSkills.push(skill); 
-          } else {
-            missingSkills.push(skill);
-          }
-        });
-        skillMatch = (matchCount / mandatory.length) * 40;
-      } else {
-        skillMatch = 40;
-      }
-
-      // Experience Match
-      let expMatch = 0;
-      const candExp = cand.experience_years || 0;
-      if (candExp >= (job.experience_min || 0) && (!job.experience_max || candExp <= job.experience_max)) {
-        expMatch = 20;
-      } else if (candExp >= (job.experience_min || 0) - 1) {
-        expMatch = 10;
-      }
-
-      // Location Match
-      let locMatch = 0;
-      if (job.work_mode?.toLowerCase() === 'remote') {
-        locMatch = 10;
-      } else if (cand.location?.toLowerCase().includes((job.location || '').toLowerCase())) {
-        locMatch = 10;
-      } else {
-        locMatch = 5; 
-      }
-
-      const totalAtsScore = Math.round(skillMatch + expMatch + locMatch + 20); // Base 20 for education/notice padding
-
-      return {
-        candidate_id: cand.id,
-        name: cand.headline || 'Candidate', 
-        similarity: (totalAtsScore / 100), 
-        score: totalAtsScore,
-        matched_skills: matchedSkills,
-        missing_skills: missingSkills
-      };
-    }).sort((a, b) => b.score - a.score);
-
-    return NextResponse.json({ success: true, data: results });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
 }

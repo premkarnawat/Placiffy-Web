@@ -35,6 +35,8 @@ export default function CandidatePool() {
       return [];
   };
 
+
+
   useEffect(() => {
     if (user) {
       fetchJobs();
