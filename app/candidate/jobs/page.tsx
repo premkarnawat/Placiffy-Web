@@ -41,7 +41,9 @@ export default function CandidateJobs() {
           // Merge vector match data with real jobs from DB
           const { data: dbJobs } = await supabase.from('jobs').select('*');
           if (dbJobs) {
-            const enrichedJobs = dbJobs.map(dbJ => {
+            const enrichedJobs = dbJobs
+              .filter((dbJ:any) => data.matches.some((m:any) => m.job_id === dbJ.job_id))
+              .map(dbJ => {
               const matchInfo = data.matches.find((m:any) => m.job_id === dbJ.job_id);
               return {
                 ...dbJ,

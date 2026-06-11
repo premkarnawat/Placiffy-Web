@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
         const jobSkills = parseSkills(job.mandatory_skills).map((s: string) => s.toLowerCase());
 
-        const { data: candidates } = await supabase.from('candidates').select('id, skills, is_verified');
+        const { data: candidates } = await supabase.from('candidates').select('id, skills, profile_completion_pct');
         if (!candidates) return NextResponse.json({ status: "success", data: [] });
 
         const matches = candidates.map(c => {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             
             return {
                 candidate_id: c.id,
-                similarity: c.is_verified ? score * 1.1 : score 
+                similarity: c.profile_completion_pct > 80 ? score * 1.1 : score 
             };
         }).filter(m => m.similarity > 0);
 
