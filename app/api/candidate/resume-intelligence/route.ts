@@ -111,6 +111,55 @@ ${resume_text.substring(0, 12000)}` }
       return NextResponse.json({ error: 'Database Save Failed' }, { status: 500 });
     }
 
+    // ---------------------------------------------------------
+    // STRICT PATCH: TRUST SCORE ARCHITECTURE INJECTION
+    // ---------------------------------------------------------
+    try {
+        const { data: cand } = await supabase.from('candidates').select('profile_completion_pct, is_verified, last_active_at').eq('id', candidate_id).single();
+        
+        if (cand) {
+            // 1. Activity Score Logic
+            let activity_score = 0;
+            const lastActiveDate = new Date(cand.last_active_at || Date.now());
+            const daysSinceActive = Math.floor((Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (daysSinceActive <= 7) activity_score = 100;
+            else if (daysSinceActive <= 15) activity_score = 80;
+            else if (daysSinceActive <= 30) activity_score = 60;
+            else if (daysSinceActive <= 60) activity_score = 40;
+            else if (daysSinceActive <= 90) activity_score = 20;
+            else activity_score = 0;
+
+            // 2. Trust Score Formula
+            const profilePoints = (cand.profile_completion_pct || 50) * 0.25; // 25% weight
+            const resumePoints = overall * 0.20; // 20% weight
+            const verificationPoints = cand.is_verified ? 20 : 0; // 20% weight
+            const skillPortPoints = ((result.skill_score + result.portfolio_score) / 2) * 0.15; // 15% weight
+            const expPoints = result.achievement_score * 0.10; // 10% weight mapped to exp consistency
+            const activityPoints = activity_score * 0.10; // 10% weight
+
+            const trust_score = Math.round(profilePoints + resumePoints + verificationPoints + skillPortPoints + expPoints + activityPoints);
+
+            const trustBreakdown = {
+                profile: Math.round(profilePoints),
+                resume: Math.round(resumePoints),
+                verification: Math.round(verificationPoints),
+                skills: Math.round(skillPortPoints),
+                experience: Math.round(expPoints),
+                activity: Math.round(activityPoints)
+            };
+
+            await supabase.from('candidates').update({
+                trust_score,
+                activity_score,
+                trust_score_breakdown: trustBreakdown,
+                trust_score_last_updated: new Date().toISOString()
+            }).eq('id', candidate_id);
+        }
+    } catch (trustErr) {
+        console.error("Trust Score Calc Failed", trustErr);
+    }
+
     return NextResponse.json({ success: true, overall_score: overall, grade });
   } catch (err: any) {
     console.error('Intelligence Engine Error:', err);

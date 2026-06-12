@@ -25,6 +25,31 @@ export default function CandidatePool() {
     minExperience: "",
   });
 
+  const handleCandidateAction = async (candidateId: string, action: 'Shortlisted' | 'Interview' | 'Saved') => {
+      if (!activeJob && action !== 'Saved') {
+          toast("error", "Select Job", `Please select a job from the Auto-Match dropdown to ${action.toLowerCase()} this candidate.`);
+          return;
+      }
+      
+      try {
+          if (action === 'Saved') {
+              toast("success", "Candidate Saved", "Added to your saved talent pool.");
+              return;
+          }
+          
+          const { error } = await supabase.from('applications').insert({
+              candidate_id: candidateId,
+              job_id: activeJob,
+              status: action
+          });
+          if (error && error.code !== '23505') throw error;
+          
+          toast("success", `Candidate ${action}`, `Moved candidate to ${action} stage for the selected job.`);
+      } catch (e: any) {
+          toast("error", "Action Failed", e.message);
+      }
+  };
+
   const parseSkills = (skillsData: any): string[] => {
       if (!skillsData) return [];
       if (Array.isArray(skillsData)) return skillsData;
@@ -59,7 +84,7 @@ export default function CandidatePool() {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      let query = supabase.from('candidates').select('id, user_id, headline, location, skills, experience_years');
+      let query = supabase.from('candidates').select('id, user_id, full_name, headline, location, skills, experience_years, trust_score, activity_score, last_active_at, resume_url');
       
       if (filters.search) query = query.ilike('headline', `%${filters.search}%`);
       if (filters.location) query = query.ilike('location', `%${filters.location}%`);
@@ -112,12 +137,16 @@ export default function CandidatePool() {
           
           if (json.data && json.data.length > 0) {
               const matchedIds = json.data.map((m: any) => m.candidate_id);
-              const { data: matchedCands } = await supabase.from('candidates').select('id, user_id, headline, location, skills, experience_years, trust_score, is_verified, passports(id)').in('id', matchedIds);
+              const { data: matchedCands } = await supabase.from('candidates').select('id, user_id, full_name, headline, location, skills, experience_years, trust_score, activity_score, last_active_at, resume_url, passports(id)').in('id', matchedIds);
               
               if (matchedCands) {
                   const scoredCands = matchedCands.map((c: any) => {
                       const matchInfo = json.data.find((m: any) => m.candidate_id === c.id);
-                      return { ...c, ats_score: Math.round(matchInfo.similarity * 100) };
+                      return { 
+                          ...c, 
+                          ats_score: Math.round(matchInfo.similarity * 100),
+                          vector_similarity: Math.round(matchInfo.similarity * 100)
+                      };
                   });
                   scoredCands.sort((a, b) => b.ats_score - a.ats_score);
                   setCandidates(scoredCands);
@@ -208,7 +237,7 @@ export default function CandidatePool() {
                                   <User size={24} />
                               </div>
                               <div>
-                                  <h3 className="font-bold text-gray-900 line-clamp-1">{c.headline || "Candidate Profile"}</h3>
+                                  <h3 className="font-bold text-gray-900 line-clamp-1">{c.full_name || c.headline || "Candidate Profile"}</h3>
                                   <div className="flex items-center gap-2 text-sm text-gray-500 mt-0.5">
                                       <MapPin size={14}/> {c.location || "Remote"}
                                       <span className="w-1 h-1 bg-gray-300 rounded-full"/>
@@ -224,23 +253,31 @@ export default function CandidatePool() {
                               {parseSkills(c.skills).length > 4 && <span className="text-[10px] font-bold bg-gray-50 text-gray-400 px-2 py-1 rounded-md">+{parseSkills(c.skills).length - 4}</span>}
                           </div>
                           
-                          <div className="flex items-center justify-between pt-4 border-t border-gray-50 mb-4">
-                              <div className="flex flex-col gap-1 text-xs font-bold">
-                                  <div className="flex items-center gap-1.5">
-                                      <ShieldCheck size={16} className={c.is_verified ? "text-blue-500" : "text-gray-400"} />
-                                      <span className={c.is_verified ? "text-blue-700" : "text-gray-500"}>Trust Score: {c.trust_score || 0}</span>
+                          <div className="flex flex-col gap-2 pt-4 border-t border-gray-50 mb-4">
+                              <div className="flex justify-between items-center text-xs font-bold">
+                                  <div className="flex items-center gap-1.5 text-blue-700">
+                                      <ShieldCheck size={16} className="text-blue-500" />
+                                      Trust Score: {c.trust_score || 0}/100
                                   </div>
-                                  <div className="text-gray-400 font-medium">Availability: {c.availability || 'Immediate'}</div>
-                                  <div className="text-gray-400 font-medium">Notice Period: {c.notice_period || 'None'}</div>
+                                  <div className="flex items-center gap-1.5 text-indigo-700">
+                                      <Zap size={16} className="text-indigo-500" />
+                                      Activity Score: {c.activity_score || 0}/100
+                                  </div>
                               </div>
+                              {c.vector_similarity && (
+                                  <div className="flex justify-between items-center text-xs font-bold text-emerald-700 mt-1">
+                                      <span>Vector Similarity</span>
+                                      <span>{c.vector_similarity}%</span>
+                                  </div>
+                              )}
                           </div>
                           <div className="grid grid-cols-2 gap-2 mt-auto">
-                              <button onClick={(e) => { e.stopPropagation(); window.location.href = `/company/candidates/${c.id}`}} className="px-3 py-2 bg-gray-50 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-100 transition-colors">View Profile</button>
-                              <button onClick={(e) => { e.stopPropagation(); window.location.href = `/company/candidates/${c.id}/passport`}} className="px-3 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors">View Passport</button>
-                              <button className="px-3 py-2 border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors">Save</button>
-                              <button className="px-3 py-2 bg-[#0052CC] text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors">Shortlist</button>
-                              <button onClick={(e) => { e.stopPropagation(); window.location.href = `/company/messages?candidate=${c.id}`}} className="px-3 py-2 border border-blue-200 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-50 transition-colors">Message</button>
-                              <button className="px-3 py-2 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 transition-colors">Interview</button>
+                              <button onClick={(e) => { e.stopPropagation(); window.location.href = `/company/candidates/${c.id}`}} className="px-3 py-2 bg-gray-50 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-100 transition-colors z-10 relative">View Profile</button>
+                              <button onClick={(e) => { e.stopPropagation(); window.location.href = `/company/candidates/${c.id}/passport`}} className="px-3 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors z-10 relative">View Passport</button>
+                              <button onClick={(e) => { e.stopPropagation(); handleCandidateAction(c.id, 'Saved')}} className="px-3 py-2 border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors z-10 relative">Save</button>
+                              <button onClick={(e) => { e.stopPropagation(); handleCandidateAction(c.id, 'Shortlisted')}} className="px-3 py-2 bg-[#0052CC] text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors z-10 relative">Shortlist</button>
+                              <button onClick={(e) => { e.stopPropagation(); window.location.href = `/company/messages?candidate=${c.user_id}`}} className="px-3 py-2 border border-blue-200 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-50 transition-colors z-10 relative">Message</button>
+                              <button onClick={(e) => { e.stopPropagation(); handleCandidateAction(c.id, 'Interview')}} className="px-3 py-2 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 transition-colors z-10 relative">Interview</button>
                           </div>
                       </div>
                   ))

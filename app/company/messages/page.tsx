@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
@@ -14,10 +14,30 @@ export default function CompanyMessages() {
   const [activeChat, setActiveChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState("");
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
-    if (user) fetchConversations();
+    if (user) {
+        fetchConversations();
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoOpenUserId = urlParams.get('candidate');
+        if (autoOpenUserId) {
+            // Auto open logic
+            autoLoadConversation(autoOpenUserId);
+        }
+    }
   }, [user]);
+
+  const autoLoadConversation = async (candidateUserId: string) => {
+      try {
+          const { data } = await supabase.from('candidates').select('id, user_id, full_name, headline').eq('user_id', candidateUserId).single();
+          if (data) {
+              loadMessages(data);
+          }
+      } catch(e) {
+          console.error(e);
+      }
+  };
 
   const fetchConversations = async () => {
     try {
@@ -30,7 +50,7 @@ export default function CompanyMessages() {
       const { data: shorts } = await supabase.from('candidate_shortlists').select('candidate_id, status').eq('company_id', cu.id);
       if (shorts) {
           const cIds = shorts.map((s: any) => s.candidate_id);
-          const { data: cands } = await supabase.from('candidates').select('id, user_id, headline').in('id', cIds);
+          const { data: cands } = await supabase.from('candidates').select('id, user_id, full_name, headline').in('id', cIds);
           setConversations(cands || []);
       }
     } catch (e) {
@@ -107,10 +127,10 @@ export default function CompanyMessages() {
                           <div key={c.id} onClick={() => loadMessages(c)} className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${activeChat?.id === c.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-white'}`}>
                               <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0">
-                                      {c.headline.charAt(0).toUpperCase()}
+                                      {(c.full_name || c.headline).charAt(0).toUpperCase()}
                                   </div>
                                   <div className="overflow-hidden">
-                                      <h3 className="font-bold text-gray-900 text-sm truncate">{c.headline}</h3>
+                                      <h3 className="font-bold text-gray-900 text-sm truncate">{c.full_name || c.headline}</h3>
                                       <p className="text-xs text-gray-500 truncate">Tap to view conversation</p>
                                   </div>
                               </div>
@@ -134,10 +154,10 @@ export default function CompanyMessages() {
                       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 shadow-sm">
                           <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center">
-                                  {activeChat.headline.charAt(0).toUpperCase()}
+                                  {(activeChat.full_name || activeChat.headline).charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                  <h2 className="font-bold text-gray-900">{activeChat.headline}</h2>
+                                  <h2 className="font-bold text-gray-900">{activeChat.full_name || activeChat.headline}</h2>
                                   <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> Online
                                   </div>
@@ -154,8 +174,14 @@ export default function CompanyMessages() {
                                   const isMe = m.sender_id === user?.id;
                                   return (
                                       <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                          <div className={`max-w-[70%] rounded-2xl px-5 py-3 text-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-900 shadow-sm rounded-tl-sm'}`}>
-                                              {m.content}
+                                          <div className={`max-w-[70%] rounded-2xl px-5 py-3 text-sm flex flex-col gap-2 ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-900 shadow-sm rounded-tl-sm'}`}>
+                                              {m.attachment_url && (
+                                                  <a href={m.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-black/10 rounded-lg hover:bg-black/20 transition-colors max-w-full overflow-hidden">
+                                                      <Paperclip size={16} className="shrink-0"/>
+                                                      <span className="truncate text-xs font-bold font-mono">View Attachment</span>
+                                                  </a>
+                                              )}
+                                              <span>{m.content}</span>
                                           </div>
                                       </div>
                                   )
@@ -165,9 +191,10 @@ export default function CompanyMessages() {
                       
                       {/* Input Area */}
                       <form onSubmit={sendMessage} className="p-4 bg-white border-t border-gray-100 flex items-center gap-2">
-                          <button type="button" className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
-                              <Paperclip size={20}/>
-                          </button>
+                          <label className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer relative">
+                              {uploadingFile ? <Loader2 className="animate-spin" size={20}/> : <Paperclip size={20}/>}
+                              <input type="file" className="hidden" disabled={uploadingFile} onChange={handleFileUpload} accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+                          </label>
                           <input type="text" value={inputText} onChange={(e: any) => setInputText(e.target.value)} placeholder="Type your message..." className="flex-1 bg-gray-100 border-0 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500" />
                           <button type="submit" disabled={!inputText.trim()} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors">
                               <Send size={20}/>

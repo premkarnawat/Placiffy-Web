@@ -20,6 +20,7 @@ export default function CandidateRegistration() {
   
   const [formData, setFormData] = useState({
     user_id: '',
+    full_name: '',
     profile_photo_url: '',
     headline: '',
     summary: '',
@@ -27,7 +28,8 @@ export default function CandidateRegistration() {
     current_company: '',
     current_role: '',
     skills: '',
-    experience_years: 0
+    experience_years: 0,
+    consent: false
   });
 
 
@@ -60,6 +62,7 @@ export default function CandidateRegistration() {
       // Auto-fill form data from AI JSON extraction
       setFormData(prev => ({
         ...prev,
+        full_name: parsed_data.contact?.name || '',
         headline: parsed_data.experience?.[0]?.title || '',
         current_company: parsed_data.experience?.[0]?.company || '',
         current_role: parsed_data.experience?.[0]?.title || '',
@@ -100,7 +103,7 @@ export default function CandidateRegistration() {
           password: authData.password,
           options: {
               data: {
-                  full_name: formData.headline, // basic fallback
+                  full_name: formData.full_name, // primary identity
                   role: 'candidate'
               }
           }
@@ -112,6 +115,7 @@ export default function CandidateRegistration() {
       // 3. Insert into Candidates table natively
       const { data: newCand, error: insertError } = await supabase.from('candidates').insert({
           user_id: sessionData.user.id,
+          full_name: formData.full_name,
           headline: formData.headline,
           summary: formData.summary,
           location: formData.location,
@@ -288,6 +292,11 @@ export default function CandidateRegistration() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-5">
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
+                      <input required type="text" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="w-full rounded-xl border-slate-200 focus:ring-blue-500 py-2.5 px-4 bg-slate-50" placeholder="John Doe" />
+                    </div>
 
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-semibold text-slate-700 mb-1">Professional Headline</label>
