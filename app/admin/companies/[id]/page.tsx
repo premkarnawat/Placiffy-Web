@@ -1,7 +1,7 @@
 ﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Building2, MapPin, Globe, Mail, Briefcase, FileText, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Building2, MapPin, Globe, Mail, Briefcase, FileText, CheckCircle2, TriangleAlert, ShieldCheck } from 'lucide-react';
 
 export default function CompanyProfileAdmin({ params }: { params: { id: string } }) {
   const [comp, setComp] = useState<any>(null);
@@ -37,7 +37,7 @@ export default function CompanyProfileAdmin({ params }: { params: { id: string }
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-50 rounded-bl-[100px] -z-10"></div>
         <div className="flex flex-col md:flex-row gap-8 items-start">
           <div className="w-32 h-32 rounded-3xl bg-slate-100 border-4 border-white shadow-lg overflow-hidden shrink-0 flex items-center justify-center text-slate-400 font-bold text-4xl">
-             {comp.logo_url ? <img src={comp.logo_url} className="w-full h-full object-cover"/> : <Building2 size={48}/>}
+             {comp.logo_url ? <img alt="" src={comp.logo_url} className="w-full h-full object-cover"/> : <Building2 size={48}/>}
           </div>
           <div className="flex-1">
             <div className="flex justify-between items-start">

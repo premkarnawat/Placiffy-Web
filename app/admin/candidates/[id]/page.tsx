@@ -1,7 +1,7 @@
 ﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ShieldCheck, Activity, MapPin, Briefcase, Calendar, Mail, FileText, CheckCircle2, AlertTriangle, UserX } from 'lucide-react';
+import { ShieldCheck, Activity, MapPin, Briefcase, Calendar, Mail, FileText, CheckCircle2, TriangleAlert, UserX } from 'lucide-react';
 
 export default function CandidateProfileAdmin({ params }: { params: { id: string } }) {
   const [cand, setCand] = useState<any>(null);
@@ -31,7 +31,7 @@ export default function CandidateProfileAdmin({ params }: { params: { id: string
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-bl-[100px] -z-10"></div>
         <div className="flex flex-col md:flex-row gap-8 items-start">
           <div className="w-32 h-32 rounded-3xl bg-slate-100 border-4 border-white shadow-lg overflow-hidden shrink-0 flex items-center justify-center text-slate-400 font-bold text-4xl">
-             {cand.profile_photo_url ? <img src={cand.profile_photo_url} className="w-full h-full object-cover"/> : (cand.full_name || 'U').charAt(0).toUpperCase()}
+             {cand.profile_photo_url ? <img alt="" src={cand.profile_photo_url} className="w-full h-full object-cover"/> : (cand.full_name || 'U').charAt(0).toUpperCase()}
           </div>
           <div className="flex-1">
             <div className="flex justify-between items-start">
@@ -103,7 +103,7 @@ export default function CandidateProfileAdmin({ params }: { params: { id: string
              <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Danger Zone</h3>
              <div className="space-y-3">
                <button className="w-full flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold text-sm transition-colors">
-                 <span className="flex items-center gap-2"><AlertTriangle size={16}/> Suspend Candidate</span>
+                 <span className="flex items-center gap-2"><TriangleAlert size={16}/> Suspend Candidate</span>
                </button>
                <button className="w-full flex items-center justify-between p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-sm transition-colors">
                  <span className="flex items-center gap-2"><UserX size={16}/> Delete Candidate</span>

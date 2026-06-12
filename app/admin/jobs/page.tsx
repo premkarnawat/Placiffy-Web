@@ -89,7 +89,7 @@ export default function JobsAdmin() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        {j.companies?.logo_url && <img src={j.companies.logo_url} className="w-6 h-6 rounded border border-gray-200" />}
+                        {j.companies?.logo_url && <img alt="" src={j.companies.logo_url} className="w-6 h-6 rounded border border-gray-200" />}
                         <span className="text-sm font-bold text-slate-700">{j.companies?.name || 'Unknown'}</span>
                       </div>
                     </td>
