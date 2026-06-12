@@ -58,7 +58,7 @@ export default function CandidateMessages() {
       }
       
       const otherUserIds = otherParts.map((p: any) => p.user_id);
-      const { data: companies } = await supabase.from('companies').select('id, user_id, name').in('user_id', otherUserIds);
+      const { data: companies } = await supabase.from('companies').select('id, user_id, name, logo_url, industry').in('user_id', otherUserIds);
       
       // Map back to a list of 'conversations' for the UI
       const convs = otherParts.map((p: any) => {
@@ -67,7 +67,8 @@ export default function CandidateMessages() {
               conversation_id: p.conversation_id,
               user_id: p.user_id,
               full_name: comp ? comp.name : 'Unknown Company',
-              headline: 'Company Representative'
+              headline: comp && comp.industry ? comp.industry : 'Company Representative',
+              logo_url: comp ? comp.logo_url : null
           };
       });
       
@@ -180,8 +181,12 @@ export default function CandidateMessages() {
                       conversations.map((c: any) => (
                           <div key={c.id} onClick={() => loadMessages(c)} className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${activeChat?.id === c.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-white'}`}>
                               <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0">
-                                      {(c.full_name || c.headline).charAt(0).toUpperCase()}
+                                  <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0 overflow-hidden border border-gray-100">
+                                      {c.logo_url ? (
+                                          <img src={c.logo_url} alt={c.full_name} className="w-full h-full object-cover" />
+                                      ) : (
+                                          (c.full_name || c.headline || 'U').charAt(0).toUpperCase()
+                                      )}
                                   </div>
                                   <div className="overflow-hidden">
                                       <h3 className="font-bold text-gray-900 text-sm truncate">{c.full_name || c.headline}</h3>
@@ -207,8 +212,12 @@ export default function CandidateMessages() {
                       {/* Chat Header */}
                       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 shadow-sm">
                           <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center">
-                                  {(activeChat.full_name || activeChat.headline).charAt(0).toUpperCase()}
+                              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center overflow-hidden border border-gray-100">
+                                  {activeChat.logo_url ? (
+                                      <img src={activeChat.logo_url} alt={activeChat.full_name} className="w-full h-full object-cover" />
+                                  ) : (
+                                      (activeChat.full_name || activeChat.headline || 'U').charAt(0).toUpperCase()
+                                  )}
                               </div>
                               <div>
                                   <h2 className="font-bold text-gray-900">{activeChat.full_name || activeChat.headline}</h2>

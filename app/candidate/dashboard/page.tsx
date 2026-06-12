@@ -60,7 +60,7 @@ export default function CandidateDashboard() {
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back, {user?.email?.split('@')[0]}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome Back, {data.cand?.first_name || data.cand?.full_name?.split(' ')[0] || user?.email?.split('@')[0]}</h1>
           <p className="text-gray-500 mt-1">Here is your Candidate Operating System overview.</p>
         </div>
       </div>

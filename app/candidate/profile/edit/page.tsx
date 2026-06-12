@@ -63,8 +63,8 @@ export default function ProfileEditor() {
 
       setFormData({
         personal: {
-          fullName: user?.user_metadata?.full_name || '', email: user?.email || '', 
-          location: cand.location || '', headline: cand.headline || '', summary: cand.summary || '', experience_years: cand.experience_years || 0, profile_photo_url: cand.profile_photo_url || ''
+          fullName: cand.full_name || user?.user_metadata?.full_name || '', email: user?.email || '', 
+          location: cand.location || '', headline: cand.headline || '', summary: cand.summary || '', experience_years: cand.experience_years || 0, profile_photo_url: cand.profile_photo_url || '', skills: cand.skills || []
         },
         preferences: {
           expected_salary: profile?.expected_salary || '',
@@ -154,7 +154,7 @@ export default function ProfileEditor() {
         const d = data.extracted_data;
         setFormData((prev: any) => ({
           ...prev,
-          personal: { ...prev.personal, ...d.personal },
+          personal: { ...prev.personal, ...d.personal, skills: d.skills || prev.personal.skills },
           preferences: { ...prev.preferences, ...d.preferences },
           education: d.education || prev.education,
           experience: d.experience || prev.experience,
@@ -179,11 +179,21 @@ export default function ProfileEditor() {
       if (!candidateId) throw new Error("Candidate record not found");
 
 
+      const fullName = formData.personal.fullName || '';
+      const names = fullName.trim().split(' ');
+      const firstName = names[0] || null;
+      const lastName = names.slice(1).join(' ') || null;
+
       const { error: candErr } = await supabase.from('candidates').update({
+        full_name: fullName || null,
+        first_name: firstName,
+        last_name: lastName,
+        display_name: firstName,
         location: formData.personal.location || null,
         headline: formData.personal.headline || null,
         summary: formData.personal.summary || null,
-        experience_years: parseInt(formData.personal.experience_years) || 0
+        experience_years: parseInt(formData.personal.experience_years) || 0,
+        skills: formData.personal.skills || []
       }).eq('id', candidateId);
       if (candErr) throw new Error("Failed to update candidate record: " + candErr.message);
 
@@ -293,7 +303,19 @@ export default function ProfileEditor() {
       completionScore = Math.min(100, completionScore);
 
       // Save Completion Score back to database
-      await supabase.from('candidates').update({ profile_completion_pct: completionScore }).eq('id', candidateId);
+      const activityScoreBump = 5; // Bump activity score on update
+      
+      const { data: actData } = await supabase.from('candidates').select('activity_score, trust_score').eq('id', candidateId).single();
+      const newActivity = Math.min(100, (actData?.activity_score || 0) + activityScoreBump);
+      const newTrustScore = Math.min(100, Math.floor((completionScore * 0.5) + (newActivity * 0.5))); // Simple heuristic based on completion and activity
+      
+      await supabase.from('candidates').update({ 
+          profile_completion_pct: completionScore,
+          activity_score: newActivity,
+          trust_score: newTrustScore,
+          last_active_at: new Date().toISOString(),
+          last_profile_update: new Date().toISOString()
+      }).eq('id', candidateId);
 
       // Automatically generate ATS vector embeddings in the background
 
