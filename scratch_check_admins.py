@@ -6,11 +6,11 @@ db_url = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrzqj
 try:
     conn = psycopg2.connect(db_url)
     cursor = conn.cursor()
-    cursor.execute("SELECT relrowsecurity FROM pg_class WHERE relname = 'conversations';")
-    print(f"conversations RLS: {cursor.fetchone()[0]}")
+    cursor.execute("SELECT email, role, id FROM auth.users WHERE raw_user_meta_data->>'role' = 'admin' OR id IN (SELECT id FROM public.users WHERE role = 'admin');")
+    admins = cursor.fetchall()
+    print("ADMINS:")
+    for a in admins: print(a)
     
-    cursor.execute("SELECT relrowsecurity FROM pg_class WHERE relname = 'messages';")
-    print(f"messages RLS: {cursor.fetchone()[0]}")
 except Exception as e:
     print(f"Error: {e}")
 finally:

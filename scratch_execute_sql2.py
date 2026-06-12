@@ -1,47 +1,26 @@
 ﻿import psycopg2
-import sys
+import os
+
+db_url = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrzqj.supabase.co:5432/postgres"
+sql_path = r"C:\Users\premk\.gemini\antigravity\brain\9a078a71-79dd-41eb-a630-f5d791eb29dc\migration_v2.sql"
 
 try:
-    conn = psycopg2.connect(
-        host="db.wkgczwtnxrseiykcrzqj.supabase.co",
-        port=5432,
-        user="postgres",
-        password="@Placify$Data1716#",
-        dbname="postgres"
-    )
+    with open(sql_path, "r", encoding="utf-8") as f:
+        sql = f.read()
+
+    print("Connecting to database...")
+    conn = psycopg2.connect(db_url)
     conn.autocommit = True
-    cur = conn.cursor()
+    cursor = conn.cursor()
 
-    new_profile_cols = {
-        'current_job_role': 'TEXT',
-        'industry': 'TEXT',
-        'current_ctc': 'NUMERIC',
-        'preferred_location': 'TEXT',
-        'work_mode': 'TEXT', # Remote, Hybrid, Onsite
-        'employment_type': 'TEXT' # Full Time, Part Time, etc.
-    }
+    print("Executing SQL script...")
+    cursor.execute(sql)
+    print("Migration executed successfully!")
     
-    for col, datatype in new_profile_cols.items():
-        try:
-            cur.execute(f"ALTER TABLE public.candidate_profiles ADD COLUMN {col} {datatype};")
-            print(f"Added {col} to candidate_profiles")
-        except psycopg2.errors.DuplicateColumn:
-            print(f"{col} already exists in candidate_profiles")
-
-    # candidates expansion
-    new_candidate_cols = {
-        'profile_completion_pct': 'INTEGER DEFAULT 0',
-        'resume_parsed_at': 'TIMESTAMP WITH TIME ZONE'
-    }
-    for col, datatype in new_candidate_cols.items():
-        try:
-            cur.execute(f"ALTER TABLE public.candidates ADD COLUMN {col} {datatype};")
-            print(f"Added {col} to candidates")
-        except psycopg2.errors.DuplicateColumn:
-            print(f"{col} already exists in candidates")
-
-    cur.close()
-    conn.close()
-    print("\nPhase 1 (Schema Expansion completion) completed successfully!")
 except Exception as e:
-    print("FAILED:", e)
+    print(f"Error: {e}")
+finally:
+    if 'cursor' in locals():
+        cursor.close()
+    if 'conn' in locals():
+        conn.close()

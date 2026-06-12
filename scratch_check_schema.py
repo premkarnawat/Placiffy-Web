@@ -1,28 +1,23 @@
 ﻿import psycopg2
-import sys
+import os
+
+db_url = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrzqj.supabase.co:5432/postgres"
 
 try:
-    conn = psycopg2.connect(
-        host="db.wkgczwtnxrseiykcrzqj.supabase.co",
-        port=5432,
-        user="postgres",
-        password="@Placify$Data1716#",
-        dbname="postgres"
-    )
-    conn.autocommit = True
-    cur = conn.cursor()
+    conn = psycopg2.connect(db_url)
+    cursor = conn.cursor()
+    cursor.execute("SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'conversations';")
+    columns = cursor.fetchall()
+    print("conversations columns:")
+    for c in columns: print(c)
 
-    cur.execute("""
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name='candidate_profiles';
-    """)
-    cols = cur.fetchall()
-    print("candidate_profiles schema:")
-    for c in cols:
-        print(c)
+    cursor.execute("SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'conversation_participants';")
+    columns = cursor.fetchall()
+    print("conversation_participants columns:")
+    for c in columns: print(c)
 
-    cur.close()
-    conn.close()
 except Exception as e:
-    print("FAILED:", e)
+    print(f"Error: {e}")
+finally:
+    if 'cursor' in locals(): cursor.close()
+    if 'conn' in locals(): conn.close()
