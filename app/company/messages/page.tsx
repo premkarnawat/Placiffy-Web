@@ -103,6 +103,37 @@ export default function CompanyMessages() {
       }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !activeChat) return;
+      
+      setUploadingFile(true);
+      try {
+          const fileName = `attachment_${Date.now()}_${file.name}`;
+          const { error: uploadError } = await supabase.storage.from("message_attachments").upload(fileName, file);
+          if (uploadError) throw uploadError;
+          
+          const { data } = supabase.storage.from("message_attachments").getPublicUrl(fileName);
+          
+          // Optimistic update
+          const msg = `Attached file: ${file.name}`;
+          const tempMsg = { id: Date.now(), sender_id: user?.id, content: msg, attachment_url: data.publicUrl, created_at: new Date().toISOString() };
+          setMessages((prev: any) => [...prev, tempMsg]);
+          
+          await supabase.from('messages').insert({
+              sender_id: user?.id,
+              receiver_id: activeChat.user_id,
+              content: msg,
+              attachment_url: data.publicUrl
+          });
+          
+      } catch (err: any) {
+          toast("error", "Upload Failed", err.message);
+      } finally {
+          setUploadingFile(false);
+      }
+  };
+
   return (
     <div className="max-w-[1400px] mx-auto h-[calc(100vh-2rem)] p-4 sm:p-6">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm h-full flex overflow-hidden">

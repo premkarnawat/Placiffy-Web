@@ -42,6 +42,22 @@ export default function CandidatePassport() {
         return <div className="flex h-screen items-center justify-center font-bold text-gray-500">Candidate Not Found</div>;
     }
 
+    const lastActiveDate = new Date(candidate.last_active_at || Date.now());
+    const daysSinceActive = Math.floor((Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24));
+    let realTimeActivityScore = 0;
+    if (daysSinceActive <= 7) realTimeActivityScore = 100;
+    else if (daysSinceActive <= 15) realTimeActivityScore = 80;
+    else if (daysSinceActive <= 30) realTimeActivityScore = 60;
+    else if (daysSinceActive <= 60) realTimeActivityScore = 40;
+    else if (daysSinceActive <= 90) realTimeActivityScore = 20;
+    else realTimeActivityScore = 0;
+    
+    // Use the higher of DB score or realtime score
+    const finalActivityScore = Math.max(candidate.activity_score || 0, realTimeActivityScore);
+    
+    // Display name
+    const displayName = candidate.full_name || candidate.headline || `Candidate ${candidate.id.split('-')[0]}`;
+
     return (
         <div className="max-w-[800px] mx-auto p-4 sm:p-8 space-y-8">
             <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
@@ -55,14 +71,14 @@ export default function CandidatePassport() {
                         <div className="flex items-center gap-2 text-blue-400 font-bold tracking-widest text-xs uppercase mb-6">
                             <ShieldCheck size={16}/> Placify Verified Passport
                         </div>
-                        <h1 className="text-4xl font-black mb-2">{candidate.full_name || "Name Unavailable"}</h1>
+                        <h1 className="text-4xl font-black mb-2">{displayName}</h1>
                         <p className="text-zinc-400 font-medium text-lg">{candidate.headline}</p>
                     </div>
                     <div className="w-24 h-24 rounded-full border-4 border-zinc-800 bg-zinc-800 shrink-0 overflow-hidden relative z-10 flex items-center justify-center">
                         {candidate.profile_photo_url ? (
                             <img src={candidate.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-3xl font-black text-white">{(candidate.full_name || candidate.headline || 'C').charAt(0).toUpperCase()}</span>
+                            <span className="text-3xl font-black text-white">{displayName.charAt(0).toUpperCase()}</span>
                         )}
                     </div>
                 </div>
@@ -76,7 +92,7 @@ export default function CandidatePassport() {
                         </div>
                         <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100 flex flex-col items-center justify-center text-center">
                             <Zap className="text-emerald-500 mb-2" size={32}/>
-                            <div className="text-4xl font-black text-emerald-900">{candidate.activity_score || 0}</div>
+                            <div className="text-4xl font-black text-emerald-900">{finalActivityScore}</div>
                             <div className="text-sm font-bold text-emerald-600 uppercase mt-1">Activity Score</div>
                         </div>
                     </div>

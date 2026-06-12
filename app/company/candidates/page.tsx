@@ -226,7 +226,7 @@ export default function CandidatePool() {
               ) : (
                   candidates.map((c: any) => (
                       <div key={c.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
-                          {c.ats_score && (
+                          {c.ats_score !== undefined && (
                               <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-black px-3 py-1 rounded-bl-xl flex items-center gap-1">
                                   <Star size={12} fill="currentColor"/> {c.ats_score}% MATCH
                               </div>
@@ -264,7 +264,7 @@ export default function CandidatePool() {
                                       Activity Score: {c.activity_score || 0}/100
                                   </div>
                               </div>
-                              {c.vector_similarity && (
+                              {c.vector_similarity !== undefined && (
                                   <div className="flex justify-between items-center text-xs font-bold text-emerald-700 mt-1">
                                       <span>Vector Similarity</span>
                                       <span>{c.vector_similarity}%</span>
