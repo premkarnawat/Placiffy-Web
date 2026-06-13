@@ -17,7 +17,7 @@ export default function CompaniesAdmin() {
     try {
       setLoading(true);
       // Fetch companies with users for email/name
-      const { data, error } = await supabase.from('companies').select('*, users(email, name, phone)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('companies').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       
       const enriched = await Promise.all((data || []).map(async (c) => {
@@ -97,8 +97,8 @@ export default function CompaniesAdmin() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <p className="text-sm font-bold text-slate-700">{c.users?.name || 'Admin User'}</p>
-                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><Mail size={12}/> {c.users?.email}</p>
+                      <p className="text-sm font-bold text-slate-700">Enterprise Contact</p>
+                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><Mail size={12}/> No Email Linked</p>
                       {c.users?.phone && <p className="text-xs text-slate-500 mt-0.5">{c.users.phone}</p>}
                     </td>
                     <td className="p-4">

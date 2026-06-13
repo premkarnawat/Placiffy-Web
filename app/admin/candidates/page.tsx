@@ -16,7 +16,7 @@ export default function CandidatesAdmin() {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('candidates').select('*, users!user_id(email)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('candidates').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       
       const enriched = await Promise.all((data || []).map(async (c) => {
@@ -91,7 +91,7 @@ export default function CandidatesAdmin() {
                          <div>
                            <Link href={`/admin/candidates/${c.id}`} className="font-bold text-sm text-slate-900 hover:text-blue-600 transition-colors block">{c.full_name}</Link>
                            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1"><MapPin size={12}/> {c.location || 'Unknown'}</p>
-                           <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1"><Mail size={12}/> {c.users?.email}</p>
+                           <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1"><Mail size={12}/> No Email Linked</p>
                          </div>
                       </div>
                     </td>

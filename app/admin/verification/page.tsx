@@ -19,7 +19,7 @@ export default function VerificationAdmin() {
     try {
       setLoading(true);
       // verifications table uses user_id. We fetch it, then join to find if it's candidate or company
-      const { data, error } = await supabase.from('verifications').select('*, users(email, role)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('verifications').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       
       const enriched = await Promise.all((data || []).map(async (v) => {
@@ -68,7 +68,7 @@ export default function VerificationAdmin() {
 
   const filtered = verifications.filter(v => 
     v.status === activeTab && 
-    ((v.entity_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (v.users?.email || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    ((v.entity_name || '').toLowerCase().includes(searchTerm.toLowerCase()) )
   );
 
   return (
@@ -130,7 +130,7 @@ export default function VerificationAdmin() {
                         <Link href={v.type === 'candidate' ? `/admin/candidates/${v.entity_id}` : `/admin/companies/${v.entity_id}`} className="font-bold text-sm text-slate-900 hover:text-blue-600 transition-colors">
                           {v.entity_name}
                         </Link>
-                        <span className="text-xs text-slate-500">{v.users?.email}</span>
+                        <span className="text-xs text-slate-500">No Email Linked</span>
                       </div>
                     </td>
                     <td className="p-4">

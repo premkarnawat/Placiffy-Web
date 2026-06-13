@@ -18,7 +18,7 @@ export default function PassportsAdmin() {
   const fetchPassports = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('passports').select('*, candidates(full_name, location, users(email))').order('last_generated_at', { ascending: false });
+      const { data, error } = await supabase.from('passports').select('*, candidates(full_name, location)').order('last_generated_at', { ascending: false });
       if (error) throw error;
       setPassports(data || []);
     } catch (e) {
@@ -130,7 +130,7 @@ export default function PassportsAdmin() {
                   <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="p-4 pl-6">
                       <Link href={`/admin/candidates/${p.candidate_id}`} className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors block">{p.candidates?.full_name}</Link>
-                      <p className="text-xs text-slate-500">{p.candidates?.users?.email}</p>
+                      <p className="text-xs text-slate-500">No Email Linked</p>
                     </td>
                     <td className="p-4 text-sm font-mono text-slate-600">PASS-{p.id.split('-')[0].toUpperCase()}</td>
                     <td className="p-4">

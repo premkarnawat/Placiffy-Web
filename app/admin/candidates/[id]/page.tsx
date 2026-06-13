@@ -19,7 +19,7 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
       setLoading(true);
       
       const [candRes, eduRes, expRes, projRes, certRes, appRes, passRes, verRes] = await Promise.all([
-        supabase.from('candidates').select('*, users!user_id(email)').eq('id', params.id).single(),
+        supabase.from('candidates').select('*').eq('id', params.id).single(),
         supabase.from('candidate_education').select('*').eq('candidate_id', params.id).order('end_date', { ascending: false }),
         supabase.from('candidate_experience').select('*').eq('candidate_id', params.id).order('start_date', { ascending: false }),
         supabase.from('candidate_projects').select('*').eq('candidate_id', params.id),
@@ -88,7 +88,7 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
             <p className="text-slate-700 font-medium mt-1">{cand.headline || 'No headline provided'}</p>
             <p className="text-slate-500 text-sm mt-1 flex items-center gap-4">
               <span className="flex items-center gap-1"><MapPin size={14}/> {cand.location || 'Unknown Location'}</span>
-              <span className="flex items-center gap-1"><Mail size={14}/> {cand.users?.email}</span>
+              <span className="flex items-center gap-1"><Mail size={14}/> No Email Linked</span>
             </p>
             <div className="mt-3 flex gap-2">
                <button onClick={handleRecalculate} disabled={recalculating} className="text-xs font-bold bg-white border border-gray-200 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-1">

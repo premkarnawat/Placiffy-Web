@@ -20,7 +20,7 @@ export default function CompanyDetailsAdmin({ params }: { params: { id: string }
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: comp, error } = await supabase.from('companies').select('*, users(email, name, phone)').eq('id', params.id).single();
+      const { data: comp, error } = await supabase.from('companies').select('*').eq('id', params.id).single();
       if (error) throw error;
       
       const [jobsRes, verRes, subRes] = await Promise.all([
@@ -191,8 +191,8 @@ export default function CompanyDetailsAdmin({ params }: { params: { id: string }
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
             <h3 className="font-bold text-slate-900 flex items-center gap-2"><Mail size={18} className="text-slate-500"/> Primary Contact</h3>
             <div>
-              <p className="font-bold text-slate-900 text-sm">{company.users?.name || 'Admin User'}</p>
-              <p className="text-slate-600 text-sm">{company.users?.email}</p>
+              <p className="font-bold text-slate-900 text-sm">Enterprise Contact</p>
+              <p className="text-slate-600 text-sm">No Email Linked</p>
               {company.users?.phone && <p className="text-slate-600 text-sm">{company.users.phone}</p>}
             </div>
           </div>
