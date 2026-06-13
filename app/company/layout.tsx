@@ -3,13 +3,13 @@ import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import {
-  LayoutDashboard, Briefcase, Users, MessageSquare, BarChart2,
+  LayoutDashboard, Shield, Briefcase, Users, MessageSquare, BarChart2,
   HelpCircle, Settings, Plus, Sparkles, Building2, Loader2,
   Search, Bell
 } from "lucide-react";
 
 const NAV = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/company/dashboard" },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, Shield, href: "/company/dashboard" },
   { id: "create_job", label: "Create Job", icon: Plus, href: "/company/jobs/create" },
   { id: "jobs", label: "Job Workspace", icon: Briefcase, href: "/company/workspace" },
   { id: "candidates", label: "Candidate Pool", icon: Users, href: "/company/candidates" },
@@ -19,7 +19,7 @@ const NAV = [
 ];
 
 const BOTTOM_NAV = [
-  { id: "billing", label: "Billing", icon: LayoutDashboard, href: "/company/billing" },
+  { id: "billing", label: "Billing", icon: LayoutDashboard, Shield, href: "/company/billing" },
   { id: "support", label: "Support", icon: HelpCircle, href: "/company/support" },
   { id: "settings", label: "Settings", icon: Settings, href: "/company/settings" },
   { id: "ai", label: "AI Assistant", icon: Sparkles, href: "/company/ai-assistant" },

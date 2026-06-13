@@ -335,7 +335,7 @@ export default function ProfileEditor() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div><h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1><p className="text-gray-500 mt-1">Complete your profile to unlock applications.</p></div>
+        <div><h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">Edit Profile {candData?.verification_badge && <span className="text-emerald-500 bg-emerald-50 text-sm px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-200"><ShieldCheck size={16}/> Verified Candidate</span>}</h1><p className="text-gray-500 mt-1">Complete your profile to unlock applications.</p></div>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-medium transition-all cursor-pointer shadow-sm border border-indigo-200">
             <input type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} disabled={isParsing} />

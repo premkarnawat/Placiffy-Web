@@ -1,4 +1,7 @@
-"use client";
+﻿import os
+
+filepath = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\jobs\page.tsx"
+content = """"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Briefcase, MapPin, DollarSign, Building2, Search, Filter, BookmarkPlus, Clock, Zap, ArrowRight, Lock, FileText, CheckCircle2, Loader2, X } from 'lucide-react';
@@ -330,4 +333,8 @@ export default function CandidateJobs() {
       </div>
     </div>
   );
-}
+}"""
+
+os.makedirs(os.path.dirname(filepath), exist_ok=True)
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(content)

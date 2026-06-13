@@ -5,11 +5,15 @@ db_url = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrzqj
 try:
     conn = psycopg2.connect(db_url)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name FROM storage.buckets;")
+    cursor.execute("""
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name LIKE '%verifications%';
+    """)
     rows = cursor.fetchall()
-    print("Buckets:")
+    print("Verification Tables:")
     for row in rows:
-        print(row)
+        print(row[0])
 except Exception as e:
     print(f"Error: {e}")
 finally:

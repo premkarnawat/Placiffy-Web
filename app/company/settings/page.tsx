@@ -23,7 +23,7 @@ export default function CompanySettings() {
 
   const fetchProfile = async () => {
     try {
-      const { data } = await supabase.from('companies').select('*').eq('user_id', user?.id).single();
+      const { data } = await supabase.from('companies').select('*, verification_badge').eq('user_id', user?.id).single();
       if (data) {
         setCompany(data);
         setFormData({
@@ -79,6 +79,7 @@ export default function CompanySettings() {
     <div className="max-w-[1000px] mx-auto p-4 sm:p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          {company?.verification_badge && <span className="text-emerald-500 bg-emerald-50 text-sm px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-200"><ShieldCheck size={16}/> Verified Employer</span>}
           <SettingsIcon className="text-blue-600" size={32}/> Company Settings
         </h1>
         <p className="text-gray-500 mt-1">Manage your company profile, branding, and notification preferences.</p>

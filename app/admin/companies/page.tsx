@@ -17,7 +17,7 @@ export default function CompaniesAdmin() {
     try {
       setLoading(true);
       // Fetch companies with users for email/name
-      const { data, error } = await supabase.from('companies').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('companies').select('*, verification_badge').order('created_at', { ascending: false });
       if (error) throw error;
       
       const enriched = await Promise.all((data || []).map(async (c) => {

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, MapPin, Loader2, Eye, Mail, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, ShieldCheck, MapPin, Loader2, Eye, Mail, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CandidatesAdmin() {
@@ -16,7 +16,7 @@ export default function CandidatesAdmin() {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('candidates').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('candidates').select('*, verification_badge').order('created_at', { ascending: false });
       if (error) throw error;
       
       const enriched = await Promise.all((data || []).map(async (c) => {
