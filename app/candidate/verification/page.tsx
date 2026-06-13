@@ -76,6 +76,16 @@ export default function CandidateVerification() {
 
       if (files['aadhaarFront']) aadhaarFront = await uploadFile(files['aadhaarFront'], 'aadhaar-front');
       if (files['aadhaarBack']) aadhaarBack = await uploadFile(files['aadhaarBack'], 'aadhaar-back');
+      
+      let panUrl = verification?.pan_url;
+      if (files['panUrl']) panUrl = await uploadFile(files['panUrl'], 'pan');
+      
+      let passportUrl = verification?.passport_url;
+      if (files['passportUrl']) passportUrl = await uploadFile(files['passportUrl'], 'passport');
+      
+      let otherLinks = verification?.other_links || {};
+      if (files['experienceLetter']) otherLinks.experience_letter = await uploadFile(files['experienceLetter'], 'experience-letter');
+      if (files['degreeCertificate']) otherLinks.degree_certificate = await uploadFile(files['degreeCertificate'], 'degree-certificate');
 
       const payload = {
         candidate_id: cand.id,
@@ -83,9 +93,12 @@ export default function CandidateVerification() {
         aadhaar_front_url: aadhaarFront,
         aadhaar_back_url: aadhaarBack,
         pan_number: panNumber,
+        pan_url: panUrl,
+        passport_url: passportUrl,
         linkedin_url: linkedinUrl,
         github_url: githubUrl,
         portfolio_url: portfolioUrl,
+        other_links: otherLinks,
         status: verification?.status === 'rejected' ? 'pending' : (verification?.status || 'pending')
       };
 
@@ -198,11 +211,13 @@ export default function CandidateVerification() {
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-blue-500 transition-colors bg-slate-50">
                 <p className="text-sm font-bold text-slate-700 mb-1">Experience/Offer Letters</p>
-                <input type="file" className="mt-2 text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                <input type="file" onChange={e => handleFileChange('experienceLetter', e)} className="mt-2 text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                {verification?.other_links?.experience_letter && <a href={verification.other_links.experience_letter} target="_blank" className="text-xs text-blue-600 mt-2 block">View Uploaded Document</a>}
               </div>
               <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-blue-500 transition-colors bg-slate-50">
                 <p className="text-sm font-bold text-slate-700 mb-1">Degree Certificates</p>
-                <input type="file" className="mt-2 text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                <input type="file" onChange={e => handleFileChange('degreeCertificate', e)} className="mt-2 text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                {verification?.other_links?.degree_certificate && <a href={verification.other_links.degree_certificate} target="_blank" className="text-xs text-blue-600 mt-2 block">View Uploaded Document</a>}
               </div>
           </div>
         </div>

@@ -133,22 +133,29 @@ export default function AdminVerification() {
                       <div className="flex flex-col gap-1">
                         {c.aadhaar_front_url && <a href={c.aadhaar_front_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Aadhaar Front</a>}
                         {c.aadhaar_back_url && <a href={c.aadhaar_back_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Aadhaar Back</a>}
+                        {c.pan_number && <div className="text-xs text-slate-700 font-bold">PAN: {c.pan_number}</div>}
+                        {c.pan_url && <a href={c.pan_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> PAN Card</a>}
+                        {c.passport_url && <a href={c.passport_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Passport</a>}
                         {c.linkedin_url && <a href={c.linkedin_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> LinkedIn</a>}
-                        {!c.aadhaar_front_url && !c.linkedin_url && <span className="text-xs text-slate-400">No links provided</span>}
+                        {c.github_url && <a href={c.github_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> GitHub</a>}
+                        {c.portfolio_url && <a href={c.portfolio_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Portfolio</a>}
+                        {c.other_links?.experience_letter && <a href={c.other_links.experience_letter} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Experience Letter</a>}
+                        {c.other_links?.degree_certificate && <a href={c.other_links.degree_certificate} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Degree Certificate</a>}
+                        {!c.aadhaar_front_url && !c.linkedin_url && !c.pan_number && !c.portfolio_url && !c.other_links?.experience_letter && <span className="text-xs text-slate-400">No documents uploaded</span>}
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-slate-600">{c.created_at ? c.created_at.split('T')[0] : 'N/A'}</div>
                     </td>
                     <td className="p-4">
-                      {getStatusBadge(c.verification_status)}
+                      {getStatusBadge(c.status)}
                     </td>
                     <td className="p-4 pr-6">
                       <div className="flex justify-end gap-2">
-                        <button disabled={actionLoading === c.id || c.verification_status === 'approved' || c.verification_status === 'Verified'} onClick={() => handleAction(c.id, 'candidates', 'approved', c.candidate_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.status === 'approved' || c.status === 'approved'} onClick={() => handleAction(c.id, 'candidates', 'approved', c.candidate_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
                         </button>
-                        <button disabled={actionLoading === c.id || c.verification_status === 'rejected'} onClick={() => handleAction(c.id, 'candidates', 'rejected', c.candidate_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.status === 'rejected'} onClick={() => handleAction(c.id, 'candidates', 'rejected', c.candidate_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <XCircle size={16}/>}
                         </button>
                       </div>
@@ -181,23 +188,26 @@ export default function AdminVerification() {
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-1">
-                        {c.registration_document_url && <a href={c.registration_document_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Reg. Document</a>}
+                        {c.incorporation_certificate_url && <a href={c.incorporation_certificate_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Incorporation Cert</a>}
+                        {c.gst_certificate_url && <a href={c.gst_certificate_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> GST Certificate</a>}
+                        {c.pan_url && <a href={c.pan_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> PAN Card</a>}
                         {c.linkedin_url && <a href={c.linkedin_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> LinkedIn</a>}
-                        {!c.registration_document_url && <span className="text-xs text-slate-400">No docs provided</span>}
+                        {c.website_url && <a href={c.website_url} target="_blank" className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"><ExternalLink size={12}/> Website</a>}
+                        {!c.incorporation_certificate_url && !c.gst_certificate_url && !c.pan_url && <span className="text-xs text-slate-400">No docs provided</span>}
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-slate-600">{c.created_at ? c.created_at.split('T')[0] : 'N/A'}</div>
                     </td>
                     <td className="p-4">
-                      {getStatusBadge(c.verification_status)}
+                      {getStatusBadge(c.status)}
                     </td>
                     <td className="p-4 pr-6">
                       <div className="flex justify-end gap-2">
-                        <button disabled={actionLoading === c.id || c.verification_status === 'approved' || c.verification_status === 'Verified'} onClick={() => handleAction(c.id, 'companies', 'approved', c.company_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.status === 'approved' || c.status === 'approved'} onClick={() => handleAction(c.id, 'companies', 'approved', c.company_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
                         </button>
-                        <button disabled={actionLoading === c.id || c.verification_status === 'rejected'} onClick={() => handleAction(c.id, 'companies', 'rejected', c.company_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.status === 'rejected'} onClick={() => handleAction(c.id, 'companies', 'rejected', c.company_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <XCircle size={16}/>}
                         </button>
                       </div>
