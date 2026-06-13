@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Shield, Building2, User as UserIcon, CheckCircle2, XCircle, Clock, FileText, ExternalLink, Loader2, Search } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function AdminVerification() {
     }
   };
 
-  const handleAction = async (id: string, type: 'candidates'|'companies', action: 'Approved'|'Rejected'|'Requires Documents', coreId: string) => {
+  const handleAction = async (id: string, type: 'candidates'|'companies', action: 'approved'|'rejected'|'Requires Documents', coreId: string) => {
     try {
       setActionLoading(id);
       const table = type === 'candidates' ? 'candidate_verifications' : 'company_verifications';
@@ -48,11 +48,11 @@ export default function AdminVerification() {
       }).eq('id', id);
 
       // 2. Update core table badge if approved
-      if (action === 'Approved') {
+      if (action === 'approved') {
         await supabase.from(coreTable).update({
           verification_badge: true
         }).eq('id', coreId);
-      } else if (action === 'Rejected') {
+      } else if (action === 'rejected') {
         await supabase.from(coreTable).update({
           verification_badge: false
         }).eq('id', coreId);
@@ -69,10 +69,10 @@ export default function AdminVerification() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'Approved':
+      case 'approved':
       case 'Verified':
         return <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">Verified</span>;
-      case 'Rejected':
+      case 'rejected':
         return <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full border border-red-200">Rejected</span>;
       case 'Requires Documents':
         return <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">Docs Required</span>;
@@ -145,10 +145,10 @@ export default function AdminVerification() {
                     </td>
                     <td className="p-4 pr-6">
                       <div className="flex justify-end gap-2">
-                        <button disabled={actionLoading === c.id || c.verification_status === 'Approved' || c.verification_status === 'Verified'} onClick={() => handleAction(c.id, 'candidates', 'Approved', c.candidate_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.verification_status === 'approved' || c.verification_status === 'Verified'} onClick={() => handleAction(c.id, 'candidates', 'approved', c.candidate_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
                         </button>
-                        <button disabled={actionLoading === c.id || c.verification_status === 'Rejected'} onClick={() => handleAction(c.id, 'candidates', 'Rejected', c.candidate_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.verification_status === 'rejected'} onClick={() => handleAction(c.id, 'candidates', 'rejected', c.candidate_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <XCircle size={16}/>}
                         </button>
                       </div>
@@ -194,10 +194,10 @@ export default function AdminVerification() {
                     </td>
                     <td className="p-4 pr-6">
                       <div className="flex justify-end gap-2">
-                        <button disabled={actionLoading === c.id || c.verification_status === 'Approved' || c.verification_status === 'Verified'} onClick={() => handleAction(c.id, 'companies', 'Approved', c.company_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.verification_status === 'approved' || c.verification_status === 'Verified'} onClick={() => handleAction(c.id, 'companies', 'approved', c.company_id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
                         </button>
-                        <button disabled={actionLoading === c.id || c.verification_status === 'Rejected'} onClick={() => handleAction(c.id, 'companies', 'Rejected', c.company_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
+                        <button disabled={actionLoading === c.id || c.verification_status === 'rejected'} onClick={() => handleAction(c.id, 'companies', 'rejected', c.company_id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">
                           {actionLoading === c.id ? <Loader2 size={16} className="animate-spin"/> : <XCircle size={16}/>}
                         </button>
                       </div>

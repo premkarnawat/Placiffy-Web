@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
@@ -86,13 +86,13 @@ export default function CandidateVerification() {
         linkedin_url: linkedinUrl,
         github_url: githubUrl,
         portfolio_url: portfolioUrl,
-        verification_status: verification?.verification_status === 'Rejected' ? 'Pending' : (verification?.verification_status || 'Pending')
+        status: verification?.status === 'rejected' ? 'pending' : (verification?.status || 'pending')
       };
 
       if (verification) {
-        await supabase.from('candidate_verifications').update(payload).eq('id', verification.id);
+        const {error} = await supabase.from('candidate_verifications').update(payload).eq('id', verification.id); if(error) throw new Error(error.message);
       } else {
-        await supabase.from('candidate_verifications').insert([payload]);
+        const {error} = await supabase.from('candidate_verifications').insert([payload]); if(error) throw new Error(error.message);
       }
       
       alert("Verification documents submitted successfully! Admin will review shortly.");
@@ -107,7 +107,7 @@ export default function CandidateVerification() {
 
   if (!isMounted || loading) return <div className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-blue-600"/></div>;
 
-  const status = verification?.verification_status || 'Not Submitted';
+  const status = verification?.status || 'Not Submitted';
   const isVerified = status === 'Verified' || status === 'approved';
 
   return (
@@ -121,7 +121,7 @@ export default function CandidateVerification() {
           </div>
           <div className="bg-white/10 backdrop-blur-sm px-6 py-4 rounded-2xl border border-white/20 text-center">
             <p className="text-xs font-bold text-blue-200 uppercase tracking-wider mb-1">Status</p>
-            <div className={`text-xl font-black ${isVerified ? 'text-emerald-400' : status === 'Pending' ? 'text-amber-400' : 'text-white'}`}>
+            <div className={`text-xl font-black ${isVerified ? 'text-emerald-400' : status === 'pending' ? 'text-amber-400' : 'text-white'}`}>
               {status.toUpperCase()}
             </div>
           </div>
