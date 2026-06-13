@@ -1,23 +1,7 @@
-﻿import psycopg2
-import os
-
-db_url = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrzqj.supabase.co:5432/postgres"
+﻿import json
 
 try:
-    conn = psycopg2.connect(db_url)
-    cursor = conn.cursor()
-    cursor.execute("SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'conversations';")
-    columns = cursor.fetchall()
-    print("conversations columns:")
-    for c in columns: print(c)
-
-    cursor.execute("SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'conversation_participants';")
-    columns = cursor.fetchall()
-    print("conversation_participants columns:")
-    for c in columns: print(c)
-
+    with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\types\supabase.ts", "r", encoding="utf-8") as f:
+        print(f.read()[:2000])
 except Exception as e:
-    print(f"Error: {e}")
-finally:
-    if 'cursor' in locals(): cursor.close()
-    if 'conn' in locals(): conn.close()
+    print(e)
