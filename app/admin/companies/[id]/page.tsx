@@ -48,20 +48,27 @@ export default function CompanyDetailsAdmin({ params }: { params: { id: string }
       setMsgLoading(true);
       const companyUserId = data.company.user_id;
       
-      // Check if conversation already exists between Admin and Company
-      const { data: existingConvs } = await supabase.rpc('get_direct_conversation', {
-        user1_id: adminUser.id,
-        user2_id: companyUserId
-      });
+      // Check if conversation already exists where BOTH admin and company are participants
+      const { data: adminConvs } = await supabase.from('conversation_participants').select('conversation_id').eq('user_id', adminUser.id);
       
-      if (existingConvs && existingConvs.length > 0) {
-        // Just navigate to messages page and ideally we'd pass the conv ID or it would be first
+      let existingConvId = null;
+      if (adminConvs && adminConvs.length > 0) {
+        const convIds = adminConvs.map(c => c.conversation_id);
+        const { data: sharedConvs } = await supabase.from('conversation_participants')
+          .select('conversation_id')
+          .in('conversation_id', convIds)
+          .eq('user_id', companyUserId);
+          
+        if (sharedConvs && sharedConvs.length > 0) {
+           existingConvId = sharedConvs[0].conversation_id;
+        }
+      }
+      
+      if (existingConvId) {
         router.push('/admin/messages');
         return;
       }
       
-      // If no function, manually check or create
-      // We will create a new conversation
       const { data: newConv, error: convErr } = await supabase.from('conversations').insert({
         type: 'support',
         status: 'open'

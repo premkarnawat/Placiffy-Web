@@ -1,4 +1,7 @@
-"use client";
+﻿import os
+
+filepath = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\passports\page.tsx"
+content = """"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CreditCard, Search, ShieldCheck, Download, RefreshCw, Loader2, CheckCircle2, UserX, Trash2 } from 'lucide-react';
@@ -158,4 +161,8 @@ export default function PassportsAdmin() {
       </div>
     </div>
   );
-}
+}"""
+
+os.makedirs(os.path.dirname(filepath), exist_ok=True)
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(content)
