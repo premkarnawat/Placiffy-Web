@@ -5,10 +5,10 @@ db_url = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrzqj
 try:
     conn = psycopg2.connect(db_url)
     cursor = conn.cursor()
-    cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'jobs';")
+    cursor.execute("SELECT id, created_at FROM companies;")
     rows = cursor.fetchall()
     for r in rows:
-        print(r[0])
+        print(f"Company ID: {r[0]}, created_at: {r[1]}")
 except Exception as e:
     print(f"Error: {e}")
 finally:

@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function CandidateDetailsAdmin({ params }: { params: { id: string } }) {
   const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
     setRecalculating(false);
   };
 
-  if (loading) return (
+  if (!isMounted || loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
       <p className="text-slate-500 font-medium">Loading Candidate Intelligence...</p>
@@ -205,7 +206,7 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
                             <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">{a.status}</span>
                           </td>
                           <td className="p-4 pr-5 text-right text-xs font-medium text-slate-500">
-                            {new Date(a.applied_at).toLocaleDateString()}
+                            {a.applied_at ? a.applied_at.split('T')[0] : 'N/A'}
                           </td>
                         </tr>
                       ))}
@@ -258,15 +259,15 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
             <div className="space-y-3">
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Joined Placify</p>
-                <p className="text-sm font-medium text-slate-700">{new Date(cand.created_at).toLocaleDateString()}</p>
+                <p className="text-sm font-medium text-slate-700">{cand.created_at ? cand.created_at.split('T')[0] : 'N/A'}</p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last Active</p>
-                <p className="text-sm font-medium text-slate-700">{cand.last_active_at ? new Date(cand.last_active_at).toLocaleDateString() : 'N/A'}</p>
+                <p className="text-sm font-medium text-slate-700">{cand.last_active_at ? cand.last_active_at.split('T')[0] : 'N/A'}</p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Profile Last Updated</p>
-                <p className="text-sm font-medium text-slate-700">{cand.last_profile_update ? new Date(cand.last_profile_update).toLocaleDateString() : 'N/A'}</p>
+                <p className="text-sm font-medium text-slate-700">{cand.last_profile_update ? cand.last_profile_update.split('T')[0] : 'N/A'}</p>
               </div>
             </div>
           </div>
