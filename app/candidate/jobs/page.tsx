@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Briefcase, MapPin, DollarSign, Building2, Search, Filter, BookmarkPlus, Clock, Zap, ArrowRight, Lock, FileText, CheckCircle2, Loader2, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
