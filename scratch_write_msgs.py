@@ -1,4 +1,7 @@
-"use client";
+﻿import os
+
+filepath = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\messages\page.tsx"
+content = """"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MessageSquare, Search, Loader2, Send, Paperclip, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -183,4 +186,7 @@ export default function MessagesAdmin() {
       </div>
     </div>
   );
-}
+}"""
+
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(content)

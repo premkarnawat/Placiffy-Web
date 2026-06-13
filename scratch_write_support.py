@@ -1,4 +1,7 @@
-"use client";
+﻿import os
+
+filepath = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\support\page.tsx"
+content = """"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BookOpen, AlertCircle, CheckCircle2, Clock, MessageSquare, ShieldAlert, Search, Loader2 } from 'lucide-react';
@@ -158,4 +161,7 @@ export default function SupportAdmin() {
       </div>
     </div>
   );
-}
+}"""
+
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(content)

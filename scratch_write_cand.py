@@ -1,4 +1,7 @@
-"use client";
+﻿import os
+
+filepath = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\candidates\[id]\page.tsx"
+content = """"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ShieldCheck, Activity, MapPin, Briefcase, Calendar, Mail, FileText, CheckCircle2, TriangleAlert, UserX, Star, GraduationCap, Award, ExternalLink, RefreshCw } from 'lucide-react';
@@ -225,4 +228,7 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
       </div>
     </div>
   );
-}
+}"""
+
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(content)

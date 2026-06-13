@@ -1,4 +1,7 @@
-"use client";
+﻿import os
+
+filepath = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\billing\page.tsx"
+content = """"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Receipt, Search, CreditCard, DollarSign, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
@@ -137,4 +140,7 @@ export default function BillingAdmin() {
       </div>
     </div>
   );
-}
+}"""
+
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(content)
