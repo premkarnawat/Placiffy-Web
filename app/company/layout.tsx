@@ -87,7 +87,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/company/dashboard");
+            const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== "/company/dashboard");
             
             return (
               <button
