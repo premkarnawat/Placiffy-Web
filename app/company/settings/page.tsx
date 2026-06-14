@@ -48,7 +48,7 @@ export default function CompanySettingsPage() {
       }
     } catch (e: any) {
       console.error(e);
-      toast({ title: "Error", description: "Could not load company profile.", variant: "destructive" });
+      toast("error" if "destructive" in m.group(0) else "success", "Error", "Could not load company profile.");
     } finally {
       setLoading(false);
     }
@@ -70,9 +70,9 @@ export default function CompanySettingsPage() {
 
       setProfile(formData);
       setIsEditing(false);
-      toast({ title: "Success", description: "Company profile updated successfully." });
+      toast("error" if "destructive" in m.group(0) else "success", "Success", "Company profile updated successfully." );
     } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
     } finally {
       setSaving(false);
     }

@@ -34,7 +34,7 @@ export default function CandidatePoolPage() {
       if (error) throw error;
       setCandidates(data || []);
     } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
     } finally {
       setLoading(false);
     }
