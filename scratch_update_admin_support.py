@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BookOpen, AlertCircle, CheckCircle2, Clock, MessageSquare, ShieldAlert, Search, Loader2, Filter, ChevronRight } from 'lucide-react';
@@ -183,3 +183,8 @@ export default function SupportAdmin() {
     </div>
   );
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\support\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Updated admin/support/page.tsx")

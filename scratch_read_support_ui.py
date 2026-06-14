@@ -1,0 +1,7 @@
+﻿print("=== CANDIDATE SUPPORT MAIN ===")
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\support\page.tsx", "r", encoding="utf-8-sig") as f:
+    print(f.read()[:1000] + "\n...\n")
+
+print("=== CANDIDATE SUPPORT DETAIL ===")
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\support\[id]\page.tsx", "r", encoding="utf-8-sig") as f:
+    print(f.read()[:1000] + "\n...\n")

@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -264,3 +264,8 @@ export default function TicketDetailsPage() {
     </div>
   );
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\support\[id]\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Updated candidate/support/[id]/page.tsx")
