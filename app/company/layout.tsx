@@ -27,6 +27,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -126,8 +127,20 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
       {/* Main Content */}
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen pt-16 lg:pt-0">
         <header className="hidden lg:flex h-16 bg-white border-b border-gray-100 items-center justify-between px-8 sticky top-0 z-30">
-          <div className="flex items-center bg-slate-50 px-4 py-2 rounded-xl text-sm font-medium text-slate-500 w-96 border border-slate-100">
-            <Search size={16} className="mr-2 opacity-50"/> Search jobs, candidates, or messages...
+          <div className="flex items-center bg-slate-50 px-4 py-2 rounded-xl text-sm font-medium text-slate-500 w-96 border border-slate-100 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-500 transition-all">
+            <Search size={16} className="mr-2 opacity-50"/> 
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  router.push(`/company/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                }
+              }}
+              placeholder="Search jobs, candidates, or messages..." 
+              className="bg-transparent border-none outline-none w-full text-gray-700 placeholder:text-gray-400"
+            />
           </div>
           <div className="flex items-center gap-6">
             <button className="text-gray-400 hover:text-blue-600 transition-colors flex items-center gap-2">
