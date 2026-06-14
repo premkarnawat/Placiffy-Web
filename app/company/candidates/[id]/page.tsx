@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, MapPin, Briefcase, Star, Zap, ShieldCheck, Mail, Phone, ExternalLink, Calendar, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Briefcase, Star, Zap, ShieldCheck, Mail, Phone, ExternalLink, Calendar, Loader2 , Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function CandidateProfile() {

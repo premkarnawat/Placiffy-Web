@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Briefcase, FileText, Shield, Award, CreditCard, 
   Search, Bell, Settings, LogOut, HelpCircle, UserPlus, Menu, X, MessageSquare, ChevronDown, User
+, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import AIAssistant from '@/components/candidate/AIAssistant';
