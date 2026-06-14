@@ -1,4 +1,6 @@
-﻿import { NextResponse } from 'next/server';
+﻿import os
+
+content = """import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 // GET: Fetch cached report for the candidate
@@ -56,20 +58,16 @@ export async function POST(req: Request) {
     Skills: ${(cand.skills || []).join(', ')}
 
     Education:
-    ${(edu || []).map((e: any) => `- ${e.degree} at ${e.institution} (${e.start_date} to ${e.end_date})`).join('
-')}
+    ${(edu || []).map((e: any) => `- ${e.degree} at ${e.institution} (${e.start_date} to ${e.end_date})`).join('\n')}
 
     Experience:
-    ${(exp || []).map((e: any) => `- ${e.title} at ${e.company} (${e.start_date} to ${e.end_date}): ${e.description}`).join('
-')}
+    ${(exp || []).map((e: any) => `- ${e.title} at ${e.company} (${e.start_date} to ${e.end_date}): ${e.description}`).join('\n')}
 
     Projects:
-    ${(proj || []).map((p: any) => `- ${p.name}: ${p.description} (URL: ${p.url || 'N/A'})`).join('
-')}
+    ${(proj || []).map((p: any) => `- ${p.name}: ${p.description} (URL: ${p.url || 'N/A'})`).join('\n')}
 
     Certifications:
-    ${(certs || []).map((c: any) => `- ${c.name} by ${c.issuer}`).join('
-')}
+    ${(certs || []).map((c: any) => `- ${c.name} by ${c.issuer}`).join('\n')}
     `;
 
     const groqApiKey = process.env.GROQ_API_KEY || ['gsk_OsFnHuyJsGvdD830tQkBW', 'Gdyb3FY1uiazLQqHQHTa6xYNbGh0wZL'].join('');
@@ -119,9 +117,7 @@ Be highly critical. Average score should be 50-70. Return valid JSON only.`;
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyze this parsed profile data:
-
-${compiledProfile.substring(0, 15000)}` }
+          { role: 'user', content: `Analyze this parsed profile data:\n\n${compiledProfile.substring(0, 15000)}` }
         ],
         temperature: 0.1,
         response_format: { type: "json_object" }
@@ -186,3 +182,8 @@ ${compiledProfile.substring(0, 15000)}` }
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\api\candidate\resume-intelligence\route.ts", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("API Route saved successfully")

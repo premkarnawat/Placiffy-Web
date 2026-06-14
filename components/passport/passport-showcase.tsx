@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, CheckCircle, Download, Link2, MapPin, Briefcase, Award, BrainCircuit } from 'lucide-react';
@@ -10,6 +10,7 @@ interface PassportData {
   role: string;
   trust_score: number;
   ats_score: number;
+  resume_intel_score?: number | null;
   resume_intelligence_score?: number;
   resume_intelligence_grade?: string;
 

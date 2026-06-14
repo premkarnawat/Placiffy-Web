@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +12,7 @@ export default function CandidateProfile() {
     
     const [loading, setLoading] = useState(true);
     const [candidate, setCandidate] = useState<any>(null);
+  const [intel, setIntel] = useState<any>(null);
 
     useEffect(() => {
         if (params.id) fetchCandidate(params.id as string);
@@ -134,6 +135,16 @@ export default function CandidateProfile() {
                 
                 {/* Right Column */}
                 <div className="space-y-8">
+                    {intel?.ats_resume_score && (
+                        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                            <Sparkles className="text-indigo-500 mb-2" size={32}/>
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">ATS Resume Intelligence</h3>
+                            <div className="text-4xl font-black text-slate-900 mb-2">{intel.ats_resume_score}<span className="text-xl text-slate-400">/100</span></div>
+                            <div className="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full">
+                                {intel.ats_resume_score >= 80 ? 'Strong Profile' : intel.ats_resume_score >= 60 ? 'Good Profile' : 'Needs Improvement'}
+                            </div>
+                        </div>
+                    )}
                     <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
                         <h3 className="text-lg font-black text-gray-900 mb-4">Skills</h3>
                         <div className="flex flex-wrap gap-2">

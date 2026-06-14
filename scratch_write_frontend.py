@@ -1,4 +1,8 @@
-﻿'use client';
+﻿import os
+
+os.makedirs(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\resume-intelligence", exist_ok=True)
+
+content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -212,3 +216,8 @@ export default function ResumeIntelligencePage() {
     </div>
   );
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\resume-intelligence\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Frontend page saved")

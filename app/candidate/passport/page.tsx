@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import PassportShowcase from '@/components/passport/passport-showcase';
@@ -21,7 +21,7 @@ export default function PassportPage() {
       const { data: cand } = await supabase.from('candidates').select('*, candidate_profiles(*)').eq('user_id', user.id).single();
       
       if (cand) {
-        const { data: intel } = await supabase.from('resume_intelligence_reports').select('overall_score, grade').eq('candidate_id', cand.id).single();
+        const { data: intel } = await supabase.from('resume_intelligence_reports').select('ats_resume_score').eq('candidate_id', cand.id).single();
 
 
 
@@ -46,6 +46,7 @@ export default function PassportPage() {
           role: cand.headline || profile.current_job_role || 'Professional',
           trust_score: cand.trust_score || 0,
           ats_score: cand.profile_completion_pct || 0,
+          resume_intel_score: intel?.ats_resume_score || null,
           profile_photo_url: cand.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
           skills: parsedSkills, // Will fall back to empty array in UI if null
           experience_years: cand.experience_years || 0,

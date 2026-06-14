@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
@@ -62,6 +62,7 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
     { name: 'Applications', href: '/candidate/applications', icon: FileText },
     { name: 'Messages', href: '/candidate/messages', icon: MessageSquare },
     { name: 'Resume', href: '/candidate/resume', icon: FileText },
+    { name: 'ATS Intelligence', href: '/candidate/resume-intelligence', icon: Sparkles },
     { name: 'Verification', href: '/candidate/verification', icon: Shield },
     { name: 'Trust Score', href: '/candidate/trust-score', icon: Award },
     { name: 'Passport', href: '/candidate/passport', icon: CreditCard },
