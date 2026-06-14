@@ -37,7 +37,7 @@ export default function CompanySupportPage() {
       if (error) throw error;
       setTickets(data || []);
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
+      toast("error", "Error", e.message);
     } finally {
       setIsLoading(false);
     }
@@ -67,12 +67,12 @@ export default function CompanySupportPage() {
         message: newTicket.description
       }]);
       
-      toast("error" if "destructive" in m.group(0) else "success", "Success", "Support ticket created successfully." );
+      toast("error", "Success", "Support ticket created successfully." );
       setIsCreating(false);
       setNewTicket({ category: 'Billing Issues', priority: 'Medium', subject: '', description: '' });
       router.push(`/company/support/${data.id}`);
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
+      toast("error", "Error", e.message);
     }
   };
 

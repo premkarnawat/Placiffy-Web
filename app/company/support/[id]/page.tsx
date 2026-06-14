@@ -52,7 +52,7 @@ export default function CompanyTicketDetailsPage() {
       if (mErr) throw mErr;
       setMessages(mData || []);
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
+      toast("error", "Error", e.message);
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export default function CompanyTicketDetailsPage() {
       setAttachments([]);
       await fetchTicketData();
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
+      toast("error", "Error", e.message);
     } finally {
       setSending(false);
     }

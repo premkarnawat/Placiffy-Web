@@ -49,7 +49,7 @@ export default function WorkspacePage() {
       setJobs(jRes.data || []);
       setApplications(appData || []);
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error fetching workspace", e.message);
+      toast("error", "Error fetching workspace", e.message);
     } finally {
       setLoading(false);
     }

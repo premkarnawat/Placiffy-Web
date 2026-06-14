@@ -57,7 +57,7 @@ export default function ApplicantsPage() {
       if (error) throw error;
       setApplications(apps || []);
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error fetching applicants", e.message);
+      toast("error", "Error fetching applicants", e.message);
     } finally {
       setLoading(false);
     }
@@ -76,9 +76,9 @@ export default function ApplicantsPage() {
         link: '/candidate/applications'
       }]);
 
-      toast("error" if "destructive" in m.group(0) else "success", "Status Updated", `Candidate marked as ${newStatus}` );
+      toast("error", "Status Updated", `Candidate marked as ${newStatus}` );
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Update Failed", e.message);
+      toast("error", "Update Failed", e.message);
     }
   };
 

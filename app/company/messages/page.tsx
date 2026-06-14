@@ -163,7 +163,7 @@ export default function CompanyMessages() {
       fetchMessages(activeCandidateId);
       fetchConversations();
     } catch (e: any) {
-      toast("error" if "destructive" in m.group(0) else "success", "Error", e.message);
+      toast("error", "Error", e.message);
     } finally {
       setSending(false);
     }
