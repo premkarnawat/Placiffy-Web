@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
@@ -129,3 +129,7 @@ export default function CandidateApplicationsPage() {
     </div>
   );
 }
+"""
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\applications\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Updated candidate applications logic")

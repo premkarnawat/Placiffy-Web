@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -276,3 +276,7 @@ export default function CandidateDashboard() {
     </div>
   );
 }
+"""
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\dashboard\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Rewrote candidate dashboard")

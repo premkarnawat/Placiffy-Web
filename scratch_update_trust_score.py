@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Shield, CheckCircle2, AlertCircle, Loader2, Award, Zap, Lock, Eye, Briefcase, Code, Activity, UserCheck } from 'lucide-react';
@@ -187,3 +187,7 @@ export default function TrustScorePage() {
     </div>
   );
 }
+"""
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\trust-score\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Updated trust score logic")

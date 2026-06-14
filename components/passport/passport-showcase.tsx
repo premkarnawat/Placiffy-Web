@@ -20,6 +20,14 @@ interface PassportData {
   summary: string;
   location: string;
   current_job_role: string;
+  
+  activity_score?: number;
+  verification_status?: string;
+  education_summary?: string;
+  project_summary?: string;
+  certification_summary?: string;
+  generated_date?: string;
+  last_updated?: string;
 }
 
 const defaultPassport: PassportData = {
@@ -130,6 +138,22 @@ export default function PassportShowcase({ data = defaultPassport }: { data?: Pa
                 </div>
                 <div className="text-lg font-bold text-emerald-400 mt-2">{data.current_job_role}</div>
               </div>
+
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xs uppercase tracking-widest text-slate-400 font-bold">Verification</h3>
+                  <p className="text-slate-500 text-[10px] mt-1">Identity Status</p>
+                </div>
+                <div className={`text-lg font-bold mt-2 ${data.verification_status === 'Verified' ? 'text-green-400' : 'text-amber-400'}`}>{data.verification_status || 'Pending'}</div>
+              </div>
+
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xs uppercase tracking-widest text-slate-400 font-bold">Activity Score</h3>
+                  <p className="text-slate-500 text-[10px] mt-1">Platform Engagement</p>
+                </div>
+                <div className="text-lg font-bold text-cyan-400 mt-2">{data.activity_score || 0}/10</div>
+              </div>
             </div>
 
             {/* Skills Array */}
@@ -159,6 +183,39 @@ export default function PassportShowcase({ data = defaultPassport }: { data?: Pa
                 </p>
               </div>
             </div>
+
+            {data.education_summary && (
+            <div>
+              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Education & Degrees</h3>
+              <div className="p-6 bg-slate-900/30 rounded-2xl border border-slate-800/50">
+                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {data.education_summary}
+                </p>
+              </div>
+            </div>
+            )}
+
+            {data.project_summary && (
+            <div>
+              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Projects & Portfolio</h3>
+              <div className="p-6 bg-slate-900/30 rounded-2xl border border-slate-800/50">
+                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {data.project_summary}
+                </p>
+              </div>
+            </div>
+            )}
+
+            {data.certification_summary && (
+            <div>
+              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Certifications</h3>
+              <div className="p-6 bg-slate-900/30 rounded-2xl border border-slate-800/50">
+                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {data.certification_summary}
+                </p>
+              </div>
+            </div>
+            )}
 
           </div>
 

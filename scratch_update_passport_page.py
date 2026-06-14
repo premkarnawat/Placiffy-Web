@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import PassportShowcase from '@/components/passport/passport-showcase';
@@ -41,12 +41,9 @@ export default function PassportPage() {
         
         if (parsedSkills.length === 0) parsedSkills = null;
 
-        const eduSummary = edu.data?.map(e => `• ${e.degree} at ${e.institution} (${e.start_date || 'N/A'} - ${e.end_date || 'Present'})`).join('
-') || null;
-        const projSummary = proj.data?.map(p => `• ${p.name}: ${p.description || 'No description'}`).join('
-') || null;
-        const certSummary = cert.data?.map(c => `• ${c.name} by ${c.issuer}`).join('
-') || null;
+        const eduSummary = edu.data?.map(e => `• ${e.degree} at ${e.institution} (${e.start_date || 'N/A'} - ${e.end_date || 'Present'})`).join('\n') || null;
+        const projSummary = proj.data?.map(p => `• ${p.name}: ${p.description || 'No description'}`).join('\n') || null;
+        const certSummary = cert.data?.map(c => `• ${c.name} by ${c.issuer}`).join('\n') || null;
 
         const isRecentlyActive = cand.last_active_at ? (new Date().getTime() - new Date(cand.last_active_at).getTime()) < (7 * 24 * 60 * 60 * 1000) : false;
         const activityScore = isRecentlyActive ? 10 : 5;
@@ -111,3 +108,7 @@ export default function PassportPage() {
     </div>
   );
 }
+"""
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\candidate\passport\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Updated passport page logic")
