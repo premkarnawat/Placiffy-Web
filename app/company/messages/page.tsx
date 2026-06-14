@@ -81,12 +81,12 @@ export default function CompanyMessages() {
             name: cinfo.first_name ? `${cinfo.first_name} ${cinfo.last_name || ''}` : candData?.full_name || candData?.email,
             photo: cinfo.profile_photo_url,
             headline: cinfo.headline,
-            latestMessage: msg.message,
+            latestMessage: msg.content,
             timestamp: msg.created_at,
-            unread: !isSender && !msg.read ? 1 : 0
+            unread: !isSender && !!!msg.read_at ? 1 : 0
           });
         } else {
-          if (!isSender && !msg.read) {
+          if (!isSender && !!!msg.read_at) {
             const current = convoMap.get(candId);
             convoMap.set(candId, { ...current, unread: current.unread + 1 });
           }
@@ -263,11 +263,11 @@ export default function CompanyMessages() {
                         <span className="text-[10px] text-gray-400">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       </div>
                       <div className={`max-w-[75%] rounded-2xl p-4 shadow-sm text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'}`}>
-                        <p className="whitespace-pre-wrap">{msg.message}</p>
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
                       </div>
                       {isMe && (
                         <div className="mt-1 px-1 flex items-center gap-1">
-                          {msg.read ? <CheckCheck size={12} className="text-blue-500"/> : <Check size={12} className="text-gray-300"/>}
+                          {!!msg.read_at ? <CheckCheck size={12} className="text-blue-500"/> : <Check size={12} className="text-gray-300"/>}
                         </div>
                       )}
                     </div>

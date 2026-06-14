@@ -4,7 +4,7 @@ conn_str = "postgresql://postgres:%40Placify%24Data1716%23@db.wkgczwtnxrseiykcrz
 try:
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor()
-    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
-    print("Tables:", [r[0] for r in cur.fetchall()])
+    cur.execute("SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE tablename = 'support_tickets';")
+    print(cur.fetchall())
 except Exception as e:
     print(f"Error: {e}")

@@ -52,7 +52,7 @@ export default function CompanyDashboard() {
         supabase.from('jobs').select('id, status, job_title').eq('company_id', comp.id),
         supabase.from('applications').select('id, status, applied_at, job_id, jobs!inner(company_id)').eq('jobs.company_id', comp.id),
         supabase.from('candidates').select('*', { count: 'exact', head: true }),
-        supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', user?.id).eq('read', false)
+        supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user?.id).eq('is_read', false)
       ]);
 
       const jobs = jobsRes.data || [];

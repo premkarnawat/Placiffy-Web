@@ -44,12 +44,7 @@ export default function CandidatePoolPage() {
 
   const fetchCandidates = async () => {
     try {
-      const { data, error } = await supabase.from('candidates').select(`
-        *,
-        candidate_profiles(experience, skills),
-        passports(trust_score, verification_status),
-        resume_intelligence_reports(ats_resume_score)
-      `).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('candidates').select(`*`).order('created_at', { ascending: false });
 
       if (error) throw error;
       
@@ -64,7 +59,7 @@ export default function CandidatePoolPage() {
       cands.forEach((c: any) => {
         if (c.headline) roles.add(c.headline);
         if (c.location) locs.add(c.location);
-        const candSkills = c.candidate_profiles?.[0]?.skills;
+        const candSkills = c.skills;
         if (Array.isArray(candSkills)) {
           candSkills.forEach(s => skills.add(s));
         }
@@ -91,13 +86,13 @@ export default function CandidatePoolPage() {
     // Dropdown Filters
     const roleMatch = !filterRole || c.headline === filterRole;
     const locMatch = !filterLocation || c.location === filterLocation;
-    const expMatch = !filterExp || c.candidate_profiles?.[0]?.experience === filterExp;
-    const skillMatch = !filterSkill || c.candidate_profiles?.[0]?.skills?.includes(filterSkill);
+    const expMatch = !filterExp || c.experience_years === filterExp;
+    const skillMatch = !filterSkill || c.skills?.includes(filterSkill);
     
     // Status Filter
     let statusMatch = true;
-    if (filterStatus === 'verified') statusMatch = c.passports?.[0]?.verification_status === 'Verified';
-    if (filterStatus === 'top_ats') statusMatch = (c.resume_intelligence_reports?.[0]?.ats_resume_score || 0) >= 80;
+    if (filterStatus === 'verified') statusMatch = c.verification_badge === true;
+    if (filterStatus === 'top_ats') statusMatch = (c.trust_score || 0) >= 80;
     
     return nameMatch && roleMatch && locMatch && expMatch && skillMatch && statusMatch;
   });
@@ -183,9 +178,9 @@ export default function CandidatePoolPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCandidates.map(cand => {
-            const passport = cand.passports?.[0];
-            const intel = cand.resume_intelligence_reports?.[0];
-            const profile = cand.candidate_profiles?.[0];
+            const passport = cand;
+            const intel = cand;
+            const profile = cand;
 
             return (
               <div key={cand.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col group">
@@ -207,7 +202,7 @@ export default function CandidatePoolPage() {
                       </p>
                     </div>
                   </div>
-                  {passport?.verification_status === 'Verified' && (
+                  {cand.verification_badge === true && (
                     <div className="bg-emerald-50 p-1.5 rounded-full" title="Verified Passport">
                       <ShieldCheck size={18} className="text-emerald-500" />
                     </div>
@@ -221,7 +216,7 @@ export default function CandidatePoolPage() {
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">ATS Intel</div>
-                    <div className="text-xl font-black text-blue-600">{intel?.ats_resume_score || 'N/A'}<span className="text-xs text-blue-400 font-bold ml-0.5">%</span></div>
+                    <div className="text-xl font-black text-blue-600">{cand.trust_score || 'N/A'}<span className="text-xs text-blue-400 font-bold ml-0.5">%</span></div>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Trust Score</div>
