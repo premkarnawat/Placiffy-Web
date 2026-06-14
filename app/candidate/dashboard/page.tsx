@@ -11,6 +11,7 @@ export default function CandidateDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [atsScore, setAtsScore] = useState<number | null>(null);
   const [insights, setInsights] = useState<any[]>([]);
 
   useEffect(() => {
