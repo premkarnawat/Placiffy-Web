@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   ArrowLeft, Search, Filter, Loader2, CheckCircle2, 
-  XCircle, Clock, ShieldCheck, Mail, MapPin, Briefcase 
+  XCircle, Clock, ShieldCheck, Mail, MapPin, Briefcase, Users 
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
