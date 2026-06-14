@@ -43,7 +43,7 @@ export default function CandidateDashboard() {
         supabase.from('applications').select('status, applied_at, ats_score').eq('candidate_id', cand.id),
         supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', user?.id).eq('read', false),
         supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user?.id).eq('is_read', false),
-        supabase.from('resume_intelligence_reports').select('ats_resume_score').eq('candidate_id', cand.id).single(),
+        supabase.from('resume_intelligence_reports').select('ats_resume_score').eq('candidate_id', cand.id).maybeSingle(),
         supabase.from('passports').select('verification_status').eq('candidate_id', cand.id).maybeSingle()
       ]);
 
@@ -124,6 +124,26 @@ export default function CandidateDashboard() {
     <div className="flex items-center justify-center h-[70vh]">
       <Loader2 className="animate-spin text-blue-500" size={40} />
       <span className="ml-3 text-slate-500 font-bold tracking-widest uppercase">Initializing Dashboard</span>
+    </div>
+  );
+
+
+  const getColorStyles = (color: string) => {
+    switch(color) {
+      case 'amber': return { border: 'hover:border-amber-300', line: 'bg-amber-400', btn: 'bg-amber-50 text-amber-700 hover:bg-amber-100' };
+      case 'purple': return { border: 'hover:border-purple-300', line: 'bg-purple-400', btn: 'bg-purple-50 text-purple-700 hover:bg-purple-100' };
+      case 'red': return { border: 'hover:border-red-300', line: 'bg-red-400', btn: 'bg-red-50 text-red-700 hover:bg-red-100' };
+      case 'green': return { border: 'hover:border-emerald-300', line: 'bg-emerald-400', btn: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' };
+      default: return { border: 'hover:border-blue-300', line: 'bg-blue-400', btn: 'bg-blue-50 text-blue-700 hover:bg-blue-100' };
+    }
+  };
+
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+      <XCircle className="text-red-500 mb-4" size={48} />
+      <h2 className="text-xl font-bold text-slate-900">Dashboard Unavailable</h2>
+      <p className="text-slate-500 mt-2 max-w-md">We couldn't load your dashboard. This usually happens if your profile is incomplete. Please finish setting up your candidate profile.</p>
+      <button onClick={() => router.push('/candidate/profile')} className="mt-6 px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700">Complete Profile</button>
     </div>
   );
 
@@ -257,13 +277,13 @@ export default function CandidateDashboard() {
               </div>
             ) : (
               data.insights.map((insight: any, idx: number) => (
-                <div key={idx} className={`bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden group hover:border-${insight.color}-300 transition-colors`}>
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 bg-${insight.color}-400`}></div>
+                <div key={idx} className={`bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden group ${getColorStyles(insight.color).border} transition-colors`}>
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${getColorStyles(insight.color).line}`}></div>
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">{insight.title}</h4>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">{insight.description}</p>
                   </div>
-                  <button onClick={()=>router.push(insight.link)} className={`self-start text-xs font-bold px-4 py-2 rounded-lg bg-${insight.color}-50 text-${insight.color}-700 hover:bg-${insight.color}-100 transition-colors`}>
+                  <button onClick={()=>router.push(insight.link)} className={`self-start text-xs font-bold px-4 py-2 rounded-lg transition-colors ${getColorStyles(insight.color).btn}`}>
                     {insight.action}
                   </button>
                 </div>
