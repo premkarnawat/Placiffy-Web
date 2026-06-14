@@ -157,14 +157,7 @@ export default function CandidateDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Removing duplicate verification banner */}
-          <ShieldCheck size={120} className="absolute -right-10 -bottom-10 text-white opacity-10" />
-          <h2 className="text-2xl font-bold mb-3 flex items-center gap-3"><Lock className="text-blue-400" /> Unlock Premium Status</h2>
-          <p className="text-blue-100 mb-6">You are currently unverified. Complete the Verification Journey to get your Candidate Passport and double your ATS ranking.</p>
-          <button onClick={() => router.push('/candidate/verification')} className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg flex items-center gap-2">
-            Start Verification <ChevronRight size={18} />
-          </button>
-        </div>
+        {/* Removed duplicate verification banner */}
 
         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
           <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Activity size={20} className="text-amber-500"/> AI Actionable Insights</h2>

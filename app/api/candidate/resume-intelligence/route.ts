@@ -56,20 +56,16 @@ export async function POST(req: Request) {
     Skills: ${(cand.skills || []).join(', ')}
 
     Education:
-    ${(edu || []).map((e: any) => `- ${e.degree} at ${e.institution} (${e.start_date} to ${e.end_date})`).join('
-')}
+    ${(edu || []).map((e: any) => `- ${e.degree} at ${e.institution} (${e.start_date} to ${e.end_date})`).join('\n')}
 
     Experience:
-    ${(exp || []).map((e: any) => `- ${e.title} at ${e.company} (${e.start_date} to ${e.end_date}): ${e.description}`).join('
-')}
+    ${(exp || []).map((e: any) => `- ${e.title} at ${e.company} (${e.start_date} to ${e.end_date}): ${e.description}`).join('\n')}
 
     Projects:
-    ${(proj || []).map((p: any) => `- ${p.name}: ${p.description} (URL: ${p.url || 'N/A'})`).join('
-')}
+    ${(proj || []).map((p: any) => `- ${p.name}: ${p.description} (URL: ${p.url || 'N/A'})`).join('\n')}
 
     Certifications:
-    ${(certs || []).map((c: any) => `- ${c.name} by ${c.issuer}`).join('
-')}
+    ${(certs || []).map((c: any) => `- ${c.name} by ${c.issuer}`).join('\n')}
     `;
 
     const groqApiKey = process.env.GROQ_API_KEY || ['gsk_OsFnHuyJsGvdD830tQkBW', 'Gdyb3FY1uiazLQqHQHTa6xYNbGh0wZL'].join('');
