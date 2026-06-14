@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
@@ -17,7 +17,7 @@ const NAV = [
   { id: "candidates", label: "Candidate Pool", icon: Users, href: "/company/candidates" },
   { id: "messaging", label: "Messages", icon: MessageSquare, href: "/company/messages" },
   { id: "reports", label: "Reports", icon: BarChart2, href: "/company/reports" },
-  { id: "analytics", label: "Analytics", icon: BarChart2, href: "/company/analytics" },
+  
 ];
 
 

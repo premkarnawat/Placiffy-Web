@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -24,7 +24,7 @@ export default function SupportPage() {
   const fetchTickets = async () => {
     try {
       const { data, error } = await supabase.from('support_tickets').select('*').eq('user_id', user?.id).order('created_at', { ascending: false });
-      const { data: kbData } = await supabase.from('knowledge_base').select('title, category').limit(5);
+      const { data: kbData } = await supabase.from('knowledge_base_articles').select('title, category').limit(5);
       if (error) throw error;
       setTickets(data || []);
     } catch (e) {

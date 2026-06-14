@@ -49,9 +49,22 @@ export default function AdminVerification() {
 
       // 2. Update core table badge if approved
       if (action === 'approved') {
-        await supabase.from(coreTable).update({
-          verification_badge: true
-        }).eq('id', coreId);
+        if (coreTable === 'candidates') {
+           const { data: cand } = await supabase.from('candidates').select('trust_score_breakdown, trust_score').eq('id', coreId).single();
+           const breakdown = cand?.trust_score_breakdown || {};
+           breakdown.identity_verified = true;
+           breakdown.identity_points = 50; // Max identity points for aadhar/pan
+           
+           await supabase.from('candidates').update({
+             verification_badge: true,
+             trust_score_breakdown: breakdown,
+             trust_score: (cand?.trust_score || 0) + 50
+           }).eq('id', coreId);
+        } else {
+           await supabase.from(coreTable).update({
+             verification_badge: true
+           }).eq('id', coreId);
+        }
       } else if (action === 'rejected') {
         await supabase.from(coreTable).update({
           verification_badge: false

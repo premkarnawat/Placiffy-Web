@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Shield, CheckCircle2, AlertCircle, Loader2, Award, Zap, Lock, Eye } from 'lucide-react';
@@ -27,6 +27,8 @@ export default function TrustScorePage() {
 
   const calculateTrustScore = (candidateData: any) => {
     if (!candidateData) return 0;
+    if (candidateData.trust_score) return candidateData.trust_score; // use DB value
+    
     let score = 20; // Base email points
     const pct = candidateData.profile_completion_pct || 0;
     score += Math.floor(pct * 0.4);
@@ -47,8 +49,10 @@ export default function TrustScorePage() {
   if (loading) return <div className="flex items-center justify-center h-full"><Loader2 className="animate-spin text-blue-500" size={32} /></div>;
 
   const score = calculateTrustScore(cand);
-  const profilePoints = Math.floor((cand?.profile_completion_pct || 0) * 0.4);
-  const hasMobile = !!cand?.candidate_profiles?.[0]?.mobile_number;
+  const breakdown = cand?.trust_score_breakdown || {};
+  const profilePoints = breakdown.profile_points || Math.floor((cand?.profile_completion_pct || 0) * 0.4);
+  const hasMobile = cand?.candidate_profiles?.[0]?.mobile_number || breakdown.mobile_verified;
+  const identityPoints = breakdown.identity_points || 20;
 
   
   return (
@@ -75,7 +79,7 @@ export default function TrustScorePage() {
               <h3 className="font-bold text-gray-900">Identity Verification</h3>
               <p className="text-sm text-gray-500 mt-1">Your email and basic identity signals have been established.</p>
               <div className="mt-3 flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full w-fit">
-                +20 Points
+                +{identityPoints} Points
               </div>
             </div>
           </div>
@@ -97,7 +101,7 @@ export default function TrustScorePage() {
               <h3 className="font-bold text-gray-900">Mobile Number Verification</h3>
               <p className="text-sm text-gray-500 mt-1">{hasMobile ? 'Your mobile number is linked and verified.' : 'Please link your mobile number in the Profile page.'}</p>
               <div className={`mt-3 flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full w-fit ${hasMobile ? 'text-purple-600 bg-purple-50' : 'text-gray-500 bg-gray-50'}`}>
-                {hasMobile ? '+20 Points' : '0 / 20 Points'}
+                {hasMobile ? '+{identityPoints} Points' : '0 / 20 Points'}
               </div>
             </div>
           </div>

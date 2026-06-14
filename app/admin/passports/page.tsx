@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CreditCard, Search, ShieldCheck, Download, RefreshCw, Loader2, CheckCircle2, UserX, Trash2 } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function PassportsAdmin() {
       if (allCands) {
         for (const cand of allCands) {
            const { data: existing } = await supabase.from('passports').select('id').eq('candidate_id', cand.id).maybeSingle();
-           const { data: ver } = await supabase.from('verifications').select('status').eq('user_id', cand.user_id).maybeSingle();
+           const { data: ver } = await supabase.from('candidate_verifications').select('status').eq('candidate_id', cand.id).maybeSingle();
            
            // Only issue passports to verified candidates OR those with score >= 80
            if (cand.trust_score >= 80 || ver?.status === 'approved') {

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Search, HelpCircle, ShieldCheck, Zap, Briefcase, ChevronRight, FileText, Bot } from 'lucide-react';
@@ -16,9 +16,8 @@ export default function HelpCenterPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: fData } = await supabase.from('faqs').select('*');
-        const { data: kData } = await supabase.from('knowledge_base').select('*');
-        setFaqs(fData || []);
+        const { data: kData } = await supabase.from('knowledge_base_articles').select('*');
+        setFaqs([]); // Use hardcoded FAQs or empty for now
         setKbArticles(kData || []);
       } catch (e) {
         console.error(e);

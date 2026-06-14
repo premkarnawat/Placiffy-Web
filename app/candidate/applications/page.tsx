@@ -23,7 +23,7 @@ export default function CandidateApplicationsPage() {
         .from('applications')
         .select(`
           id, status, ats_score, applied_at,
-          job:jobs ( title, location, type, company:companies ( name, logo_url ) )
+          job:jobs ( job_title, location, employment_type, company:companies ( name, logo_url ) )
         `)
         .eq('candidate_id', cand.id)
         .order('applied_at', { ascending: false });
@@ -89,10 +89,10 @@ export default function CandidateApplicationsPage() {
                     {app.job?.company?.logo_url ? <img src={app.job.company.logo_url} alt="Logo" className="w-full h-full object-cover"/> : <Building2 className="text-gray-400" size={24} />}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">{app.job?.title || 'Unknown Role'}</h3>
+                    <h3 className="text-lg font-bold text-gray-900">{app.job?.job_title || 'Unknown Role'}</h3>
                     <p className="text-sm text-gray-500 font-medium">{app.job?.company?.name || 'Unknown Company'}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><Briefcase size={14}/> {app.job?.type || 'Full-time'}</span>
+                      <span className="flex items-center gap-1"><Briefcase size={14}/> {app.job?.employment_type || 'Full-time'}</span>
                       <span className="flex items-center gap-1"><Calendar size={14}/> Applied {new Date(app.applied_at).toLocaleDateString()}</span>
                     </div>
                   </div>

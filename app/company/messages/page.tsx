@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
@@ -47,11 +47,13 @@ export default function CompanyMessages() {
       const { data: cu } = await supabase.from('companies').select('id').eq('user_id', user?.id).single();
       if (!cu) return;
       
-      const { data: shorts } = await supabase.from('candidate_shortlists').select('candidate_id, status').eq('company_id', cu.id);
-      if (shorts) {
-          const cIds = shorts.map((s: any) => s.candidate_id);
-          const { data: cands } = await supabase.from('candidates').select('id, user_id, full_name, headline').in('id', cIds);
-          setConversations(cands || []);
+      const { data: apps } = await supabase.from('applications').select('candidate_id, jobs!inner(company_id)').eq('jobs.company_id', cu.id);
+      if (apps) {
+          const cIds = [...new Set(apps.map((s: any) => s.candidate_id))];
+          if (cIds.length > 0) {
+              const { data: cands } = await supabase.from('candidates').select('id, user_id, full_name, headline, profile_photo_url').in('id', cIds);
+              setConversations(cands || []);
+          }
       }
     } catch (e) {
       console.error(e);
