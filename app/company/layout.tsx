@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Users, Briefcase, Plus, MessageSquare, 
-  Settings, LogOut, Loader2, Sparkles, Shield, HelpCircle, Bell
+  Settings, LogOut, Loader2, Sparkles, Shield, HelpCircle, Bell, Search
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
