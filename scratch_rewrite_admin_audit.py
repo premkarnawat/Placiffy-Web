@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -135,3 +135,12 @@ export default function AdminAuditLogs() {
     </div>
   );
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\logs\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+
+import shutil
+shutil.copyfile(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\logs\page.tsx", r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\audit\page.tsx")
+
+print("Audit Log Center rebuilt")

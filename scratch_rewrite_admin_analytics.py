@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -210,3 +210,9 @@ export default function AdminAnalytics() {
     </div>
   );
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\analytics\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+
+print("Analytics Center rebuilt")
