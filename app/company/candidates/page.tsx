@@ -44,7 +44,7 @@ export default function CandidatePoolPage() {
 
   const fetchCandidates = async () => {
     try {
-      const { data, error } = await supabase.from('candidates').select(`*`).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('candidates').select(`*, resume_intelligence_reports(ats_resume_score)`).order('created_at', { ascending: false });
 
       if (error) throw error;
       
@@ -216,7 +216,7 @@ export default function CandidatePoolPage() {
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">ATS Intel</div>
-                    <div className="text-xl font-black text-blue-600">{cand.trust_score || 'N/A'}<span className="text-xs text-blue-400 font-bold ml-0.5">%</span></div>
+                    <div className="text-xl font-black text-blue-600">{cand.resume_intelligence_reports?.[0]?.ats_resume_score || cand.resume_intelligence_reports?.ats_resume_score || 'N/A'}<span className="text-xs text-blue-400 font-bold ml-0.5">%</span></div>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Trust Score</div>
