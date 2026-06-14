@@ -1,4 +1,23 @@
-﻿'use client';
+﻿import os
+import shutil
+
+# Remove analytics / reports directories
+for d in ['analytics', 'reports']:
+    p = rf"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\company\{d}"
+    if os.path.exists(p):
+        shutil.rmtree(p)
+        print(f"Removed {d}")
+
+# Update layout.tsx
+layout_path = r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\company\layout.tsx"
+with open(layout_path, "r", encoding="utf-8-sig") as f:
+    content = f.read()
+
+# Replace the NAV_ITEMS array definition to remove Analytics/Reports and ensure support exists
+# Also we need to inject the notification logic. Actually, rewriting the whole layout might be cleaner if we want a realtime notification bell.
+# Let's check if the layout already has the bell and we just need to update it.
+
+new_content = """'use client';
 
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
@@ -163,3 +182,9 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
     </div>
   );
 }
+"""
+
+with open(layout_path, "w", encoding="utf-8-sig") as f:
+    f.write(new_content)
+    
+print("Updated Layout and cleaned up analytics route.")

@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -222,3 +222,8 @@ export default function WorkspacePage() {
     </div>
   );
 }
+"""
+
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\company\workspace\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+print("Updated company workspace")
