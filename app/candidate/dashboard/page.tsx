@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Activity, ShieldCheck, Zap, Briefcase, MessageSquare, 
   TrendingUp, ChevronRight, Lock, Sparkles, Bell, Clock, 
-  CheckCircle2, XCircle, Award 
+  CheckCircle2, XCircle, Award, Loader2 
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
