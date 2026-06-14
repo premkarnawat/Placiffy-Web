@@ -101,7 +101,7 @@ export default function TrustScorePage() {
               <h3 className="font-bold text-gray-900">Mobile Number Verification</h3>
               <p className="text-sm text-gray-500 mt-1">{hasMobile ? 'Your mobile number is linked and verified.' : 'Please link your mobile number in the Profile page.'}</p>
               <div className={`mt-3 flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full w-fit ${hasMobile ? 'text-purple-600 bg-purple-50' : 'text-gray-500 bg-gray-50'}`}>
-                {hasMobile ? '+{identityPoints} Points' : '0 / 20 Points'}
+                {hasMobile ? `+${identityPoints} Points` : '0 / 20 Points'}
               </div>
             </div>
           </div>
