@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   HelpCircle, Search, Clock, CheckCircle2, 
-  AlertCircle, MessageSquare, User as UserIcon, Loader2 
+  AlertCircle, MessageSquare, User as UserIcon, Loader2, Eye 
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
+import Link from 'next/link';
 
 export default function AdminSupportCenter() {
   const { toast } = useToast();
@@ -35,7 +36,7 @@ export default function AdminSupportCenter() {
       
       const [candsRes, compsRes] = await Promise.all([
         supabase.from('candidates').select('user_id, first_name, last_name, profile_photo_url').in('user_id', userIds),
-        supabase.from('companies').select('user_id, company_name, logo_url').in('user_id', userIds)
+        supabase.from('companies').select('user_id, name, logo_url').in('user_id', userIds)
       ]);
 
       const cands = candsRes.data || [];
@@ -54,7 +55,7 @@ export default function AdminSupportCenter() {
           creatorType = 'Candidate';
           creatorPhoto = cand.profile_photo_url;
         } else if (comp) {
-          creatorName = comp.company_name;
+          creatorName = comp.name;
           creatorType = 'Company';
           creatorPhoto = comp.logo_url;
         }
@@ -73,16 +74,6 @@ export default function AdminSupportCenter() {
       toast("error", "Error", "Failed to fetch support tickets");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleStatusUpdate = async (ticketId: string, newStatus: string) => {
-    try {
-      await supabase.from('support_tickets').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', ticketId);
-      toast("success", "Status Updated", `Ticket marked as ${newStatus}`);
-      fetchTickets();
-    } catch (e) {
-      toast("error", "Error", "Failed to update ticket");
     }
   };
 
@@ -192,17 +183,13 @@ export default function AdminSupportCenter() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <select 
-                        value={t.status || 'Open'}
-                        onChange={(e) => handleStatusUpdate(t.id, e.target.value)}
-                        className="text-xs font-bold bg-white border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-500"
+                    <div className="flex items-center justify-end">
+                      <Link 
+                        href={`/admin/support/${t.id}`}
+                        className="p-2 rounded-xl transition-colors text-indigo-600 bg-indigo-50 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1"
                       >
-                        <option value="Open">Set Open</option>
-                        <option value="In Progress">Set Progress</option>
-                        <option value="Resolved">Set Resolved</option>
-                        <option value="Closed">Set Closed</option>
-                      </select>
+                        <Eye size={14}/> View Ticket
+                      </Link>
                     </div>
                   </td>
                 </tr>

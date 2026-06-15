@@ -1,183 +1,208 @@
 ﻿content = """'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { BookOpen, AlertCircle, CheckCircle2, Clock, MessageSquare, ShieldAlert, Search, Loader2, Filter, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { 
+  HelpCircle, Search, Clock, CheckCircle2, 
+  AlertCircle, MessageSquare, User as UserIcon, Loader2, Eye 
+} from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
+import Link from 'next/link';
 
-export default function SupportAdmin() {
-  const router = useRouter();
+export default function AdminSupportCenter() {
+  const { toast } = useToast();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('open');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     fetchTickets();
-    const channel = supabase.channel('admin_support_tickets')
+
+    const channel = supabase.channel('admin_support')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => fetchTickets())
       .subscribe();
+
     return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchTickets = async () => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase.from('support_tickets').select('*, users(email, full_name, candidates(first_name, last_name))').order('updated_at', { ascending: false });
+      const { data: ticketData, error } = await supabase.from('support_tickets').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setTickets(data || []);
-    } catch (e) {
+      if (!ticketData || ticketData.length === 0) { setLoading(false); return; }
+
+      const userIds = ticketData.map(t => t.user_id);
+      
+      const [candsRes, compsRes] = await Promise.all([
+        supabase.from('candidates').select('user_id, first_name, last_name, profile_photo_url').in('user_id', userIds),
+        supabase.from('companies').select('user_id, name, logo_url').in('user_id', userIds)
+      ]);
+
+      const cands = candsRes.data || [];
+      const comps = compsRes.data || [];
+
+      const enriched = ticketData.map(ticket => {
+        const cand = cands.find(c => c.user_id === ticket.user_id);
+        const comp = comps.find(c => c.user_id === ticket.user_id);
+        
+        let creatorName = 'Unknown User';
+        let creatorType = 'User';
+        let creatorPhoto = null;
+
+        if (cand) {
+          creatorName = `${cand.first_name} ${cand.last_name}`;
+          creatorType = 'Candidate';
+          creatorPhoto = cand.profile_photo_url;
+        } else if (comp) {
+          creatorName = comp.name;
+          creatorType = 'Company';
+          creatorPhoto = comp.logo_url;
+        }
+
+        return {
+          ...ticket,
+          creatorName,
+          creatorType,
+          creatorPhoto
+        };
+      });
+
+      setTickets(enriched);
+    } catch (e: any) {
       console.error(e);
+      toast("error", "Error", "Failed to fetch support tickets");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTickets = tickets.filter(t => {
-    const matchesTab = activeTab === 'all' 
-      ? true 
-      : activeTab === 'open' 
-        ? ['Open', 'In Progress', 'Pending'].includes(t.status)
-        : t.status?.toLowerCase() === activeTab;
-    
-    const matchesSearch = t.subject?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          t.users?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-                          
-    return matchesTab && matchesSearch;
+  const filtered = tickets.filter(t => {
+    const term = searchTerm.toLowerCase();
+    const searchMatch = t.subject?.toLowerCase().includes(term) || t.id.toLowerCase().includes(term) || t.creatorName.toLowerCase().includes(term);
+    const statusMatch = filterStatus === 'all' || t.status?.toLowerCase() === filterStatus;
+    return searchMatch && statusMatch;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'open': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-      case 'in progress': return 'bg-blue-50 text-blue-600 border-blue-200';
-      case 'resolved': return 'bg-purple-50 text-purple-600 border-purple-200';
-      case 'closed': return 'bg-slate-100 text-slate-500 border-slate-200';
-      default: return 'bg-amber-50 text-amber-600 border-amber-200';
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'Resolved':
+      case 'Closed':
+        return <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-emerald-200 flex items-center gap-1 w-max"><CheckCircle2 size={12}/> {status}</span>;
+      case 'In Progress':
+        return <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-blue-200 flex items-center gap-1 w-max"><Clock size={12}/> {status}</span>;
+      default:
+        return <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-amber-200 flex items-center gap-1 w-max"><AlertCircle size={12}/> Open</span>;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'critical': return 'text-red-600 bg-red-50';
-      case 'high': return 'text-orange-600 bg-orange-50';
-      case 'low': return 'text-slate-600 bg-slate-50';
-      default: return 'text-blue-600 bg-blue-50';
-    }
-  };
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[70vh]">
+      <Loader2 className="animate-spin text-indigo-600" size={40} />
+    </div>
+  );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <MessageSquare className="text-blue-600" /> Support Desk
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <HelpCircle className="text-indigo-600" /> Support Center
           </h1>
-          <p className="text-gray-500 mt-1">Manage and resolve candidate support tickets</p>
+          <p className="text-gray-500 mt-1">Manage and resolve user tickets across the platform.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="text-center px-4 border-r border-gray-100">
-            <div className="text-2xl font-black text-emerald-600">{tickets.filter(t => t.status === 'Open').length}</div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Open</div>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={18}/>
+            <input 
+              type="text" 
+              placeholder="Search by ID, Subject, or User..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-gray-200 focus:outline-none focus:border-indigo-500 text-sm font-medium"
+            />
           </div>
-          <div className="text-center px-4 border-r border-gray-100">
-            <div className="text-2xl font-black text-blue-600">{tickets.filter(t => t.status === 'In Progress').length}</div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">In Progress</div>
-          </div>
-          <div className="text-center px-4">
-            <div className="text-2xl font-black text-red-600">{tickets.filter(t => t.priority === 'Critical' && t.status !== 'Closed').length}</div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Critical</div>
-          </div>
+          <select 
+            value={filterStatus} 
+            onChange={e => setFilterStatus(e.target.value)}
+            className="bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
+          >
+            <option value="all">All Tickets</option>
+            <option value="open">Open</option>
+            <option value="in progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
         </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
-          <div className="flex gap-2 p-1 bg-gray-100/50 rounded-xl">
-            {['open', 'closed', 'all'].map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-          
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search tickets..." 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto min-h-[400px]">
-          {loading ? (
-            <div className="flex justify-center items-center h-64 text-blue-500"><Loader2 className="animate-spin" size={32}/></div>
-          ) : filteredTickets.length === 0 ? (
-            <div className="text-center p-12 text-gray-500 flex flex-col items-center">
-              <CheckCircle2 size={48} className="text-gray-200 mb-4"/>
-              <p>No tickets found matching your criteria.</p>
-            </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  <th className="p-4 pl-6 font-medium">Ticket ID</th>
-                  <th className="p-4 font-medium">Subject</th>
-                  <th className="p-4 font-medium">Category</th>
-                  <th className="p-4 font-medium">Status & Priority</th>
-                  <th className="p-4 font-medium">Candidate</th>
-                  <th className="p-4 font-medium">Last Updated</th>
-                  <th className="p-4 pr-6 text-right font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredTickets.map(ticket => {
-                  const candidateName = ticket.users?.candidates?.[0]?.first_name 
-                    ? `${ticket.users.candidates[0].first_name} ${ticket.users.candidates[0].last_name || ''}`
-                    : ticket.users?.full_name || ticket.users?.email || 'Unknown';
-                    
-                  return (
-                    <tr key={ticket.id} className="hover:bg-slate-50 transition-colors group cursor-pointer" onClick={() => router.push(`/admin/support/${ticket.id}`)}>
-                      <td className="p-4 pl-6">
-                        <span className="font-mono text-xs text-gray-500 font-bold">#{ticket.id.split('-')[0]}</span>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">{ticket.subject}</div>
-                      </td>
-                      <td className="p-4">
-                        <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md">{ticket.category}</span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border ${getStatusColor(ticket.status)}`}>{ticket.status}</span>
-                          <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-wider">Requester</th>
+                <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-wider">Subject & Category</th>
+                <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-wider">Priority</th>
+                <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.map(t => (
+                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {t.creatorPhoto ? (
+                        <img src={t.creatorPhoto} className={`w-8 h-8 object-cover ${t.creatorType === 'Candidate' ? 'rounded-full' : 'rounded-md'}`} />
+                      ) : (
+                        <div className={`w-8 h-8 flex items-center justify-center text-xs font-bold ${t.creatorType === 'Candidate' ? 'rounded-full bg-indigo-50 text-indigo-600' : 'rounded-md bg-purple-50 text-purple-600'}`}>
+                          <UserIcon size={14}/>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm font-bold text-gray-900">{candidateName}</div>
-                        <div className="text-xs text-gray-500">{ticket.users?.email}</div>
-                      </td>
-                      <td className="p-4 text-xs font-medium text-gray-500">
-                        {new Date(ticket.updated_at || ticket.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
-                      </td>
-                      <td className="p-4 pr-6 text-right">
-                        <button className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors inline-flex items-center">
-                          Resolve <ChevronRight size={16}/>
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
+                      )}
+                      <div>
+                        <div className="font-bold text-gray-900">{t.creatorName}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t.creatorType}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-gray-900 line-clamp-1">{t.subject || 'No Subject'}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{t.category || 'General'} • {new Date(t.created_at).toLocaleString()}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {getStatusBadge(t.status || 'Open')}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                      t.priority === 'High' ? 'bg-red-50 border-red-100 text-red-700' :
+                      t.priority === 'Medium' ? 'bg-amber-50 border-amber-100 text-amber-700' :
+                      'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}>
+                      {t.priority || 'Normal'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end">
+                      <Link 
+                        href={`/admin/support/${t.id}`}
+                        className="p-2 rounded-xl transition-colors text-indigo-600 bg-indigo-50 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1"
+                      >
+                        <Eye size={14}/> View Ticket
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    No support tickets found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -187,4 +212,5 @@ export default function SupportAdmin() {
 
 with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\support\page.tsx", "w", encoding="utf-8-sig") as f:
     f.write(content)
-print("Updated admin/support/page.tsx")
+
+print("Admin Support Page Updated")

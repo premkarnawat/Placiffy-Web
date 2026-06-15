@@ -1,4 +1,4 @@
-﻿'use client';
+﻿content = """'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -257,3 +257,11 @@ export default function AdminTicketDetails({ params }: { params: { id: string } 
     </div>
   );
 }
+"""
+
+import os
+os.makedirs(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\support\[id]", exist_ok=True)
+with open(r"c:\Users\premk\.gemini\antigravity\playground\ruby-galaxy\app\admin\support\[id]\page.tsx", "w", encoding="utf-8-sig") as f:
+    f.write(content)
+
+print("Admin Ticket Details Page Created")

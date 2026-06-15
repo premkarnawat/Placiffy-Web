@@ -5,10 +5,7 @@ try:
     conn = psycopg2.connect(conn_str)
     cur = conn.cursor()
     
-    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE '%support%'")
-    print("Tables:", [row[0] for row in cur.fetchall()])
-    
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'support_tickets'")
+    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'notifications'")
     print("Columns:", [row[0] for row in cur.fetchall()])
     
 except Exception as e:
