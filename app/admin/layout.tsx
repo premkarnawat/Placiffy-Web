@@ -47,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'ATS Center', href: '/admin/ats', icon: Activity },
     { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
     { name: 'Support', href: '/admin/support', icon: BookOpen },
+    { name: 'Notifications', href: '/admin/notifications', icon: Bell },
     { name: 'Analytics', href: '/admin/analytics', icon: PieChart },
     { name: 'Billing', href: '/admin/billing', icon: Receipt },
     { name: 'Audit Logs', href: '/admin/audit', icon: Search },

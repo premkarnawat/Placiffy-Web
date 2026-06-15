@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ShieldCheck, Activity, MapPin, Briefcase, Calendar, Mail, FileText, CheckCircle2, TriangleAlert, UserX, Star, GraduationCap, Award, ExternalLink, RefreshCw, ArrowLeft, Send } from 'lucide-react';
@@ -25,9 +25,9 @@ export default function CandidateDetailsAdmin({ params }: { params: { id: string
         supabase.from('candidate_experience').select('*').eq('candidate_id', params.id).order('start_date', { ascending: false }),
         supabase.from('candidate_projects').select('*').eq('candidate_id', params.id),
         supabase.from('candidate_certifications').select('*').eq('candidate_id', params.id),
-        supabase.from('applications').select('*, jobs(job_title, companies(name))').eq('candidate_id', params.id).order('applied_at', { ascending: false }),
+        supabase.from('applications').select('*, jobs(title, companies(name))').eq('candidate_id', params.id).order('applied_at', { ascending: false }),
         supabase.from('passports').select('*').eq('candidate_id', params.id).maybeSingle(),
-        supabase.from('verifications').select('*').eq('user_id', (await supabase.from('candidates').select('user_id').eq('id', params.id).single()).data?.user_id).maybeSingle()
+        supabase.from('candidate_verifications').select('*').eq('candidate_id', params.id).maybeSingle()
       ]);
 
       setData({

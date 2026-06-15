@@ -39,7 +39,7 @@ export default function CompanyRegistry() {
       const [jobDataRes, appDataRes, subDataRes] = await Promise.all([
         supabase.from('jobs').select('company_id, id, status').in('company_id', compIds),
         supabase.from('applications').select('job_id'), // To count apps received
-        supabase.from('subscriptions').select('company_id, plan_id, status').in('company_id', compIds)
+        supabase.from('subscriptions').select('company_id, plan_tier, status').in('company_id', compIds)
       ]);
 
       const jobData = jobDataRes.data || [];
@@ -58,7 +58,7 @@ export default function CompanyRegistry() {
           activeJobs: jobs.filter(j => j.status === 'Open').length,
           totalJobs: jobs.length,
           appsReceived: apps.length,
-          plan: sub ? sub.plan_id : 'Free',
+          plan: sub ? sub.plan_tier : 'Free',
           subStatus: sub ? sub.status : 'inactive'
         };
       });

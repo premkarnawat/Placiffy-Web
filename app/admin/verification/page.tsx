@@ -33,7 +33,7 @@ export default function AdminVerification() {
       setLoading(true);
       if (activeTab === 'candidates') {
         const { data, error } = await supabase.from('candidate_verifications')
-          .select('*, candidates(first_name, last_name, profile_photo_url, location, email)')
+          .select('*, candidates(first_name, last_name, profile_photo_url, location)')
           .order('created_at', { ascending: false });
           
         if (error) throw error;
